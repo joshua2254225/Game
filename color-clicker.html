@@ -12,6 +12,12 @@
     nav { margin-top:8px; }
     nav a { color:#fff; margin-right:10px; text-decoration:none; font-weight:600; font-size:14px; }
     main { flex:1; padding:20px; max-width:900px; margin:0 auto; }
+
+    .card { background:#fafafa; border-radius:10px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,.06); }
+    .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+    .controls button { padding:8px 12px; border-radius:6px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+    .status { margin-left:auto; font-weight:700; }
+
     .grid { display:grid; grid-template-columns: repeat(2, 140px); gap:12px; justify-content:center; margin-top:12px; }
     .cell { width:140px; height:140px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#e6e6e6; font-size:26px; cursor:pointer; user-select:none; transition:transform .08s ease, box-shadow .08s; }
     .cell:active { transform:scale(.98); }
@@ -19,6 +25,11 @@
     .cell.active.green { background:#28c76f; color:#fff; }
     .cell.active.yellow { background:#ffca3a; color:#111; }
     .cell.active.blue { background:#4dabf7; color:#fff; }
+
+    @media (max-width:480px){
+      .grid { grid-template-columns: repeat(2, calc(40vw)); gap:8px; }
+      .cell { width:40vw; height:40vw; font-size:20px; }
+    }
   </style>
 </head>
 <body>
@@ -34,14 +45,24 @@
   </header>
 
   <main>
-    <p>Click the highlighted box as fast as you can!</p>
-    <div class="grid">
-      <div class="cell" data-index="0"></div>
-      <div class="cell" data-index="1"></div>
-      <div class="cell" data-index="2"></div>
-      <div class="cell" data-index="3"></div>
+    <div class="card">
+      <div class="controls">
+        <button id="startBtn">Start</button>
+        <button id="restartBtn">Restart</button>
+        <div>Time: <strong><span id="time">30</span>s</strong></div>
+        <div>Score: <strong><span id="score">0</span></strong></div>
+        <div class="status">Best: <span id="best">0</span></div>
+      </div>
+
+      <div class="grid" id="grid">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+      </div>
+
+      <p style="margin-top:12px;color:#444">Click the highlighted box as fast as you can. Use <strong>Start</strong> to begin and <strong>Restart</strong> to reset.</p>
     </div>
-    <p>Score: <span id="score">0</span> | Time left: <span id="time">30</span>s</p>
   </main>
 
   <footer>
@@ -49,34 +70,128 @@
   </footer>
 
   <script>
-    const cells = document.querySelectorAll('.cell');
-    let score = 0, time = 30, activeIndex = -1;
-    const scoreEl = document.getElementById('score');
-    const timeEl = document.getElementById('time');
+    (function(){
+      const TIME_TOTAL = 30;
+      const grid = document.getElementById('grid');
+      const cells = Array.from(grid.querySelectorAll('.cell'));
+      const timeEl = document.getElementById('time');
+      const scoreEl = document.getElementById('score');
+      const bestEl = document.getElementById('best');
+      const startBtn = document.getElementById('startBtn');
+      const restartBtn = document.getElementById('restartBtn');
 
-    function pickRandom() { return Math.floor(Math.random()*cells.length); }
+      const BEST_KEY = 'color_clicker_best';
+      bestEl.textContent = localStorage.getItem(BEST_KEY) || 0;
 
-    function activateCell() {
-      cells.forEach(c=>c.classList.remove('active','red','green','yellow','blue'));
-      activeIndex = pickRandom();
-      const colors = ['red','green','yellow','blue'];
-      const color = colors[Math.floor(Math.random()*colors.length)];
-      const cell = cells[activeIndex];
-      cell.classList.add('active', color);
-    }
+      let timer = null;
+      let timeLeft = TIME_TOTAL;
+      let score = 0;
+      let activeIdx = -1;
+      let running = false;
 
-    cells.forEach((cell, idx)=>{
-      cell.addEventListener('click', ()=>{
-        if(idx===activeIndex){ score++; scoreEl.textContent = score; activateCell(); }
+      function pickRandom() { return Math.floor(Math.random() * cells.length); }
+      function randomColor() {
+        return ['red','green','yellow','blue'][Math.floor(Math.random()*4)];
+      }
+
+      function clearActive() {
+        cells.forEach(c => c.classList.remove('active','red','green','yellow','blue'));
+        activeIdx = -1;
+      }
+
+      function activateRandom() {
+        clearActive();
+        activeIdx = pickRandom();
+        const cell = cells[activeIdx];
+        const color = randomColor();
+        cell.classList.add('active', color);
+      }
+
+      function updateUI() {
+        timeEl.textContent = timeLeft;
+        scoreEl.textContent = score;
+      }
+
+      function startGame() {
+        if (running) return;
+        running = true;
+        score = 0;
+        timeLeft = TIME_TOTAL;
+        updateUI();
+        startBtn.disabled = true;
+        restartBtn.disabled = false;
+        activateRandom();
+        timer = setInterval(() => {
+          timeLeft--;
+          updateUI();
+          if (timeLeft <= 0) endGame();
+          else {
+            // rotate target every 700ms for more action (but synced with interval will be each second)
+          }
+        }, 1000);
+        // faster change than second: change target every 700ms independently
+        if (!window._ccChangeInterval) {
+          window._ccChangeInterval = setInterval(() => {
+            if (running) activateRandom();
+          }, 700);
+        }
+      }
+
+      function restartGame() {
+        stopGame();
+        score = 0;
+        timeLeft = TIME_TOTAL;
+        clearActive();
+        updateUI();
+        startBtn.disabled = false;
+        restartBtn.disabled = false;
+      }
+
+      function stopGame() {
+        running = false;
+        clearInterval(timer);
+        timer = null;
+        clearActive();
+        startBtn.disabled = false;
+      }
+
+      function endGame() {
+        stopGame();
+        const best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
+        if (score > best) {
+          localStorage.setItem(BEST_KEY, score);
+          bestEl.textContent = score;
+          alert('Time! New best: ' + score);
+        } else {
+          alert('Time! Your score: ' + score + '. Best: ' + best);
+        }
+      }
+
+      // click logic only active when running
+      grid.addEventListener('click', (e) => {
+        const cell = e.target.closest('.cell');
+        if (!cell || !running) return;
+        const idx = Number(cell.dataset.index);
+        if (idx === activeIdx) {
+          score += 1;
+          scoreEl.textContent = score;
+          activateRandom();
+        } else {
+          // small penalty/feedback
+          score = Math.max(0, score - 1);
+          scoreEl.textContent = score;
+          cell.style.transform = 'scale(.95)';
+          setTimeout(()=> cell.style.transform = '', 90);
+        }
       });
-    });
 
-    activateCell();
+      startBtn.addEventListener('click', startGame);
+      restartBtn.addEventListener('click', restartGame);
 
-    const timer = setInterval(()=>{
-      time--; timeEl.textContent = time;
-      if(time<=0){ clearInterval(timer); alert('Time up! Score: '+score); }
-    },1000);
+      // init
+      updateUI();
+      clearActive();
+    })();
   </script>
 </body>
 </html>
