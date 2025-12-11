@@ -12,25 +12,13 @@
     nav { margin-top:8px; }
     nav a { color:#fff; margin-right:10px; text-decoration:none; font-weight:600; font-size:14px; }
     main { flex:1; padding:20px; max-width:960px; margin:0 auto; }
-
-    .game-card { background:#fafafa; border-radius:10px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,.06); }
-    .controls { display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
-    .controls button { padding:8px 12px; border-radius:6px; border:1px solid #ccc; background:#fff; cursor:pointer; }
-    .status { margin-left:auto; font-weight:700; }
-
     .board { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:12px; }
-    .card { background:#eee; border-radius:10px; height:80px; display:flex; align-items:center; justify-content:center; font-size:36px; cursor:pointer; position:relative; user-select:none; }
+    .card { background:#eee; border-radius:10px; height:80px; display:flex; align-items:center; justify-content:center; font-size:36px; cursor:pointer; user-select:none; position:relative; }
     .card.flipped, .card.matched { background:#fff; }
     .card .face { display:none; }
     .card.flipped .face, .card.matched .face { display:block; }
     .card .back { display:block; font-size:20px; color:#666; }
     .card.flipped .back { display:none; }
-
-    .results { margin-top:12px; font-size:14px; color:#333; }
-    @media (max-width:480px) {
-      .board { grid-template-columns: repeat(4, 1fr); gap:8px; }
-      .card { height:64px; font-size:28px; }
-    }
   </style>
 </head>
 <body>
@@ -46,18 +34,10 @@
   </header>
 
   <main>
-    <div class="game-card">
-      <div class="controls">
-        <button id="restart">Restart</button>
-        <div>Moves: <span id="moves">0</span></div>
-        <div class="status">Time: <span id="timer">0</span>s</div>
-        <div>Best Moves: <span id="bestMoves">—</span></div>
-      </div>
-
-      <div class="board" id="board" aria-live="polite"></div>
-
-      <div class="results" id="results"></div>
-    </div>
+    <p>Find all matching emoji pairs as fast as you can!</p>
+    <div class="board" id="board"></div>
+    <p>Moves: <span id="moves">0</span></p>
+    <button id="restart">Restart</button>
   </main>
 
   <footer>
@@ -65,139 +45,31 @@
   </footer>
 
   <script>
-    (function(){
-      const boardEl = document.getElementById('board');
-      const movesEl = document.getElementById('moves');
-      const timerEl = document.getElementById('timer');
-      const restartBtn = document.getElementById('restart');
-      const resultsEl = document.getElementById('results');
-      const bestMovesEl = document.getElementById('bestMoves');
+    const boardEl = document.getElementById('board');
+    const movesEl = document.getElementById('moves');
+    const restartBtn = document.getElementById('restart');
+    const EMOJIS = ['🍎','🚀','🐶','⚽','🎵','🌟','🍀','🍩'];
+    let deck = [], flipped=[], moves=0;
 
-      const BEST_KEY = 'emoji_memory_best_moves';
-      bestMovesEl.textContent = localStorage.getItem(BEST_KEY) || '—';
+    function shuffle(array){ for(let i=array.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [array[i],array[j]]=[array[j],array[i]];} return array;}
 
-      const EMOJIS = ['🍎','🚀','🐶','⚽','🎵','🌟','🍀','🍩']; // 8 pairs -> 16 cards
-      let deck = [];
-      let flipped = [];
-      let matchedCount = 0;
-      let moves = 0;
-      let timer = null;
-      let seconds = 0;
-      let running = false;
+    function buildDeck(){ deck=shuffle([...EMOJIS,...EMOJIS]); }
 
-      function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
+    function render(){ boardEl.innerHTML=''; deck.forEach((emoji,i)=>{ const card=document.createElement('button'); card.className='card'; card.dataset.index=i; card.innerHTML='<span class="face">'+emoji+'</span><span class="back">?</span>'; boardEl.appendChild(card); });}
+
+    function reset(){ moves=0; movesEl.textContent=moves; flipped=[]; buildDeck(); render(); }
+
+    boardEl.addEventListener('click', e=>{
+      const btn = e.target.closest('.card'); if(!btn || btn.classList.contains('flipped')) return;
+      btn.classList.add('flipped'); flipped.push({btn,emoji:deck[btn.dataset.index]});
+      if(flipped.length===2){ moves++; movesEl.textContent=moves;
+        if(flipped[0].emoji===flipped[1].emoji){ flipped.forEach(f=>f.btn.classList.add('matched')); flipped=[]; }
+        else{ setTimeout(()=>{ flipped.forEach(f=>f.btn.classList.remove('flipped')); flipped=[]; },700); }
       }
+    });
 
-      function buildDeck() {
-        deck = shuffle([...EMOJIS, ...EMOJIS]);
-      }
-
-      function renderBoard() {
-        boardEl.innerHTML = '';
-        deck.forEach((emoji, i) => {
-          const card = document.createElement('button');
-          card.className = 'card';
-          card.type = 'button';
-          card.setAttribute('data-index', i);
-          card.setAttribute('aria-label', 'Card');
-          card.innerHTML = '<span class="face">' + emoji + '</span><span class="back">?</span>';
-          boardEl.appendChild(card);
-        });
-      }
-
-      function startTimer() {
-        if (running) return;
-        running = true;
-        timer = setInterval(() => {
-          seconds++;
-          timerEl.textContent = seconds;
-        }, 1000);
-      }
-
-      function stopTimer() {
-        running = false;
-        clearInterval(timer);
-      }
-
-      function resetGame() {
-        stopTimer();
-        seconds = 0;
-        timerEl.textContent = 0;
-        moves = 0;
-        movesEl.textContent = 0;
-        matchedCount = 0;
-        flipped = [];
-        resultsEl.textContent = '';
-        buildDeck();
-        renderBoard();
-      }
-
-      function onCardClick(e) {
-        const btn = e.target.closest('.card');
-        if (!btn) return;
-        const idx = Number(btn.dataset.index);
-        // disabled if matched or flipped
-        if (btn.classList.contains('flipped') || btn.classList.contains('matched')) return;
-
-        // start timer on first action
-        if (moves === 0 && !running) startTimer();
-
-        flipCard(btn);
-        flipped.push({ idx, btn });
-
-        if (flipped.length === 2) {
-          moves++;
-          movesEl.textContent = moves;
-          const a = deck[flipped[0].idx];
-          const b = deck[flipped[1].idx];
-          if (a === b) {
-            // match
-            flipped[0].btn.classList.add('matched');
-            flipped[1].btn.classList.add('matched');
-            flipped = [];
-            matchedCount += 2;
-            if (matchedCount === deck.length) {
-              gameWin();
-            }
-          } else {
-            // not match -> flip back after delay
-            boardEl.style.pointerEvents = 'none';
-            setTimeout(() => {
-              flipped.forEach(f => f.btn.classList.remove('flipped'));
-              flipped = [];
-              boardEl.style.pointerEvents = '';
-            }, 700);
-          }
-        }
-      }
-
-      function flipCard(btn) {
-        btn.classList.add('flipped');
-      }
-
-      function gameWin() {
-        stopTimer();
-        resultsEl.textContent = `You won! Time: ${seconds}s · Moves: ${moves}`;
-        const best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
-        if (!best || moves < best) {
-          localStorage.setItem(BEST_KEY, moves);
-          bestMovesEl.textContent = moves;
-          resultsEl.textContent += ' — New best!';
-        }
-      }
-
-      // init
-      resetGame();
-
-      // events
-      boardEl.addEventListener('click', onCardClick);
-      restartBtn.addEventListener('click', resetGame);
-    })();
+    restartBtn.addEventListener('click', reset);
+    reset();
   </script>
 </body>
-  </html>
+</html>
