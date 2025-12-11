@@ -1,66 +1,31 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Emoji Memory</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="../styles.css">
-<style>
-.board{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:480px;margin:18px auto}
-.card{background:#f4f4f4;border-radius:8px;padding:18px;font-size:2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;height:80px}
-.card.hidden{background:#ccc}
-.controls{text-align:center}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Emoji Memory</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header><h1>Emoji Memory</h1><nav><a href="../index.html">Home</a></nav></header>
-<main>
-  <div class="controls">
-    <button id="new">New Game</button>
-    <p>Moves: <span id="moves">0</span></p>
-  </div>
-  <div class="board" id="board"></div>
-  <aside class="ads"><div class="ad-box">Ad placeholder</div></aside>
-</main>
-<footer><p>© My Games Site</p></footer>
+  <header>
+    <h1>Emoji Memory</h1>
+    <nav>
+      <a href="/Game/index.html">Home</a>
+      <a href="/Game/color-clicker.html">Color Clicker</a>
+      <a href="/Game/emoji-memory.html">Emoji Memory</a>
+      <a href="/Game/about.html">About</a>
+      <a href="/Game/privacy.html">Privacy</a>
+    </nav>
+  </header>
 
-<script>
-const emojis = ['🐶','🐱','🦊','🐻','🐼','🐵','🐸','🐷'];
-let board = document.getElementById('board'), movesEl = document.getElementById('moves');
-let first = null, second = null, lock = false, moves = 0;
+  <main>
+    <h2>Play Emoji Memory</h2>
+    <p>Find all matching emoji pairs as fast as you can!</p>
+    <!-- Dein Spiel-Code hier -->
+  </main>
 
-function shuffle(a){return a.sort(()=>Math.random()-0.5);}
-
-function newGame(){
-  board.innerHTML='';
-  const pairs = shuffle(emojis.concat(emojis));
-  pairs.forEach((e,i)=>{
-    const card = document.createElement('div');
-    card.className='card hidden';
-    card.dataset.emoji = e;
-    card.textContent = '';
-    card.addEventListener('click', ()=> flip(card));
-    board.appendChild(card);
-  });
-  moves=0; movesEl.textContent=moves;
-}
-
-function flip(card){
-  if(lock || card===first || card.classList.contains('matched')) return;
-  card.classList.remove('hidden'); card.textContent = card.dataset.emoji;
-  if(!first){ first = card; return; }
-  second = card; lock = true;
-  moves++; movesEl.textContent = moves;
-  if(first.dataset.emoji === second.dataset.emoji){
-    first.classList.add('matched'); second.classList.add('matched');
-    first = second = null; lock = false;
-  } else {
-    setTimeout(()=>{ first.classList.add('hidden'); first.textContent=''; second.classList.add('hidden'); second.textContent=''; first = second = null; lock=false; }, 800);
-  }
-}
-
-document.getElementById('new').addEventListener('click', newGame);
-newGame();
-</script>
+  <footer>
+    <p>© My Games Site</p>
+  </footer>
 </body>
 </html>
