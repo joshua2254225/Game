@@ -39,6 +39,7 @@
       <a href="/Game/index.html">Home</a>
       <a href="/Game/color-clicker.html">Color Clicker</a>
       <a href="/Game/emoji-memory.html">Emoji Memory</a>
+      <a href="/Game/jump-monkey.html">Monkey Jump</a>
       <a href="/Game/about.html">About</a>
       <a href="/Game/privacy.html">Privacy</a>
     </nav>
@@ -54,7 +55,7 @@
       </div>
 
       <canvas id="gameCanvas" width="960" height="360" aria-label="Monkey Jump Spiel"></canvas>
-      <div class="hint">Steuerung: Leertaste / Klick / Tippen = Springen. Überspringe die Kokosnüsse 🥥. Viel Spaß!</div>
+      <div class="hint">Steuerung: Leertaste / Klick / Tippen = Springen. Überspringe die Kokosnüsse 🥥.</div>
     </div>
   </div>
 
@@ -84,15 +85,15 @@
     let best = parseInt(localStorage.getItem('monkey_jump_best') || '0', 10);
     document.getElementById('best').textContent = best;
 
+    // smaller monkey size
     const monkey = {
       x: 120,
-      y: 0,
-      size: 64,
+      y: 0,            // bottom coordinate (where emoji bottom will sit)
+      size: 48,        // was 64 -> now smaller
       vy: 0,
       gravity: 2200,
-      jumpVelocity: -800,
-      baseline: 0,
-      alive: true
+      jumpVelocity: -780,
+      baseline: 0,     // computed
     };
 
     let obstacles = [];
@@ -101,7 +102,7 @@
     let speed = 320;
     let running = false;
 
-    // palms (parallax) - will be positioned relative to ground
+    // palms (parallax)
     const palms = [
       {x: 60, baseOffset: 40, size: 48},
       {x: 420, baseOffset: 30, size: 64},
@@ -118,13 +119,11 @@
     function computeLayout() {
       const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
       const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
-      // baseline: place monkey slightly above ground top so it visually stands on sand
-      monkey.baseline = height - groundHeight + 8; // bottom coordinate where emoji is drawn (textBaseline 'bottom')
-      monkey.y = monkey.baseline; // baseline used for physics (feet position)
-      // ensure palms anchored relative to ground:
+      monkey.baseline = height - groundHeight + 6; // bottom y coordinate
+      monkey.y = monkey.baseline;
       palms.forEach((p,i) => {
         if (!p.x || p.x > width) p.x = rand(width * (0.1 + 0.2*i), width * (0.4 + 0.2*i));
-        p.y = monkey.baseline - (p.size * 0.9); // place palm so trunk base meets ground
+        p.y = monkey.baseline - (p.size * 0.9);
       });
     }
 
@@ -153,10 +152,9 @@
     }
 
     function spawnObstacle() {
-      const cSize = 44 + Math.floor(rand(-6,10));
+      const cSize = 36 + Math.floor(rand(-4,10)); // slightly smaller coconuts to match smaller monkey
       const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
       const x = width + 40;
-      // place coconut so its bottom sits on same ground baseline (slightly inset)
       const y = monkey.baseline - cSize + 6;
       obstacles.push({x, y, w: cSize, h: cSize, passed: false});
       spawnInterval = Math.max(700, 1400 - score*20);
@@ -197,14 +195,14 @@
       ctx.fillStyle = '#2e8b57';
       ctx.fillRect(0, height - groundHeight, width, 8);
 
-      // monkey
+      // monkey (draw at bottom y coordinate monkey.y)
       ctx.font = monkey.size + 'px serif';
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom'; // draw at baseline coordinate
-      ctx.fillText('🐒', monkey.x, monkey.baseline);
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('🐒', monkey.x, monkey.y);
 
       // obstacles (coconuts)
-      ctx.font = '40px serif';
+      ctx.font = '36px serif';
       obstacles.forEach(obj => {
         ctx.fillText('🥥', obj.x + obj.w/2, obj.y + obj.h*0.9);
         // shadow
@@ -214,23 +212,20 @@
       });
     }
 
-    // simple circle-based collision for robustness
+    // circle collision
     function checkCollisions() {
-      // monkey center
       const mx = monkey.x;
-      const my = monkey.baseline - monkey.size*0.45; // center approx
-      const mr = monkey.size * 0.45;
+      const my = monkey.y - monkey.size*0.45; // approximate center
+      const mr = monkey.size * 0.42;
       for (let i = 0; i < obstacles.length; i++) {
         const o = obstacles[i];
         const ox = o.x + o.w/2;
         const oy = o.y + o.h/2;
-        const or = Math.max(16, (o.w/2) * 0.9);
+        const or = Math.max(12, (o.w/2) * 0.9);
         const dx = mx - ox;
         const dy = my - oy;
         const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < mr + or) {
-          return true;
-        }
+        if (dist < mr + or) return true;
       }
       return false;
     }
@@ -240,7 +235,7 @@
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
 
-      // move palms slowly (parallax)
+      // palms parallax
       const cw = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
       palms.forEach((p,i) => {
         const palmSpeed = 20 + i*6;
@@ -253,13 +248,13 @@
 
       // physics
       monkey.vy += monkey.gravity * dt;
-      // treat monkey.baseline as feet position; track vertical offset from baseline as -jumpHeight
       monkey.y += monkey.vy * dt;
       if (monkey.y > monkey.baseline) {
         monkey.y = monkey.baseline;
         monkey.vy = 0;
       }
 
+      // spawn obstacles
       spawnTimer += dt * 1000;
       if (spawnTimer > spawnInterval) {
         spawnTimer = 0;
@@ -267,13 +262,12 @@
       }
 
       // move obstacles
-      const move = speed * dt;
       for (let i = obstacles.length - 1; i >= 0; i--) {
-        obstacles[i].x -= move;
+        obstacles[i].x -= speed * dt;
         if (obstacles[i].x + obstacles[i].w < -40) obstacles.splice(i,1);
       }
 
-      // check collisions
+      // collisions
       if (checkCollisions()) {
         running = false;
         startBtn.disabled = false;
@@ -287,7 +281,7 @@
         return;
       }
 
-      // scoring: count obstacles passed
+      // scoring when coconut passes monkey
       obstacles.forEach((o) => {
         if (!o.passed && (o.x + o.w/2) < monkey.x - 10) {
           o.passed = true;
@@ -301,10 +295,14 @@
       if (running) requestAnimationFrame(loop);
     }
 
+    // jump: allow jump when on (or very near) baseline; if not running, start first
     function jump() {
-      if (!running) return;
-      // only allow jump if near baseline
-      if (Math.abs(monkey.y - monkey.baseline) < 6) {
+      if (!running) {
+        startGame();
+        return;
+      }
+      // allow jump when near ground
+      if (Math.abs(monkey.y - monkey.baseline) < 8) {
         monkey.vy = monkey.jumpVelocity;
       }
     }
@@ -313,26 +311,24 @@
     window.addEventListener('keydown', (e)=>{
       if (e.code === 'Space') {
         e.preventDefault();
-        if (!running) startGame();
-        else jump();
+        jump();
       }
     });
 
     canvas.addEventListener('pointerdown', (e)=>{
-      if (!running) startGame();
-      else jump();
+      jump();
     });
 
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', restartGame);
 
-    // init
+    // initialize
     resetGame();
     render();
 
-    // Expose for debugging
-    window.__monkeyJump = { startGame, restartGame, spawnObstacle, obstacles, palms };
+    // expose for debugging
+    window.__monkeyJump = { startGame, restartGame, obstacles, palms };
   })();
   </script>
 </body>
-  </html>
+</html>
