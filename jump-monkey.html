@@ -62,7 +62,6 @@
 
   <script>
   (function(){
-    // Canvas & scaling for high-DPI
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -79,55 +78,64 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Game variables
     const groundHeight = 64;
     let lastTime = 0;
     let score = 0;
     let best = parseInt(localStorage.getItem('monkey_jump_best') || '0', 10);
     document.getElementById('best').textContent = best;
 
-    // Monkey physics
     const monkey = {
       x: 120,
-      y: 0,           // top coordinate (we'll compute)
+      y: 0,
       size: 64,
       vy: 0,
-      gravity: 2200, // px/s^2
+      gravity: 2200,
       jumpVelocity: -800,
-      groundedY: 0,  // set later
+      baseline: 0,
       alive: true
     };
 
-    // Obstacles (coconuts)
     let obstacles = [];
     let spawnTimer = 0;
-    let spawnInterval = 1400; // ms
-    let speed = 320; // px/s base
+    let spawnInterval = 1400;
+    let speed = 320;
     let running = false;
 
-    // Parallax palms positions (x, y offset)
+    // palms (parallax) - will be positioned relative to ground
     const palms = [
-      {x: 60, y: 40, size: 48},
-      {x: 420, y: 30, size: 64},
-      {x: 760, y: 50, size: 56}
+      {x: 60, baseOffset: 40, size: 48},
+      {x: 420, baseOffset: 30, size: 64},
+      {x: 760, baseOffset: 50, size: 56}
     ];
 
-    // UI elements
     const startBtn = document.getElementById('startBtn');
     const restartBtn = document.getElementById('restartBtn');
     const scoreEl = document.getElementById('score');
     const bestEl = document.getElementById('best');
 
-    // Helpers
     function rand(min,max){ return Math.random()*(max-min)+min; }
 
+    function computeLayout() {
+      const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
+      const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
+      // baseline: place monkey slightly above ground top so it visually stands on sand
+      monkey.baseline = height - groundHeight + 8; // bottom coordinate where emoji is drawn (textBaseline 'bottom')
+      monkey.y = monkey.baseline; // baseline used for physics (feet position)
+      // ensure palms anchored relative to ground:
+      palms.forEach((p,i) => {
+        if (!p.x || p.x > width) p.x = rand(width * (0.1 + 0.2*i), width * (0.4 + 0.2*i));
+        p.y = monkey.baseline - (p.size * 0.9); // place palm so trunk base meets ground
+      });
+    }
+
+    computeLayout();
+    window.addEventListener('resize', () => { resizeCanvas(); computeLayout(); render(); });
+
     function resetGame() {
-      score = 0; obstacles = []; spawnTimer = 0; speed = 320;
+      score = 0; obstacles = []; spawnTimer = 0; spawnInterval = 1400; speed = 320;
       running = false; monkey.vy = 0;
-      // compute ground and monkey positions based on canvas height
-      monkey.groundedY = (parseFloat(canvas.style.height) || canvas.height/ (window.devicePixelRatio||1)) - groundHeight;
-      monkey.y = monkey.groundedY;
-      document.getElementById('score').textContent = score;
+      computeLayout();
+      scoreEl.textContent = score;
       startBtn.disabled = false;
     }
 
@@ -141,43 +149,33 @@
 
     function restartGame() {
       resetGame();
-      render(); // show initial
+      render();
     }
 
-    // collision AABB
-    function rectsOverlap(a,b){
-      return !(a.x + a.w < b.x || a.x > b.x + b.w || a.y + a.h < b.y || a.y > b.y + b.h);
-    }
-
-    // spawn obstacle
     function spawnObstacle() {
-      const cSize = 44 + Math.floor(rand(-6,10)); // coconut size
-      const x = (parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1)) + 40;
-      const y = monkey.groundedY + (monkey.size - cSize); // align bottom to ground
-      obstacles.push({x, y, w: cSize, h: cSize});
-      // gradually speed up spawn frequency as score rises
+      const cSize = 44 + Math.floor(rand(-6,10));
+      const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
+      const x = width + 40;
+      // place coconut so its bottom sits on same ground baseline (slightly inset)
+      const y = monkey.baseline - cSize + 6;
+      obstacles.push({x, y, w: cSize, h: cSize, passed: false});
       spawnInterval = Math.max(700, 1400 - score*20);
     }
 
-    // draw palm emoji (parallax)
-    function drawPalms(dt, t) {
+    function drawPalms() {
       const cw = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-      palms.forEach((p, i) => {
-        // parallax movement: move to left slowly and loop
-        const speedPalm = 30 + i*10;
-        p.x -= speedPalm * dt;
-        if (p.x < -100) p.x = cw + rand(20,200);
+      palms.forEach((p,i) => {
         ctx.font = `${p.size}px serif`;
-        ctx.fillText('🌴', p.x, p.y + 20);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText('🌴', p.x, p.y + p.size*0.9);
       });
     }
 
-    // render frame
     function render() {
       const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
       const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
 
-      // clear background (sky)
+      // sky
       const grad = ctx.createLinearGradient(0,0,0,height);
       grad.addColorStop(0, '#a9e1ff');
       grad.addColorStop(1, '#7fcfff');
@@ -190,121 +188,128 @@
       ctx.arc(width - 80, 60, 28, 0, Math.PI*2);
       ctx.fill();
 
-      // palms (emoji)
-      drawPalms(0, performance.now());
+      // palms
+      drawPalms();
 
-      // ground/sand
+      // ground / sand
       ctx.fillStyle = '#f4e8c1';
       ctx.fillRect(0, height - groundHeight, width, groundHeight);
       ctx.fillStyle = '#2e8b57';
-      ctx.fillRect(0, height - groundHeight, width, 8); // grass line
+      ctx.fillRect(0, height - groundHeight, width, 8);
 
-      // draw monkey (emoji)
+      // monkey
       ctx.font = monkey.size + 'px serif';
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText('🐒', monkey.x, monkey.y + monkey.size * 0.95);
+      ctx.textBaseline = 'bottom'; // draw at baseline coordinate
+      ctx.fillText('🐒', monkey.x, monkey.baseline);
 
-      // draw obstacles (coconuts)
+      // obstacles (coconuts)
       ctx.font = '40px serif';
       obstacles.forEach(obj => {
         ctx.fillText('🥥', obj.x + obj.w/2, obj.y + obj.h*0.9);
-        // optional small shadow
+        // shadow
         ctx.fillStyle = 'rgba(0,0,0,0.12)';
         ctx.fillRect(obj.x + 6, obj.y + obj.h - 6, obj.w - 12, 4);
         ctx.fillStyle = '#000';
       });
-
-      // HUD handled via DOM (score)
     }
 
-    // main loop
+    // simple circle-based collision for robustness
+    function checkCollisions() {
+      // monkey center
+      const mx = monkey.x;
+      const my = monkey.baseline - monkey.size*0.45; // center approx
+      const mr = monkey.size * 0.45;
+      for (let i = 0; i < obstacles.length; i++) {
+        const o = obstacles[i];
+        const ox = o.x + o.w/2;
+        const oy = o.y + o.h/2;
+        const or = Math.max(16, (o.w/2) * 0.9);
+        const dx = mx - ox;
+        const dy = my - oy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < mr + or) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     function loop(now) {
       if (!running) return;
-      const dt = Math.min(0.05, (now - lastTime) / 1000); // cap delta
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
 
-      // update palms (pass dt)
-      drawPalms(dt, now); // note: drawPalms changes positions; we'll re-render entire frame so this is ok
+      // move palms slowly (parallax)
+      const cw = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
+      palms.forEach((p,i) => {
+        const palmSpeed = 20 + i*6;
+        p.x -= palmSpeed * dt;
+        if (p.x < -120) {
+          p.x = cw + rand(20, 200);
+          p.y = monkey.baseline - (p.size * 0.9);
+        }
+      });
 
-      // physics update for monkey
+      // physics
       monkey.vy += monkey.gravity * dt;
+      // treat monkey.baseline as feet position; track vertical offset from baseline as -jumpHeight
       monkey.y += monkey.vy * dt;
-      if (monkey.y > monkey.groundedY) {
-        monkey.y = monkey.groundedY;
+      if (monkey.y > monkey.baseline) {
+        monkey.y = monkey.baseline;
         monkey.vy = 0;
       }
 
-      // spawn
       spawnTimer += dt * 1000;
       if (spawnTimer > spawnInterval) {
         spawnTimer = 0;
         spawnObstacle();
       }
 
-      // update obstacles
+      // move obstacles
       const move = speed * dt;
       for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= move;
-        // remove if off-screen
         if (obstacles[i].x + obstacles[i].w < -40) obstacles.splice(i,1);
       }
 
-      // collision check
-      // monkey bounding box
-      const mbox = {
-        x: monkey.x - monkey.size*0.45,
-        y: monkey.y - monkey.size*0.95,
-        w: monkey.size*0.9,
-        h: monkey.size*0.9
-      };
-
-      for (let i = 0; i < obstacles.length; i++) {
-        const o = obstacles[i];
-        const obox = {x: o.x, y: o.y, w: o.w, h: o.h};
-        if (rectsOverlap(mbox, obox)) {
-          // hit! end round
-          running = false;
-          // update best
-          if (score > best) {
-            best = score;
-            localStorage.setItem('monkey_jump_best', String(best));
-            bestEl.textContent = best;
-          }
-          // show message
-          setTimeout(()=> alert('Oh nein — getroffen! Dein Score: ' + score), 50);
-          startBtn.disabled = false;
-          break;
+      // check collisions
+      if (checkCollisions()) {
+        running = false;
+        startBtn.disabled = false;
+        if (score > best) {
+          best = score;
+          localStorage.setItem('monkey_jump_best', String(best));
+          bestEl.textContent = best;
         }
+        setTimeout(()=> alert('Oh nein — getroffen! Dein Score: ' + score), 60);
+        render();
+        return;
       }
 
-      // scoring: increase score when an obstacle passes the monkey
-      obstacles.forEach((o, idx) => {
-        if (!o.passed && o.x + o.w < monkey.x - 10) {
+      // scoring: count obstacles passed
+      obstacles.forEach((o) => {
+        if (!o.passed && (o.x + o.w/2) < monkey.x - 10) {
           o.passed = true;
           score += 1;
           scoreEl.textContent = score;
-          // gradually increase speed slightly
           speed += 6;
         }
       });
 
-      render(); // draws everything (calls drawPalms too but that's OK)
-
-      // continue loop
+      render();
       if (running) requestAnimationFrame(loop);
     }
 
-    // input: jump
     function jump() {
       if (!running) return;
-      // only allow jump when grounded (little coyote time)
-      if (Math.abs(monkey.y - monkey.groundedY) < 4) {
+      // only allow jump if near baseline
+      if (Math.abs(monkey.y - monkey.baseline) < 6) {
         monkey.vy = monkey.jumpVelocity;
       }
     }
 
-    // keyboard
+    // inputs
     window.addEventListener('keydown', (e)=>{
       if (e.code === 'Space') {
         e.preventDefault();
@@ -313,33 +318,20 @@
       }
     });
 
-    // mouse / touch
     canvas.addEventListener('pointerdown', (e)=>{
-      // start if not running
       if (!running) startGame();
       else jump();
     });
 
-    // UI buttons
     startBtn.addEventListener('click', startGame);
-    restartBtn.addEventListener('click', ()=> { restartGame(); });
+    restartBtn.addEventListener('click', restartGame);
 
-    // initial setup
+    // init
     resetGame();
     render();
 
-    // Ensure palms initial positions relative to canvas width
-    function initPalms() {
-      const cw = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-      palms.forEach((p,i)=> {
-        p.x = rand(cw * (0.2*i + 0.05), cw * (0.5 + 0.2*i));
-        p.y = rand(24, 70);
-      });
-    }
-    initPalms();
-
-    // expose for debugging (optional)
-    window.__monkeyJump = { startGame, restartGame };
+    // Expose for debugging
+    window.__monkeyJump = { startGame, restartGame, spawnObstacle, obstacles, palms };
   })();
   </script>
 </body>
