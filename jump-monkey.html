@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Monkey Jump — Springspiel (Gravity 1200 + real coconuts)</title>
+  <title>Monkey Jump — Springspiel (Gravity 1380 + real coconuts)</title>
   <link rel="stylesheet" href="styles.css">
   <style>
     :root{--accent:#0b74de;--ground:#2e8b57;--sand:#f4e8c1;--sky1:#a9e1ff;--sky2:#7fcfff;}
@@ -79,7 +79,7 @@
     y: 0,
     size: 38,
     vy: 0,
-    gravity: 1200,      // Gravity reduziert
+    gravity: 1380,      // Gravity angepasst
     jumpVelocity: -720,
     baseline: 0
   };
@@ -102,8 +102,8 @@
   function rand(min,max){ return Math.random()*(max-min)+min; }
 
   function computeSpawnRange() {
-    const min = 350;           // Mindestabstand Kokosnüsse
-    const max = 800;
+    const min = 550;  // Abstand Kokosnüsse erhöht
+    const max = 900;
     return [min,max];
   }
 
@@ -168,9 +168,9 @@
     if(mirrored){
       ctx.translate(x,0);
       ctx.scale(-1,1);
-      ctx.fillText('🐵', 0, bottomY);
+      ctx.fillText('🐒', 0, bottomY);
     } else {
-      ctx.fillText('🐵', x, bottomY);
+      ctx.fillText('🐒', x, bottomY);
     }
     ctx.restore();
   }
@@ -312,4 +312,4 @@
 })();
 </script>
 </body>
-  </html>
+</html>
