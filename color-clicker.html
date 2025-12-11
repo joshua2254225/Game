@@ -5,6 +5,35 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Color Clicker</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Spiel-spezifische Styles (falls styles.css anders ist) */
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; padding:0; display:flex; flex-direction:column; min-height:100vh; }
+    header, footer { background:#0b74de; color:#fff; padding:12px 16px; }
+    header h1 { margin:0; font-size:20px; display:inline-block; }
+    nav { margin-top:8px; }
+    nav a { color:#fff; margin-right:10px; text-decoration:none; font-weight:600; font-size:14px; }
+    main { flex:1; padding:20px; max-width:900px; margin:0 auto; }
+
+    .game-card { background:#fafafa; border-radius:10px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,.06); }
+    .controls { display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+    .controls button { padding:8px 12px; border-radius:6px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+    .status { margin-left:auto; font-weight:700; }
+
+    .grid { display:grid; grid-template-columns: repeat(2, 140px); gap:12px; justify-content:center; margin-top:12px; }
+    .cell { width:140px; height:140px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#e6e6e6; font-size:26px; cursor:pointer; user-select:none; transition:transform .08s ease, box-shadow .08s; }
+    .cell:active { transform:scale(.98); }
+    .cell.active { box-shadow:0 10px 20px rgba(0,0,0,.12); }
+    .cell.red { background:#ff6b6b; color:#fff; }
+    .cell.green { background:#28c76f; color:#fff; }
+    .cell.yellow { background:#ffca3a; color:#111; }
+    .cell.blue { background:#4dabf7; color:#fff; }
+
+    .footer-note { font-size:12px; color:#666; margin-top:12px; text-align:center; }
+    @media (max-width:480px){
+      .grid { grid-template-columns: repeat(2, calc(40vw)); gap:8px; }
+      .cell { width:40vw; height:40vw; font-size:20px; }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -19,13 +48,152 @@
   </header>
 
   <main>
-    <h2>Play Color Clicker</h2>
-    <p>Click the colored boxes as fast as you can!</p>
-    <!-- Dein Spiel-Code hier -->
+    <div class="game-card">
+      <div class="controls">
+        <label>Time: <span id="time">30</span>s</label>
+        <label>Score: <span id="score">0</span></label>
+        <button id="startBtn">Start</button>
+        <button id="stopBtn" disabled>Stop</button>
+        <div class="status">Best: <span id="best">0</span></div>
+      </div>
+
+      <div class="grid" id="grid">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+      </div>
+
+      <div class="footer-note">Click the highlighted box as fast as you can. Correct click = +1 point.</div>
+    </div>
   </main>
 
   <footer>
     <p>© My Games Site</p>
   </footer>
+
+  <script>
+    (function(){
+      const TIME_TOTAL = 30;
+      const colors = ['red','green','yellow','blue'];
+      const grid = document.getElementById('grid');
+      const cells = Array.from(grid.querySelectorAll('.cell'));
+      const timeEl = document.getElementById('time');
+      const scoreEl = document.getElementById('score');
+      const bestEl = document.getElementById('best');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+
+      let timer = null;
+      let timeLeft = TIME_TOTAL;
+      let score = 0;
+      let activeIdx = -1;
+      let running = false;
+
+      // best score in localStorage
+      const BEST_KEY = 'color_clicker_best';
+      bestEl.textContent = localStorage.getItem(BEST_KEY) || 0;
+
+      function pickRandom() {
+        return Math.floor(Math.random() * cells.length);
+      }
+
+      function activateRandom() {
+        clearActive();
+        activeIdx = pickRandom();
+        const cell = cells[activeIdx];
+        const color = colors[Math.floor(Math.random()*colors.length)];
+        cell.classList.add('active', color);
+      }
+
+      function clearActive() {
+        cells.forEach(c => {
+          c.classList.remove('active','red','green','yellow','blue');
+        });
+        activeIdx = -1;
+      }
+
+      function updateTimeDisplay() {
+        timeEl.textContent = timeLeft;
+      }
+
+      function tick() {
+        if (!running) return;
+        timeLeft--;
+        updateTimeDisplay();
+        if (timeLeft <= 0) {
+          endGame();
+        } else {
+          // every tick we can optionally change active; keep quick pace
+          activateRandom();
+        }
+      }
+
+      function startGame() {
+        if (running) return;
+        running = true;
+        score = 0;
+        timeLeft = TIME_TOTAL;
+        updateTimeDisplay();
+        scoreEl.textContent = score;
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        activateRandom();
+        timer = setInterval(tick, 1000); // change active every second via tick + activateRandom inside tick
+      }
+
+      function stopGame() {
+        if (!running) return;
+        running = false;
+        clearInterval(timer);
+        clearActive();
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+
+      function endGame() {
+        stopGame();
+        // show result
+        const best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
+        if (score > best) {
+          localStorage.setItem(BEST_KEY, score);
+          bestEl.textContent = score;
+          alert('Time! New best: ' + score);
+        } else {
+          alert('Time! Your score: ' + score + '. Best: ' + best);
+        }
+      }
+
+      // clicking logic
+      grid.addEventListener('click', (e) => {
+        const cell = e.target.closest('.cell');
+        if (!cell || !running) return;
+        const idx = Number(cell.dataset.index);
+        if (idx === activeIdx) {
+          // correct
+          score += 1;
+          scoreEl.textContent = score;
+          // immediately pick new
+          activateRandom();
+        } else {
+          // wrong click penalty
+          score = Math.max(0, score-1);
+          scoreEl.textContent = score;
+          // small visual feedback
+          cell.style.transform = 'scale(.95)';
+          setTimeout(()=> cell.style.transform = '', 90);
+        }
+      });
+
+      startBtn.addEventListener('click', startGame);
+      stopBtn.addEventListener('click', () => {
+        stopGame();
+        alert('Game stopped. Your score: ' + score);
+      });
+
+      // init random idle highlight (not running)
+      activateRandom();
+    })();
+  </script>
 </body>
-</html>
+          </html>
