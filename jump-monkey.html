@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Monkey Jump — Springspiel (verbessert)</title>
+  <title>Monkey Jump — Springspiel (mirrored + real coconut)</title>
   <link rel="stylesheet" href="styles.css">
   <style>
     :root{--accent:#0b74de;--ground:#2e8b57;--sand:#f4e8c1;--sky1:#a9e1ff;--sky2:#7fcfff;}
@@ -73,14 +73,14 @@
   let best = parseInt(localStorage.getItem('monkey_jump_best') || '0', 10);
   document.getElementById('best').textContent = best;
 
-  // Symmetrisch gezeichneter Affe (Canvas shapes)
+  // Use emoji monkey but mirrored horizontally when drawn
   const monkey = {
-    xRatio: 0.12,    // x-Position als Anteil der canvas-breite (immer stabil)
+    xRatio: 0.12,    // fixed horizontal position (as fraction of canvas width)
     x: 120,
     y: 0,            // bottom coordinate where monkey is drawn
-    size: 40,        // monkey size (px)
+    size: 38,        // slightly smaller (you said previous was better)
     vy: 0,
-    gravity: 2200,
+    gravity: 1400,   // reduced gravity => längere Sprungzeit
     jumpVelocity: -720,
     baseline: 0
   };
@@ -88,9 +88,10 @@
   let obstacles = [];
   let spawnTimer = 0;
   let nextSpawn = 0;
-  let speed = 180;  // starts slow
+  let speed = 160;  // starts slower
   let running = false;
   let accelTimer = 0;
+  let mirroredMonkey = true; // draw mirrored emoji
 
   // palms parallax
   const palms = [{x:60,size:48},{x:420,size:64},{x:760,size:56}];
@@ -103,7 +104,7 @@
   function rand(min,max){ return Math.random()*(max-min)+min; }
 
   function computeSpawnRange() {
-    const min = Math.max(400, 1100 - score * 20); // tightens with score
+    const min = Math.max(350, 1000 - score * 18);
     const max = min + 700;
     return [min, max];
   }
@@ -123,7 +124,7 @@
   window.addEventListener('resize', ()=>{ resizeCanvas(); computeLayout(); render(); });
 
   function resetGame(){
-    score = 0; obstacles = []; spawnTimer = 0; speed = 180; accelTimer = 0;
+    score = 0; obstacles = []; spawnTimer = 0; speed = 160; accelTimer = 0;
     running = false; monkey.vy = 0;
     const [min,max] = computeSpawnRange(); nextSpawn = rand(min,max);
     computeLayout();
@@ -144,10 +145,11 @@
     render();
   }
 
+  // spawn coconut as whole textured coconut
   function spawnObstacle(){
-    const cSize = Math.round(rand(28,44)); // variable whole coconut size
+    const cSize = Math.round(rand(30,48)); // variable size
     const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const x = width + rand(20,160); // extra random offset
+    const x = width + rand(20,160);
     const y = monkey.baseline - cSize + 6;
     obstacles.push({x,y,w:cSize,h:cSize,passed:false});
     const [min,max] = computeSpawnRange(); nextSpawn = rand(min,max);
@@ -162,56 +164,63 @@
     });
   }
 
-  // Draw a symmetric monkey using canvas shapes (not emoji)
-  function drawMonkey(x, bottomY, size){
-    const faceR = size * 0.42;
-    const cx = x;
-    const cy = bottomY - faceR; // center Y
-    // body shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.06)';
-    ctx.beginPath(); ctx.ellipse(cx, bottomY - 6, faceR*1.05, 8, 0, 0, Math.PI*2); ctx.fill();
-    // head base
-    ctx.fillStyle = '#7b4f33'; // brown
-    ctx.beginPath(); ctx.arc(cx, cy, faceR, 0, Math.PI*2); ctx.fill();
-    // face lighter
-    ctx.fillStyle = '#d9b89a';
-    ctx.beginPath(); ctx.arc(cx, cy + faceR*0.12, faceR*0.65, 0, Math.PI*2); ctx.fill();
-    // ears
-    ctx.fillStyle = '#7b4f33';
-    ctx.beginPath(); ctx.arc(cx - faceR*0.8, cy - faceR*0.1, faceR*0.36, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + faceR*0.8, cy - faceR*0.1, faceR*0.36, 0, Math.PI*2); ctx.fill();
-    // eyes
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.arc(cx - faceR*0.3, cy - faceR*0.05, Math.max(1,faceR*0.08), 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + faceR*0.3, cy - faceR*0.05, Math.max(1,faceR*0.08), 0, Math.PI*2); ctx.fill();
-    // mouth
-    ctx.strokeStyle = '#3b2a20';
-    ctx.lineWidth = Math.max(1, size*0.04);
-    ctx.beginPath(); ctx.arc(cx, cy + faceR*0.18, faceR*0.28, 0, Math.PI); ctx.stroke();
+  // draw emoji monkey mirrored when required
+  function drawMonkeyEmoji(x,bottomY,size, mirrored){
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    // if mirrored, flip horizontally around x
+    if(mirrored){
+      ctx.translate(x,0);
+      ctx.scale(-1,1);
+      ctx.fillText('🐵', 0, bottomY);
+    } else {
+      ctx.fillText('🐵', x, bottomY);
+    }
+    ctx.restore();
   }
 
-  // Draw whole coconut (brown circle with darker shading)
-  function drawCoconut(x,y,size){
+  // more realistic coconut draw (not circle)
+  function drawRealCoconut(x,y,size){
     const cx = x + size/2;
     const cy = y + size/2;
-    // body
-    ctx.fillStyle = '#6b3f1f';
-    ctx.beginPath(); ctx.arc(cx, cy, size*0.45, 0, Math.PI*2); ctx.fill();
-    // highlight
-    const grad = ctx.createRadialGradient(cx - size*0.15, cy - size*0.18, 2, cx, cy, size*0.6);
-    grad.addColorStop(0, 'rgba(255,255,255,0.15)');
-    grad.addColorStop(0.6, 'rgba(255,255,255,0.05)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    const r = size*0.45;
+
+    // main shell with radial gradient
+    const grad = ctx.createRadialGradient(cx - r*0.25, cy - r*0.25, r*0.05, cx, cy, r);
+    grad.addColorStop(0, '#9b5a2b');
+    grad.addColorStop(0.6, '#6b3f1f');
+    grad.addColorStop(1, '#4a2b14');
     ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(cx, cy, size*0.45, 0, Math.PI*2); ctx.fill();
-    // small texture dots
-    ctx.fillStyle = 'rgba(0,0,0,0.08)';
-    for(let i=0;i<5;i++){
-      const rx = cx + rand(-size*0.18,size*0.18);
-      const ry = cy + rand(-size*0.18,size*0.18);
-      ctx.beginPath(); ctx.arc(rx, ry, Math.max(1, size*0.02), 0, Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, r, r*0.9, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // fibrous texture lines (subtle)
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctx.lineWidth = Math.max(1, size*0.02);
+    for(let i=0;i<6;i++){
+      const ang = (i/6)*Math.PI*2 + rand(-0.08,0.08);
+      const sx = cx + Math.cos(ang)*r*0.6;
+      const sy = cy + Math.sin(ang)*r*0.6;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(cx + Math.cos(ang)*r*0.95, cy + Math.sin(ang)*r*0.95);
+      ctx.stroke();
     }
-    // small shadow bottom
+
+    // three 'eyes' (the holes) slightly offset near top
+    ctx.fillStyle = '#2f1f13';
+    const holeR = Math.max(2, size*0.06);
+    ctx.beginPath(); ctx.arc(cx - r*0.25, cy - r*0.15, holeR, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx - r*0.02, cy - r*0.22, holeR, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + r*0.22, cy - r*0.12, holeR, 0, Math.PI*2); ctx.fill();
+
+    // small highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath(); ctx.ellipse(cx - r*0.18, cy - r*0.25, r*0.22, r*0.12, -0.5, 0, Math.PI*2); ctx.fill();
+
+    // shadow under coconut
     ctx.fillStyle = 'rgba(0,0,0,0.12)';
     ctx.fillRect(x + 6, y + size - 6, size - 12, 4);
   }
@@ -235,16 +244,16 @@
     ctx.fillStyle = '#f4e8c1'; ctx.fillRect(0, height - groundHeight, width, groundHeight);
     ctx.fillStyle = '#2e8b57'; ctx.fillRect(0, height - groundHeight, width, 8);
 
-    // monkey (draw at bottom coordinate monkey.y)
-    drawMonkey(monkey.x, monkey.y, monkey.size);
+    // monkey (emoji mirrored)
+    drawMonkeyEmoji(monkey.x, monkey.y, monkey.size, mirroredMonkey);
 
-    // obstacles (draw coconuts)
-    obstacles.forEach(obj=>{
-      drawCoconut(obj.x, obj.y, obj.w);
+    // obstacles
+    obstacles.forEach(obj => {
+      drawRealCoconut(obj.x, obj.y, obj.w);
     });
   }
 
-  // circle collision
+  // circle collision between monkey center and coconut center
   function checkCollisions(){
     const mx = monkey.x;
     const my = monkey.y - monkey.size*0.45;
@@ -270,12 +279,12 @@
     const cw = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
     palms.forEach((p,i)=>{ const palmSpeed = 18 + i*6; p.x -= palmSpeed * dt; if(p.x < -140) p.x = cw + rand(20,200); });
 
-    // physics
+    // physics (monkey.y is bottom coordinate)
     monkey.vy += monkey.gravity * dt;
     monkey.y += monkey.vy * dt;
     if(monkey.y > monkey.baseline){ monkey.y = monkey.baseline; monkey.vy = 0; }
 
-    // spawn logic
+    // spawn logic (random)
     spawnTimer += dt*1000;
     if(spawnTimer > nextSpawn){ spawnTimer = 0; spawnObstacle(); }
 
@@ -299,12 +308,11 @@
     obstacles.forEach(o=>{
       if(!o.passed && (o.x + o.w/2) < monkey.x - 10){
         o.passed = true; score++; scoreEl.textContent = score;
-        // increase speed per coconut passed
+        // increase speed a bit per coconut
         speed += 6;
       }
     });
 
-    // periodic gentle acceleration
     accelTimer += dt;
     if(accelTimer > 3){ accelTimer = 0; speed += 2; }
 
@@ -315,7 +323,7 @@
   // jump: start or jump when on ground
   function jump(){
     if(!running){ startGame(); return; }
-    if(Math.abs(monkey.y - monkey.baseline) < 8){
+    if(Math.abs(monkey.y - monkey.baseline) < 10){
       monkey.vy = monkey.jumpVelocity;
     }
   }
@@ -330,10 +338,10 @@
   // init
   resetGame(); render();
 
-  // expose for debug
+  // expose debug
   window.__monkeyJump = { startGame, restartGame, obstacles, palms };
 
 })();
 </script>
 </body>
-</html>
+  </html>
