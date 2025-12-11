@@ -1,0 +1,13 @@
+/* Simple responsive styles for games site */
+body{font-family:Arial,Helvetica,sans-serif;margin:0;color:#111;line-height:1.5}
+header{background:#f4f4f4;padding:12px 18px}
+header h1{margin:0;font-size:1.4rem}
+nav{margin-top:8px}
+nav a{color:#0073aa;text-decoration:none;margin-right:8px}
+main{display:flex;flex-wrap:wrap;padding:18px;gap:18px}
+.intro{flex:1 1 600px}
+.games-list{flex:1 1 300px;min-width:260px}
+aside.ads{width:300px;flex:0 0 300px}
+.ad-box{border:2px dashed #ccc;padding:24px;text-align:center}
+footer{background:#f4f4f4;padding:12px 18px;text-align:center;margin-top:18px}
+@media(max-width:800px){main{flex-direction:column}aside.ads{width:100%}}

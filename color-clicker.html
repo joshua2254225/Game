@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Color Clicker</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../styles.css">
+<style>
+#grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:320px;margin:18px auto}
+.tile{background:#ddd;padding:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;user-select:none}
+.controls{max-width:320px;margin:0 auto;text-align:center}
+.score{font-weight:bold}
+</style>
+</head>
+<body>
+<header><h1>Color Clicker</h1><nav><a href="../index.html">Home</a></nav></header>
+<main>
+  <div class="controls">
+    <p>Click the highlighted tile. Time: <span id="time">30</span>s — Score: <span id="score">0</span></p>
+    <button id="start">Start</button>
+  </div>
+  <div id="grid">
+    <div class="tile" data-i="0"></div>
+    <div class="tile" data-i="1"></div>
+    <div class="tile" data-i="2"></div>
+    <div class="tile" data-i="3"></div>
+  </div>
+  <aside class="ads"><div class="ad-box">Ad placeholder</div></aside>
+</main>
+<footer><p>© My Games Site</p></footer>
+
+<script>
+let timeEl = document.getElementById('time'), scoreEl = document.getElementById('score');
+let startBtn = document.getElementById('start'), grid = document.getElementById('grid');
+let tiles = Array.from(document.querySelectorAll('.tile'));
+let timer = null, remaining = 30, score = 0, active = -1;
+
+function pickActive(){
+  let idx = Math.floor(Math.random()*tiles.length);
+  active = idx;
+  tiles.forEach((t,i)=> t.style.background = (i===idx? '#ffcc00':'#ddd'));
+}
+
+tiles.forEach(t=>{
+  t.addEventListener('click', () => {
+    if(active===-1) return;
+    if(parseInt(t.dataset.i)===active){
+      score++;
+      scoreEl.textContent = score;
+      pickActive();
+    } else {
+      // penalty
+      score = Math.max(0, score-1);
+      scoreEl.textContent = score;
+    }
+  });
+});
+
+startBtn.addEventListener('click', () => {
+  if(timer) { clearInterval(timer); timer = null; }
+  remaining = 30; score = 0; scoreEl.textContent = score; timeEl.textContent = remaining;
+  pickActive();
+  timer = setInterval(()=>{
+    remaining--;
+    timeEl.textContent = remaining;
+    if(remaining<=0){
+      clearInterval(timer);
+      active=-1;
+      tiles.forEach(t=> t.style.background='#ddd');
+      alert('Time up! Score: ' + score);
+    }
+  },1000);
+});
+</script>
+</body>
+</html>
