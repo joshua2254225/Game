@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tic-Tac-Toe</title>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            margin: 20px auto;
+            width: 310px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: #f0f0f0;
+            border: 2px solid #333;
+            font-size: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .status {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="status" id="status">Spieler X ist dran</div>
+    <div class="board" id="board"></div>
+    <button onclick="resetGame()" style="display: block; margin: 20px auto;">Neues Spiel</button>
+
+    <script>
+        let currentPlayer = 'X';
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+
+        function createBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.setAttribute('data-index', i);
+                cell.addEventListener('click', () => cellClicked(i));
+                boardElement.appendChild(cell);
+            }
+        }
+
+        function cellClicked(index) {
+            if (!gameActive || board[index] !== '') return;
+            
+            board[index] = currentPlayer;
+            document.querySelector(`[data-index="${index}"]`).textContent = currentPlayer;
+            
+            if (checkWinner()) {
+                document.getElementById('status').textContent = `Spieler ${currentPlayer} hat gewonnen!`;
+                gameActive = false;
+                return;
+            }
+            
+            if (board.every(cell => cell !== '')) {
+                document.getElementById('status').textContent = 'Unentschieden!';
+                gameActive = false;
+                return;
+            }
+            
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            document.getElementById('status').textContent = `Spieler ${currentPlayer} ist dran`;
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0,1,2], [3,4,5], [6,7,8], // Reihen
+                [0,3,6], [1,4,7], [2,5,8], // Spalten
+                [0,4,8], [2,4,6]           // Diagonalen
+            ];
+            
+            return winPatterns.some(pattern => 
+                board[pattern[0]] !== '' &&
+                board[pattern[0]] === board[pattern[1]] &&
+                board[pattern[1]] === board[pattern[2]]
+            );
+        }
+
+        function resetGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = 'X';
+            gameActive = true;
+            document.getElementById('status').textContent = 'Spieler X ist dran';
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
