@@ -4,132 +4,189 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ArcadeOwl</title>
-
-  <link rel="stylesheet" href="styles.css">
   <style>
     :root{
       --blue: #0b74de;
       --muted: #666;
       --card: #ffffff;
       --max-width: 980px;
+      --accent: #ffd54f;
     }
     html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:#f5f7fb;color:#111}
 
-    /* Topbar */
+    /* Topbar with wave title */
     .topbar{
       background:var(--blue);
       color:#fff;
-      height:56px;
+      height:120px;
       display:flex;
       align-items:center;
       justify-content:center;
       position:relative;
       box-shadow:0 2px 6px rgba(11,115,222,0.06);
       padding:0 12px;
-      font-size:24px;
-      font-weight:800;
-      letter-spacing:1px;
+    }
+
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:900;
+      letter-spacing:2px;
+      font-size:48px;
+    }
+
+    .brand span {
+      display:inline-block;
+      animation: wave 1.2s infinite;
+    }
+    .brand span:nth-child(1){ animation-delay:0s; }
+    .brand span:nth-child(2){ animation-delay:.06s; }
+    .brand span:nth-child(3){ animation-delay:.12s; }
+    .brand span:nth-child(4){ animation-delay:.18s; }
+    .brand span:nth-child(5){ animation-delay:.24s; }
+    .brand span:nth-child(6){ animation-delay:.30s; }
+    .brand span:nth-child(7){ animation-delay:.36s; }
+    .brand span:nth-child(8){ animation-delay:.42s; }
+    .brand span:nth-child(9){ animation-delay:.48s; }
+
+    @keyframes wave {
+      0%,60%,100% { transform: translateY(0); }
+      30% { transform: translateY(-8px); }
     }
 
     /* main container */
     .wrap{max-width:var(--max-width); margin:18px auto; padding:12px;}
 
-    /* games list - vertical */
-    .games-list{ list-style:none; padding:0; margin:0; }
-    .games-list li{
+    /* games list - vertical cards */
+    .games-list{ list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+    .game-card{
       background:var(--card);
-      margin:12px 0;
       padding:14px 16px;
-      border-radius:10px;
-      box-shadow:0 6px 18px rgba(12,20,30,0.04);
+      border-radius:12px;
+      box-shadow:0 8px 24px rgba(12,20,30,0.04);
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:12px;
-      transition:0.2s;
+      transition: transform .16s ease, box-shadow .16s ease;
     }
-    .games-list li:hover{ transform:translateY(-2px); box-shadow:0 8px 22px rgba(12,20,30,0.08); }
+    .game-card:hover{ transform: translateY(-6px); box-shadow:0 12px 36px rgba(12,20,30,0.08); }
 
     .game-info{ display:flex; flex-direction:column; }
-    .game-title{ font-weight:700; color: #0b5fc7; text-decoration:none; font-size:16px; }
-    .game-desc{ font-size:13px; color:var(--muted); margin-top:4px; }
+    .game-title{ font-weight:800; color:#083e8a; text-decoration:none; font-size:18px; }
+    .game-desc{ font-size:13px; color:var(--muted); margin-top:6px; max-width:64ch; }
+
+    .actions{ display:flex; gap:10px; align-items:center; }
     .play-btn{
       background:var(--blue);
       color:#fff;
-      padding:8px 12px;
-      border-radius:8px;
+      padding:8px 14px;
+      border-radius:10px;
       text-decoration:none;
+      font-weight:800;
+      box-shadow: 0 6px 14px rgba(11,115,222,0.12);
+    }
+    .info-btn{
+      background:transparent;
+      border:2px solid rgba(11,115,222,0.08);
+      color:var(--blue);
+      padding:8px 12px;
+      border-radius:10px;
       font-weight:700;
+      text-decoration:none;
     }
 
     footer{ max-width:var(--max-width); margin:28px auto 40px; padding:8px 12px; color:#666; font-size:13px; text-align:center; }
 
-    @media (max-width:480px){
-      .games-list li { flex-direction:column; align-items:flex-start; gap:8px; }
-      .play-btn { align-self:flex-end; }
+    @media (max-width:700px){
+      .brand{ font-size:36px; gap:6px; letter-spacing:1px; }
+      .game-card{ flex-direction:column; align-items:flex-start; }
+      .actions { width:100%; justify-content:flex-end; }
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP BAR -->
   <header class="topbar" role="banner">
-    ArcadeOwl
+    <div class="brand" aria-label="ArcadeOwl">
+      <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span><span>O</span><span>w</span><span>l</span>
+    </div>
   </header>
 
   <main class="wrap" role="main">
-
-    <!-- Games list -->
     <ul class="games-list" aria-label="Games list">
-      <li>
+      <li class="game-card">
         <div class="game-info">
           <a class="game-title" href="color-clicker.html">Color Clicker</a>
-          <div class="game-desc">Speed reaction game — click the colored boxes.</div>
+          <div class="game-desc">Fast-reaction game — click the highlighted color boxes before time runs out.</div>
         </div>
-        <a class="play-btn" href="color-clicker.html">Play</a>
+        <div class="actions">
+          <a class="play-btn" href="color-clicker.html">Play</a>
+        </div>
       </li>
 
-      <li>
+      <li class="game-card">
         <div class="game-info">
           <a class="game-title" href="emoji-memory.html">Emoji Memory</a>
-          <div class="game-desc">Find all matching emoji pairs as fast as you can.</div>
+          <div class="game-desc">Classic memory match with emoji — flip cards and find matching pairs.</div>
         </div>
-        <a class="play-btn" href="emoji-memory.html">Play</a>
+        <div class="actions">
+          <a class="play-btn" href="emoji-memory.html">Play</a>
+        </div>
       </li>
 
-      <li>
+      <li class="game-card">
         <div class="game-info">
           <a class="game-title" href="jump-monkey.html">Monkey Jump</a>
-          <div class="game-desc">Jump over coconuts — Space / Tap to jump.</div>
+          <div class="game-desc">Jump over obstacles — press Space or tap to jump. How far can you go?</div>
         </div>
-        <a class="play-btn" href="jump-monkey.html">Play</a>
+        <div class="actions">
+          <a class="play-btn" href="jump-monkey.html">Play</a>
+        </div>
       </li>
 
-      <li>
+      <li class="game-card">
         <div class="game-info">
           <a class="game-title" href="banana-catcher.html">Banana Catcher</a>
-          <div class="game-desc">Catch falling bananas with a basket — avoid bombs.</div>
+          <div class="game-desc">Catch falling bananas, avoid bombs — simple and fun for kids.</div>
         </div>
-        <a class="play-btn" href="banana-catcher.html">Play</a>
+        <div class="actions">
+          <a class="play-btn" href="banana-catcher.html">Play</a>
+        </div>
       </li>
 
-      <li>
+      <li class="game-card">
         <div class="game-info">
           <a class="game-title" href="tic-tac-toe.html">Tic Tac Toe</a>
-          <div class="game-desc">Classic Tic Tac Toe game against a friend or local player.</div>
+          <div class="game-desc">Play a local 2-player Tic Tac Toe — colorful and kid-friendly.</div>
         </div>
-        <a class="play-btn" href="tic-tac-toe.html">Play</a>
+        <div class="actions">
+          <a class="play-btn" href="tic-tac-toe.html">Play</a>
+        </div>
       </li>
 
-      <li>
+      <li class="game-card">
         <div class="game-info">
           <a class="game-title" href="tic-tac-toe-AI.html">Tic Tac Toe AI</a>
-          <div class="game-desc">Play against the AI — choose Easy, Medium or Hard.</div>
+          <div class="game-desc">Play against the AI — choose Easy, Medium or Hard difficulty.</div>
         </div>
-        <a class="play-btn" href="tic-tac-toe-AI.html">Play</a>
+        <div class="actions">
+          <a class="play-btn" href="tic-tac-toe-AI.html">Play</a>
+        </div>
       </li>
-    </ul>
 
+      <li class="game-card">
+        <div class="game-info">
+          <a class="game-title" href="chess-ai.html">Chess vs AI</a>
+          <div class="game-desc">Chess against the AI with 5 difficulty levels. Beginner-friendly UI and hint feature.</div>
+        </div>
+        <div class="actions">
+          <a class="play-btn" href="chess-ai.html">Play</a>
+        </div>
+      </li>
+
+    </ul>
   </main>
 
   <footer>© ArcadeOwl — All rights reserved</footer>
