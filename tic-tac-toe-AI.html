@@ -3,100 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tic-Tac-Toe KI</title>
+<title>Tic-Tac-Toe KI - ArcadeOwl</title>
 <style>
     :root {
         --blue: #0b74de;
-        --red: #ff4c4c;
-        --green: #28a745;
+        --cell: #fff;
         --bg: #f5f7fb;
-        --cell-bg: #ffffff;
     }
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: var(--bg);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    /* Topbar */
-    .topbar {
-        background: var(--blue);
-        color: #fff;
-        width: 100%;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .home-link {
-        position: absolute;
-        left: 12px;
-        font-size: 24px;
-        color: #fff;
-        text-decoration: none;
-    }
-    .brand {
-        font-weight: 800;
-        font-size: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .brand img { height: 34px; width: auto; border-radius: 8px; }
-
-    /* Game area */
-    .status {
-        margin: 20px;
-        font-size: 22px;
-        font-weight: bold;
-    }
-    .board {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 5px;
-        max-width: 320px;
-        width: 90vw;
-    }
-    .cell {
-        background: var(--cell-bg);
-        border-radius: 10px;
-        border: 2px solid #333;
-        font-size: 2.5rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        aspect-ratio: 1 / 1;
-        cursor: pointer;
-        transition: transform 0.2s, background 0.3s;
-    }
-    .cell:hover { transform: scale(1.05); background: #e0f0ff; }
-    .cell.X { color: var(--red); animation: pop 0.2s ease; }
-    .cell.O { color: var(--green); animation: pop 0.2s ease; }
-    .cell.winner { background: #ffe066; }
-    @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-
-    button {
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-        border: none;
-        border-radius: 8px;
-        background: var(--blue);
-        color: #fff;
-        transition: background 0.2s;
-    }
-    button:hover { background: #095cb0; }
+    body { margin:0; font-family:system-ui; background:var(--bg); display:flex; flex-direction:column; align-items:center; }
+    .topbar { background: var(--blue); color:#fff; height:56px; width:100%; display:flex; align-items:center; justify-content:center; position:relative; margin-bottom:20px; }
+    .home-link { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#fff; font-size:24px; text-decoration:none; font-weight:bold; }
+    .brand { font-size:20px; font-weight:800; }
+    .status { font-size:24px; margin-bottom:10px; }
+    .board { display:grid; grid-template-columns:repeat(3,100px); grid-gap:5px; margin-bottom:20px; }
+    .cell { width:100px; height:100px; background:var(--cell); display:flex; align-items:center; justify-content:center; font-size:48px; cursor:pointer; border-radius:12px; transition: transform 0.2s; }
+    .cell:hover { transform: scale(1.1); background:#e0e0ff; }
+    button { background:var(--blue); color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
+    button:hover { background:#0749a3; }
 </style>
 </head>
 <body>
 
 <header class="topbar">
-    <a href="/index.html" class="home-link">←</a>
+    <a href="../index.html" class="home-link">←</a>
     <div class="brand">ArcadeOwl</div>
 </header>
 
@@ -105,88 +34,63 @@
 <button onclick="resetGame()">Neues Spiel</button>
 
 <script>
-const boardElement = document.getElementById('board');
-const statusElement = document.getElementById('status');
+let boardArray=['','','','','','','','',''];
+let gameActive=true;
+let player='X', ai='O';
 
-let board = Array(9).fill('');
-const human = 'X';
-const ai = 'O';
-let currentPlayer = human;
-let gameActive = true;
-
-const winPatterns = [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
-];
-
-function createBoard() {
-    boardElement.innerHTML = '';
-    board.forEach((val, idx) => {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.dataset.index = idx;
-        cell.addEventListener('click', () => humanMove(idx));
+function createBoard(){
+    const boardElement=document.getElementById('board');
+    boardElement.innerHTML='';
+    for(let i=0;i<9;i++){
+        const cell=document.createElement('div');
+        cell.className='cell';
+        cell.setAttribute('data-index',i);
+        cell.addEventListener('click',()=>playerMove(i));
         boardElement.appendChild(cell);
+    }
+}
+
+function playerMove(index){
+    if(!gameActive || boardArray[index]!=='') return;
+    boardArray[index]=player;
+    updateBoard();
+    if(checkWinner(player)){
+        document.getElementById('status').textContent='Du hast gewonnen!';
+        gameActive=false; return;
+    }
+    if(boardArray.every(c=>c!=='')){ document.getElementById('status').textContent='Unentschieden!'; gameActive=false; return;}
+    setTimeout(aiMove,300);
+}
+
+function aiMove(){
+    if(!gameActive) return;
+    let empty=boardArray.map((v,i)=>v===''?i:null).filter(v=>v!==null);
+    let move=empty[Math.floor(Math.random()*empty.length)];
+    boardArray[move]=ai;
+    updateBoard();
+    if(checkWinner(ai)){
+        document.getElementById('status').textContent='KI hat gewonnen!';
+        gameActive=false; return;
+    }
+    if(boardArray.every(c=>c!=='')){ document.getElementById('status').textContent='Unentschieden!'; gameActive=false; return;}
+    document.getElementById('status').textContent='Dein Zug (X)';
+}
+
+function updateBoard(){
+    boardArray.forEach((v,i)=>{
+        document.querySelector(`[data-index="${i}"]`).textContent=v;
     });
 }
 
-function humanMove(index) {
-    if (!gameActive || board[index] !== '' || currentPlayer !== human) return;
-
-    board[index] = human;
-    const cell = boardElement.children[index];
-    cell.textContent = human;
-    cell.classList.add(human);
-
-    const winningPattern = checkWinner();
-    if (winningPattern) { endGame(winningPattern, 'Du hast gewonnen!'); return; }
-    if (board.every(c => c !== '')) { endGame(null, 'Unentschieden!'); return; }
-
-    currentPlayer = ai;
-    statusElement.textContent = 'Computer zieht...';
-    setTimeout(aiMove, 500);
+function checkWinner(p){
+    const winPatterns=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    return winPatterns.some(pat=>boardArray[pat[0]]===p && boardArray[pat[1]]===p && boardArray[pat[2]]===p);
 }
 
-function aiMove() {
-    if (!gameActive) return;
-
-    // Zufällige KI
-    const empty = board.map((v,i)=>v===''?i:null).filter(v=>v!==null);
-    const move = empty[Math.floor(Math.random()*empty.length)];
-
-    board[move] = ai;
-    const cell = boardElement.children[move];
-    cell.textContent = ai;
-    cell.classList.add(ai);
-
-    const winningPattern = checkWinner();
-    if (winningPattern) { endGame(winningPattern, 'Computer hat gewonnen!'); return; }
-    if (board.every(c => c !== '')) { endGame(null, 'Unentschieden!'); return; }
-
-    currentPlayer = human;
-    statusElement.textContent = 'Dein Zug (X)';
-}
-
-function checkWinner() {
-    for (const pattern of winPatterns) {
-        const [a,b,c] = pattern;
-        if (board[a] && board[a]===board[b] && board[b]===board[c]) return pattern;
-    }
-    return null;
-}
-
-function endGame(pattern, message) {
-    gameActive = false;
-    statusElement.textContent = message;
-    if (pattern) pattern.forEach(i => boardElement.children[i].classList.add('winner'));
-}
-
-function resetGame() {
-    board = Array(9).fill('');
-    currentPlayer = human;
-    gameActive = true;
-    statusElement.textContent = 'Dein Zug (X)';
+function resetGame(){
+    boardArray=['','','','','','','','',''];
+    gameActive=true;
+    document.getElementById('status').textContent='Dein Zug (X)';
     createBoard();
 }
 
