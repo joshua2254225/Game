@@ -1,0 +1,406 @@
+<!doctype html>
+
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Multiplayer Memory (LAN / Hotspot / WLAN)</title>
+  <style>
+    :root{--bg:#0f1724;--card:#e6eef8;--accent:#60a5fa}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071024 0%, #0f1724 60%);font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#e6eef8}
+    .wrap{max-width:920px;margin:18px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between}
+    h1{font-size:1.25rem;margin:0}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .panel{background:rgba(255,255,255,0.03);border-radius:12px;padding:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}/* Controls */
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+textarea{width:100%;height:110px;padding:8px;background:rgba(255,255,255,0.02);color:inherit;border-radius:8px;border:1px solid rgba(255,255,255,0.04)}
+button{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;color:#022;cursor:pointer;font-weight:600}
+button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit}
+
+/* Game board */
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:640px;margin-top:18px}
+.card{aspect-ratio:1 / 1;border-radius:10px;background:linear-gradient(180deg,#0b1220,#09121a);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;user-select:none;box-shadow:inset 0 -3px 6px rgba(0,0,0,0.6)}
+.card.revealed{background:var(--card);color:#041025;font-weight:700}
+.card.matched{background:linear-gradient(90deg,#16a34a 0%,#059669 100%);color:white;cursor:default}
+
+.status{display:flex;gap:12px;align-items:center}
+.score{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px}
+.small{font-size:0.9rem;color:#bcd7ff}
+
+footer{margin-top:18px;color:#9fb7df;font-size:0.88rem}
+@media (max-width:700px){.controls{grid-template-columns:1fr} .board{grid-template-columns:repeat(4,1fr)}}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Multiplayer Memory — LAN / Hotspot / WLAN (2 Spieler)</h1>
+      <div class="small">Tip: neueste Chrome oder Edge verwenden (Mobil/Desktop)</div>
+    </header><div class="row">
+  <div class="panel" style="flex:1;min-width:320px">
+    <h3>Verbindung (Signalisierung per Copy/Paste)</h3>
+    <p class="small">Dieses Beispiel nutzt WebRTC DataChannel. Tritt dem Spiel bei, indem du das JSON durch Copy/Paste zwischen zwei Geräten austauschst. Keine Server nötig.</p>
+
+    <div class="controls">
+      <div>
+        <button id="btnCreateOffer">Erstelle Angebot (Host)</button>
+        <button id="btnCreateAnswer" class="secondary">Antworte (Client)</button>
+        <button id="btnReset" class="secondary">Reset Verbindung</button>
+      </div>
+      <div class="status">
+        <div class="score">Status: <span id="pcStatus">offline</span></div>
+        <div class="score">Player: <span id="playerRole">—</span></div>
+      </div>
+
+      <label class="small">Lokales Signal (kopieren und an Freund schicken)</label>
+      <textarea id="localSignal" readonly></textarea>
+
+      <label class="small">Fern-Signal (paste hier das empfangene JSON und klicke 'Set Remote')</label>
+      <textarea id="remoteSignal"></textarea>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button id="btnSetRemote" class="secondary">Set Remote</button>
+        <button id="btnAddRemoteCandidates" class="secondary">Füge Kandidaten hinzu</button>
+      </div>
+    </div>
+
+    <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
+
+    <div class="small">
+      <strong>Anleitung:</strong>
+      <ol>
+        <li>Gerät A: Klick "Erstelle Angebot" → kopiere das lok. Signal → sende an Gerät B.</li>
+        <li>Gerät B: Paste das Signal in "Fern-Signal" → Klick "Antworte (Client)" → kopiere das Lokale Signal → sende zurück an A.</li>
+        <li>Gerät A: Paste das empfangene Signal in "Fern-Signal" → Klick "Set Remote".</li>
+        <li>Wenn die Verbindung steht, startet das Spiel automatisch und synchronisiert die Karten.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="panel" style="flex:1;min-width:320px">
+    <h3>Spiel & Info</h3>
+    <div class="small">Karten sind Emojis — keine externen Dateien. Host (Ersteller des Angebots) ist Spieler 1 (blau), Antworter ist Spieler 2 (grün).</div>
+
+    <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+      <div class="score">P1 (Host): <span id="score0">0</span></div>
+      <div class="score">P2 (Client): <span id="score1">0</span></div>
+      <div style="flex:1"></div>
+      <div class="small">Zug: <strong id="turnText">—</strong></div>
+    </div>
+
+    <div id="board" class="board" aria-live="polite" style="margin-top:12px"></div>
+
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button id="btnNewGame" class="secondary">Neues Spiel (Host initiiert)</button>
+      <button id="btnShuffle" class="secondary">Shuffle (lokal)</button>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Hinweis: Copy/Paste-Signalisierung ist einfach, funktioniert auf lokalem LAN/Hotspot. Wenn du möchtest, kann ich auch eine Variante mit automatischer Signalisierung via kleinem WebSocket/HTTP-Server (Node/Python) bereitstellen.
+</footer>
+
+  </div>  <script>
+    // --- WebRTC + Signaling (manual copy/paste) ---
+    const cfg = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    let pc = null;
+    let dataChannel = null;
+    let localCandidates = [];
+    let remoteCandidates = [];
+    let isHost = false; // host = created the offer -> player 0
+    let localPlayerId = null;
+
+    const el = id => document.getElementById(id);
+    const localSignal = el('localSignal');
+    const remoteSignal = el('remoteSignal');
+    const pcStatus = el('pcStatus');
+    const playerRole = el('playerRole');
+    const btnCreateOffer = el('btnCreateOffer');
+    const btnCreateAnswer = el('btnCreateAnswer');
+    const btnSetRemote = el('btnSetRemote');
+    const btnAddRemoteCandidates = el('btnAddRemoteCandidates');
+    const btnReset = el('btnReset');
+
+    btnCreateOffer.onclick = async ()=>{
+      resetConnection();
+      isHost = true; localPlayerId = 0;
+      playerRole.textContent = 'Host (Spieler 1)';
+      await initPeer();
+      dataChannel = pc.createDataChannel('game');
+      setupDataChannel(dataChannel);
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      // wait a short time for ICE candidates to gather
+      await waitForIceGatheringComplete(pc);
+      writeLocalSignal();
+      pcStatus.textContent = 'offer erstellt';
+    }
+
+    btnCreateAnswer.onclick = async ()=>{
+      // used by the answering client after pasting remote offer
+      if(!remoteSignal.value.trim()){ alert('Bitte erst das erhaltene Angebot (Offer) in "Fern-Signal" einfügen.'); return; }
+      resetConnection();
+      isHost = false; localPlayerId = 1;
+      playerRole.textContent = 'Client (Spieler 2)';
+      await initPeer();
+      // when datachannel arrives, setup will be done in ondatachannel
+      try{
+        const obj = JSON.parse(remoteSignal.value);
+        const remoteDesc = obj.sdp;
+        await pc.setRemoteDescription(remoteDesc);
+        if (Array.isArray(obj.candidates)) {
+          // queue remote candidates to add after local answer is set
+          remoteCandidates = obj.candidates;
+        }
+      }catch(e){alert('Fehler beim Lesen des Angebots. Ist es gültiges JSON?');console.error(e);return}
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await waitForIceGatheringComplete(pc);
+      writeLocalSignal();
+      pcStatus.textContent = 'answer erstellt';
+    }
+
+    btnSetRemote.onclick = async ()=>{
+      if(!remoteSignal.value.trim()){ alert('Bitte Remote-Signal einfügen.'); return; }
+      try{
+        const obj = JSON.parse(remoteSignal.value);
+        if(obj.sdp) await pc.setRemoteDescription(obj.sdp);
+        if(Array.isArray(obj.candidates)){
+          for(const c of obj.candidates){ try{ await pc.addIceCandidate(c); }catch(e){console.warn('addIceCandidate failed',e);} }
+        }
+        pcStatus.textContent = 'remote gesetzt';
+      }catch(e){alert('Ungültiges JSON im Fern-Signal.');console.error(e)}
+    }
+
+    btnAddRemoteCandidates.onclick = async ()=>{
+      if(!remoteSignal.value.trim()){ alert('Bitte Remote-Signal einfügen.'); return; }
+      try{
+        const obj = JSON.parse(remoteSignal.value);
+        if(Array.isArray(obj.candidates)){
+          for(const c of obj.candidates){ try{ await pc.addIceCandidate(c); }catch(e){console.warn('addIceCandidate failed',e);} }
+        }
+        pcStatus.textContent = 'Kandidaten hinzugefügt';
+      }catch(e){alert('Ungültiges JSON im Fern-Signal.');console.error(e)}
+    }
+
+    btnReset.onclick = ()=>{ resetConnection(true); }
+
+    async function initPeer(){
+      pc = new RTCPeerConnection(cfg);
+      localCandidates = [];
+      remoteCandidates = [];
+
+      pc.onicecandidate = ev => {
+        if(ev.candidate) localCandidates.push(ev.candidate.toJSON());
+      }
+
+      pc.ondatachannel = ev => {
+        dataChannel = ev.channel;
+        setupDataChannel(dataChannel);
+      }
+
+      pc.onconnectionstatechange = ()=>{
+        pcStatus.textContent = pc.connectionState;
+        if(pc.connectionState === 'connected'){
+          // connection established — sync state
+          console.log('connected');
+          // If host, send state; if client, request state
+          if(isHost){ send({type:'sync', state:gameState}); }
+          else{ send({type:'requestSync'}); }
+        }
+      }
+    }
+
+    function setupDataChannel(ch){
+      ch.onopen = ()=>{ console.log('Datenkanal offen'); pcStatus.textContent = 'verbunden'; startIfReady(); }
+      ch.onclose = ()=>{ console.log('Datenkanal zu'); pcStatus.textContent = 'geschlossen'; }
+      ch.onmessage = ev => { try{ const obj = JSON.parse(ev.data); handlePeerMessage(obj); }catch(e){console.error('Invalid message',e)} }
+    }
+
+    function writeLocalSignal(){
+      if(!pc) return;
+      const out = { sdp: pc.localDescription, candidates: localCandidates };
+      localSignal.value = JSON.stringify(out);
+    }
+
+    async function waitForIceGatheringComplete(pcRef, timeout=3000){
+      // wait until iceGatheringState becomes 'complete' or timeout
+      if(pcRef.iceGatheringState === 'complete') return;
+      return new Promise(resolve=>{
+        const t = setTimeout(()=>{ resolve(); }, timeout);
+        pcRef.addEventListener('icegatheringstatechange', function f(){
+          if(pcRef.iceGatheringState === 'complete'){
+            clearTimeout(t); pcRef.removeEventListener('icegatheringstatechange', f); resolve();
+          }
+        });
+      });
+    }
+
+    function resetConnection(hard=false){
+      if(dataChannel){ try{ dataChannel.close(); }catch(e){} dataChannel = null }
+      if(pc){ try{ pc.close(); }catch(e){} pc = null }
+      localCandidates = []; remoteCandidates = [];
+      localSignal.value = '';
+      remoteSignal.value = '';
+      pcStatus.textContent = 'offline';
+      if(hard){ playerRole.textContent = '—'; isHost = false; localPlayerId = null; }
+    }
+
+    function send(obj){
+      if(!dataChannel || dataChannel.readyState !== 'open') return;
+      dataChannel.send(JSON.stringify(obj));
+    }
+
+    // --- Game logic (Memory) ---
+    const EMOJIS = ['🍎','🍌','🍇','🍓','🍑','🍍','🥝','🍉','🍒','🍋','🥥','🥭','🍐','🍊','🍈','🥑'];
+    const BOARD_SIZE = 16; // 4x4
+
+    let gameState = null; // will hold cards, scores, turn, flipped
+
+    function newGame(){
+      // create pairs
+      const arr = EMOJIS.slice(0, BOARD_SIZE/2).concat(EMOJIS.slice(0, BOARD_SIZE/2));
+      shuffleArray(arr);
+      const cards = arr.map(e=>({emoji:e, revealed:false, matched:false}));
+      gameState = { cards, scores:[0,0], turn:0, flipped:[] };
+      renderBoard();
+      updateUI();
+    }
+
+    function renderBoard(){
+      const board = el('board'); board.innerHTML = '';
+      gameState.cards.forEach((c,i)=>{
+        const div = document.createElement('div');
+        div.className = 'card' + (c.revealed?' revealed':'') + (c.matched?' matched':'');
+        div.dataset.index = i;
+        div.innerText = c.revealed || c.matched ? c.emoji : '';
+        div.addEventListener('click', ()=>{ onLocalFlip(i); });
+        board.appendChild(div);
+      });
+    }
+
+    function updateUI(){
+      el('score0').textContent = gameState.scores[0];
+      el('score1').textContent = gameState.scores[1];
+      el('turnText').textContent = (gameState.turn===localPlayerId) ? 'Dein Zug' : `Spieler ${gameState.turn+1}`;
+    }
+
+    function onLocalFlip(index){
+      if(localPlayerId===null){ alert('Bitte zunächst Verbindung aufbauen oder du bist noch kein Spieler.'); return; }
+      if(gameState.turn !== localPlayerId){ return; }
+      if(gameState.cards[index].revealed || gameState.cards[index].matched) return;
+      // flip locally
+      flipCard(index, localPlayerId);
+      // broadcast to peer
+      send({type:'flip', index});
+      // after flip, if two flipped, evaluate
+      evaluateIfNeeded();
+    }
+
+    function flipCard(index, byPlayer){
+      gameState.cards[index].revealed = true;
+      gameState.flipped.push(index);
+      renderBoard();
+      updateUI();
+    }
+
+    function evaluateIfNeeded(){
+      if(gameState.flipped.length < 2) return;
+      const [a,b] = gameState.flipped;
+      if(gameState.cards[a].emoji === gameState.cards[b].emoji){
+        // match
+        gameState.cards[a].matched = true; gameState.cards[b].matched = true;
+        gameState.scores[gameState.turn] += 1;
+        gameState.flipped = [];
+        // keep same player's turn
+        renderBoard(); updateUI();
+        send({type:'match', indices:[a,b], scorer:gameState.turn});
+        checkGameOver();
+      }else{
+        // mismatch — show for a moment, then hide and switch turn
+        setTimeout(()=>{
+          gameState.cards[a].revealed = false; gameState.cards[b].revealed = false;
+          gameState.flipped = [];
+          gameState.turn = 1 - gameState.turn; // switch turn
+          renderBoard(); updateUI();
+          send({type:'mismatch', indices:[a,b], nextTurn:gameState.turn});
+        }, 800);
+      }
+    }
+
+    function handlePeerMessage(obj){
+      if(!obj || !obj.type) return;
+      switch(obj.type){
+        case 'flip':
+          // peer flipped index
+          flipCard(obj.index, 1 - localPlayerId);
+          evaluateIfNeeded();
+          break;
+        case 'match':
+          // apply match info
+          obj.indices.forEach(i=>{ gameState.cards[i].matched = true; gameState.cards[i].revealed = true; });
+          gameState.scores = obj.scores || gameState.scores; // optional
+          gameState.flipped = [];
+          renderBoard(); updateUI();
+          checkGameOver();
+          break;
+        case 'mismatch':
+          // hide indices
+          setTimeout(()=>{
+            obj.indices.forEach(i=>{ gameState.cards[i].revealed = false; });
+            gameState.flipped = [];
+            gameState.turn = obj.nextTurn;
+            renderBoard(); updateUI();
+          }, 300);
+          break;
+        case 'sync':
+          // host sends full state
+          gameState = obj.state; renderBoard(); updateUI();
+          break;
+        case 'requestSync':
+          // client asks; host should send
+          if(isHost) send({type:'sync', state:gameState});
+          break;
+        default:
+          console.log('unknown', obj);
+      }
+    }
+
+    function checkGameOver(){
+      if(gameState.cards.every(c=>c.matched)){
+        const winner = gameState.scores[0] === gameState.scores[1] ? 'Unentschieden' : (gameState.scores[0] > gameState.scores[1] ? 'Spieler 1 (Host)' : 'Spieler 2 (Client)');
+        alert('Spiel beendet — Gewinner: ' + winner);
+      }
+    }
+
+    function startIfReady(){
+      // if both are connected and host hasn't started a board, host should init
+      if(isHost && gameState===null){ newGame(); send({type:'sync', state:gameState}); }
+      updateUI();
+    }
+
+    // small helpers
+    function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } }
+
+    // New game button (host only)
+    el('btnNewGame').onclick = ()=>{
+      if(!isHost){ alert('Nur Host kann neues Spiel initialisieren.'); return; }
+      newGame(); send({type:'sync', state:gameState});
+    }
+    el('btnShuffle').onclick = ()=>{ shuffleLocal(); }
+
+    function shuffleLocal(){ shuffleArray(gameState.cards); gameState.flipped = []; renderBoard(); updateUI(); send({type:'sync', state:gameState}); }
+
+    // load fallback
+    document.addEventListener('DOMContentLoaded', ()=>{
+      // prepare empty board until game starts
+      const emptyCards = Array.from({length:BOARD_SIZE}, ()=>({emoji:'', revealed:false, matched:false}));
+      gameState = {cards: emptyCards, scores:[0,0], turn:0, flipped:[]};
+      renderBoard(); updateUI();
+    });
+  </script></body>
+</html>
