@@ -5,100 +5,52 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ArcadeOwl — Chess vs AI</title>
 
-<!-- chess.js for move generation and rules -->
+<!-- chess.js for legal move generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
 
 <style>
 :root{
-  --blue:#0b74de;
-  --bg:#f5f7fb;
-  --card:#fff;
-  --muted:#6b7280;
-  --accent:#ffd54f;
-  --win:#4caf50;
-  --lose:#ff4d4d;
+  --blue: #0b74de;
+  --bg: #f5f7fb;
+  --card: #fff;
+  --muted: #6b7280;
+  --accent: #ffd54f;
+  --win: #4caf50;
+  --lose: #ff4d4d;
+  --glass: rgba(255,255,255,0.6);
 }
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-  background:var(--bg);
-  color:#111;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:14px;
-  min-height:100vh;
-}
+html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:#111}
+.container{display:flex;flex-direction:column;align-items:center;padding:14px 12px 40px;min-height:100vh;}
 
 /* Topbar */
 .topbar{
-  width:100%;
-  max-width:980px;
-  background:var(--blue);
-  color:#fff;
-  height:56px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  border-radius:10px;
-  box-shadow:0 6px 18px rgba(11,115,222,0.08);
-  margin-bottom:12px;
+  width:100%;max-width:980px;background:var(--blue);color:#fff;height:64px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:12px;box-shadow:0 8px 24px rgba(11,115,222,0.12);margin-bottom:16px;
 }
-.home-link{
-  position:absolute;
-  left:12px;
-  top:50%;
-  transform:translateY(-50%);
-  color:#fff;
-  text-decoration:none;
-  font-weight:700;
-  font-size:18px;
-}
+.home-link{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#fff;text-decoration:none;font-weight:700;font-size:20px;}
+.brand{font-weight:900;font-size:18px;}
 
-/* Panel */
-.panel{
-  width:100%;
-  max-width:980px;
-  background:var(--card);
-  border-radius:12px;
-  padding:12px;
-  box-shadow:0 6px 22px rgba(10,20,40,0.04);
-  margin-bottom:12px;
-}
-.controls{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  flex-wrap:wrap;
-  justify-content:space-between;
-}
-.left-controls, .right-controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
-.levels{ display:flex; gap:8px; }
-.levels button{
-  padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700;
-}
-.levels button.active{ background:var(--blue); color:#fff; }
-.levels button.inactive{ background:#eef3ff; color:var(--blue); }
+/* panel */
+.panel{width:100%;max-width:980px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:0 10px 32px rgba(10,20,40,0.06);}
 
-.side-select{ display:flex; gap:8px; align-items:center;}
-.small{ color:var(--muted); font-size:13px; }
+/* controls row */
+.controls{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;}
+.left-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.levels{display:flex;gap:8px;align-items:center;}
+.level-btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:800;background:#eef5ff;color:var(--blue);transition:transform .12s ease,box-shadow .12s ease;}
+.level-btn.active{background:var(--blue);color:#fff;box-shadow:0 8px 18px rgba(11,115,222,0.18);transform:translateY(-2px);}
+.side-select{display:flex;gap:8px;align-items:center;font-weight:700;color:var(--muted);}
 
-/* Board area */
-.board-wrap{
-  display:flex;
-  justify-content:center;
-  margin-top:12px;
-}
+/* board area */
+.board-wrap{display:flex;justify-content:center;margin-top:12px;padding-bottom:8px;}
 .board{
   display:grid;
   grid-template-columns: repeat(8, min(44px, 11vw));
-  gap:4px;
-  background:linear-gradient(180deg,#e6eefc,#f8fbff);
+  gap:6px;
   padding:8px;
-  border-radius:10px;
-  box-shadow:0 10px 30px rgba(2,6,23,0.06);
+  border-radius:12px;
+  background:linear-gradient(180deg,#eaf2ff,#f9fbff);
+  box-shadow:0 16px 40px rgba(2,6,23,0.06);
 }
 .square{
   width:100%;
@@ -106,181 +58,276 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size: clamp(18px, 3.5vw, 28px);
-  cursor:pointer;
+  font-size:clamp(18px,3.5vw,28px);
   border-radius:8px;
   user-select:none;
-  transition: transform .12s ease, background .12s ease;
+  cursor:pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  position:relative;
+  overflow:visible;
 }
 .square:hover{ transform:scale(1.04); }
-.light{ background: #fff; }
-.dark{ background: #d9e8ff; }
+.light{ background: #ffffff; }
+.dark{ background: #dceeff; }
 
-/* highlights */
-.square.legal{ outline: 3px solid rgba(11,115,222,0.16); transform:scale(1.06); }
-.square.from{ box-shadow: 0 8px 18px rgba(11,115,222,0.12) inset; }
-.square.winner{ background: var(--accent); color:#111; font-weight:800; transform:scale(1.08); }
+/* highlight effects */
+.square.legal::after{
+  content:'';position:absolute;width:20%;height:20%;border-radius:50%;background:rgba(11,115,222,0.24);
+}
+.square.from{ box-shadow: 0 12px 24px rgba(11,115,222,0.08) inset; transform:scale(1.06) }
+.square.winner{ background:var(--accent); color:#111; font-weight:900; transform:scale(1.08) }
 
-/* bottom status */
-.status-bar{ margin-top:12px; text-align:center; font-weight:700; font-size:16px; }
-.actions{ display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
-.btn{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; background:var(--blue); color:#fff; }
-.btn.secondary{ background:#eef3ff; color:var(--blue); }
-.btn.warn{ background:var(--lose); }
-.smallcenter{ font-size:13px; color:var(--muted); margin-top:6px; }
+/* piece pop animation */
+.piece-pop{ animation:pop .12s ease both; }
+@keyframes pop{ 0%{ transform: scale(.2); opacity:0 } 100%{ transform: scale(1); opacity:1 } }
 
-/* responsive tweaks */
+/* status / actions */
+.status{ margin-top:12px; text-align:center; font-weight:800; font-size:16px; }
+.actions{ display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap; }
+.btn{ padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:800;background:var(--blue);color:#fff;box-shadow:0 8px 18px rgba(11,115,222,0.12); }
+.btn.secondary{ background:#eef3ff;color:var(--blue);box-shadow:none; }
+.btn.warn{ background:var(--lose); color:#fff; }
+
+/* confetti canvas */
+#confetti{ position:fixed; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:9999; }
+
+/* small helpers */
+.small{ color:var(--muted); font-size:13px; margin-top:8px; text-align:center; }
+
+/* responsive */
 @media (max-width:520px){
-  .controls{ flex-direction:column; align-items:stretch; gap:8px; }
-  .board{ grid-template-columns: repeat(8, min(36px, 11vw)); gap:3px; }
+  .board{ gap:4px; grid-template-columns: repeat(8, min(36px, 11vw)); }
+  .level-btn{ padding:7px 10px; font-size:14px; }
 }
 </style>
 </head>
 <body>
+<div class="container">
+  <header class="topbar">
+    <a class="home-link" href="index.html">←</a>
+    <div class="brand">ArcadeOwl — Chess vs AI</div>
+  </header>
 
-<header class="topbar">
-  <a class="home-link" href="index.html">←</a>
-  <div>ArcadeOwl — Chess vs AI</div>
-</header>
+  <section class="panel" aria-label="Chess controls">
+    <div class="controls">
+      <div class="left-controls">
+        <div class="levels" role="tablist" aria-label="Difficulty levels">
+          <button class="level-btn active" data-level="very_easy">Very Easy</button>
+          <button class="level-btn" data-level="easy">Easy</button>
+          <button class="level-btn" data-level="medium">Medium</button>
+          <button class="level-btn" data-level="hard">Hard</button>
+          <button class="level-btn" data-level="expert">Expert</button>
+        </div>
 
-<section class="panel">
-  <div class="controls">
-    <div class="left-controls">
-      <div class="levels" aria-label="Difficulty levels">
-        <button data-level="very_easy" class="active">Very Easy</button>
-        <button data-level="easy" class="inactive">Easy</button>
-        <button data-level="medium" class="inactive">Medium</button>
-        <button data-level="hard" class="inactive">Hard</button>
-        <button data-level="expert" class="inactive">Expert</button>
+        <div class="side-select" aria-label="Choose side">
+          <label><input type="radio" name="side" value="w" checked> Play White</label>
+          <label><input type="radio" name="side" value="b"> Play Black</label>
+        </div>
       </div>
-      <div class="side-select small" style="margin-left:8px;">
-        <label><input type="radio" name="side" value="w" checked> Play White</label>
-        <label style="margin-left:6px;"><input type="radio" name="side" value="b"> Play Black</label>
+
+      <div class="right-controls">
+        <button id="newBtn" class="btn">New Game</button>
+        <button id="undoBtn" class="btn secondary">Undo</button>
+        <button id="flipBtn" class="btn secondary">Flip</button>
+        <button id="hintBtn" class="btn secondary">Hint</button>
       </div>
     </div>
 
-    <div class="right-controls">
-      <button id="newBtn" class="btn">New Game</button>
-      <button id="undoBtn" class="btn secondary">Undo</button>
-      <button id="flipBtn" class="btn secondary">Flip</button>
-      <button id="hintBtn" class="btn secondary">Hint</button>
+    <div class="board-wrap" aria-hidden="false">
+      <div id="board" class="board" role="grid" aria-label="Chess board"></div>
     </div>
-  </div>
 
-  <div class="board-wrap">
-    <div id="board" class="board" role="grid" aria-label="Chess board"></div>
-  </div>
+    <div class="status" id="status">Select a level to start — then click a piece to see moves.</div>
+    <div class="actions" role="toolbar" aria-label="Game actions">
+      <button id="toggleAnim" class="btn secondary">Animations: On</button>
+      <div class="small" id="perfNote"></div>
+    </div>
+    <div class="small">Tip: On mobile, rotate device for bigger board.</div>
+  </section>
+</div>
 
-  <div class="status-bar" id="status">Loading...</div>
-  <div class="smallcenter">Click a piece to see legal moves. AI uses a simple material evaluation on higher levels.</div>
-</section>
+<canvas id="confetti"></canvas>
 
 <script>
-/* --------- Setup chess.js --------- */
-const game = new Chess(); // chess.js (global from CDN)
-let humanColor = 'w'; // 'w' or 'b'
-let aiColor = 'b';
-let flipped = false;
-let difficulty = 'very_easy'; // levels map below
-let gameActive = true;
-let selectedFrom = null;
+/* ======= Chess vs AI — full implementation with animations ======= */
 
-/* difficulty -> algorithm parameters */
+/* --- config & state --- */
+const game = new Chess();
+let humanColor = 'w', aiColor = 'b';
+let flipped = false;
+let difficulty = 'very_easy';
+let animations = true;
+let gameActive = false;
+let selected = null;
+
+/* level config */
 const LEVELS = {
-  'very_easy': {type:'random'},
-  'easy': {type:'random_capture_bias'},
-  'medium': {type:'minimax', depth: 2},
-  'hard': {type:'minimax', depth: 3},
-  'expert': {type:'minimax', depth: 4}
+  very_easy: {type:'random'},
+  easy: {type:'random_capture_bias'},
+  medium: {type:'minimax', depth: 2},
+  hard: {type:'minimax', depth: 3},
+  expert: {type:'minimax', depth: 4}
 };
 
-/* piece values */
-const VALUE = {'p':100,'n':320,'b':330,'r':500,'q':900,'k':20000};
+/* piece values + PSTs (simplified) */
+const PIECE_VALUES = {'p':100,'n':320,'b':330,'r':500,'q':900,'k':20000};
+const PST = {
+  p: [ 0,  5, 10, 20, 20, 10, 5, 0,
+       5, 10, 20, 30, 30, 20,10, 5,
+       0,  0,  5, 25, 25,  5, 0,  0,
+       0,  0,  0, 20, 20,  0, 0,  0,
+       0,  0,  0, 10, 10,  0, 0,  0,
+       5, -5,-10,  0,  0,-10,-5, 5,
+       5, 10, 10,-20,-20, 10,10, 5,
+       0,  0,  0,  0,  0,  0, 0,  0],
+  n: [-50,-40,-30,-30,-30,-30,-40,-50,
+       -40,-20,  0,  0,  0,  0,-20,-40,
+       -30,  0,10,15,15,10, 0,-30,
+       -30,  5,15,20,20,15, 5,-30,
+       -30,  0,15,20,20,15, 0,-30,
+       -30,  5,10,15,15,10, 5,-30,
+       -40,-20,  0,  5,  5,  0,-20,-40,
+       -50,-40,-30,-30,-30,-30,-40,-50],
+  b: [-20,-10,-10,-10,-10,-10,-10,-20,
+       -10,  5,  0,  0,  0,  0,  5,-10,
+       -10, 10, 10, 10, 10, 10, 10,-10,
+       -10,  0,10,10,10,10,0,-10,
+       -10,  5,5,10,10,5,5,-10,
+       -10,  0,5,10,10,5,0,-10,
+       -10,  0,  0,  0,  0,  0,  0,-10,
+       -20,-10,-10,-10,-10,-10,-10,-20],
+  r: [ 0,  0,  5, 10, 10,  5,  0,  0,
+         0,  0,  5, 10, 10,  5,  0,  0,
+         0,  0,  5, 10, 10,  5,  0,  0,
+         0,  0,  5, 10, 10,  5,  0,  0,
+         0,  0,  5, 10, 10,  5,  0,  0,
+         0,  0,  5, 10, 10,  5,  0,  0,
+        25, 25, 25, 25, 25, 25, 25, 25,
+         0,  0,  5, 10, 10,  5,  0,  0],
+  q: [ -20,-10,-10, -5, -5,-10,-10,-20,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -10,  0,  5,  5,  5,  5,  0,-10,
+         -5,  0,  5,  5,  5,  5,  0, -5,
+          0,  0,  5,  5,  5,  5,  0, -5,
+        -10,  5,  5,  5,  5,  5,  0,-10,
+        -10,  0,  5,  0,  0,  0,  0,-10,
+        -20,-10,-10, -5, -5,-10,-10,-20 ],
+  k: [ -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -20,-30,-30,-40,-40,-30,-30,-20,
+        -10,-20,-20,-20,-20,-20,-20,-10,
+         20, 20,  0,  0,  0,  0, 20, 20,
+         20, 30, 10,  0,  0, 10, 30, 20 ]
+};
 
-/* element refs */
+/* UI refs */
 const boardEl = document.getElementById('board');
 const statusEl = document.getElementById('status');
+const newBtn = document.getElementById('newBtn');
+const undoBtn = document.getElementById('undoBtn');
+const flipBtn = document.getElementById('flipBtn');
+const hintBtn = document.getElementById('hintBtn');
+const toggleAnimBtn = document.getElementById('toggleAnim');
+const confettiCanvas = document.getElementById('confetti');
+let confettiCtx, confettiParticles=[];
 
-/* Unicode pieces */
-const PIECE_UNICODE = {
+/* piece unicode */
+const PIECES = {
   'p_w':'♙','r_w':'♖','n_w':'♘','b_w':'♗','q_w':'♕','k_w':'♔',
   'p_b':'♟','r_b':'♜','n_b':'♞','b_b':'♝','q_b':'♛','k_b':'♚'
 };
 
-/* initialize DOM board */
+/* helpers: coordinates */
+function idxToSquare(i, flippedLocal=false){
+  // i 0..63 reading board DOM order (row-major top-left)
+  const row = Math.floor(i/8), col = i%8;
+  // map row->rank and col->file depending on flipped
+  const rank = flippedLocal ? row+1 : 8-row;
+  const file = ['a','b','c','d','e','f','g','h'][flippedLocal ? 7-col : col];
+  return file + rank;
+}
+
+/* render board */
 function renderBoard(){
   boardEl.innerHTML = '';
-  // chess.js uses ranks 8->1; files a->h
-  const board = game.board(); // array [rank8...rank1], each rank is array file a->h
-  const squares = [];
-  for(let rankIdx=0; rankIdx<8; rankIdx++){
-    const rank = flipped ? rankIdx : 7 - rankIdx; // if not flipped, we show rank 8 first
-    for(let file=0; file<8; file++){
-      const fileIdx = flipped ? 7 - file : file;
-      const sq = ( 'abcdefgh'[fileIdx] ) + (8 - rank);
-      const piece = board[rank][file];
-      squares.push({sq, piece});
+  const boardArray = game.board(); // 8 ranks from 8->1
+  // create squares in DOM order top-left -> bottom-right (rank8 file a -> rank1 file h) but consider flipped
+  for(let r=0;r<8;r++){
+    for(let f=0;f<8;f++){
+      const idx = r*8 + f;
+      const logicalRank = flipped ? r+1 : 8 - r;
+      const fileIndex = flipped ? 7 - f : f;
+      const squareName = ['a','b','c','d','e','f','g','h'][fileIndex] + logicalRank;
+      const sqDiv = document.createElement('div');
+      const isLight = ( (r + f) % 2 === 0 );
+      sqDiv.className = 'square ' + (isLight ? 'light' : 'dark');
+      sqDiv.dataset.square = squareName;
+      const piece = getPieceAtSquareFromGame(squareName);
+      if(piece){
+        const key = piece.type + '_' + (piece.color==='w' ? 'w' : 'b');
+        const span = document.createElement('span');
+        span.textContent = PIECES[key];
+        span.className = 'piece';
+        if(animations){ span.classList.add('piece-pop'); }
+        sqDiv.appendChild(span);
+      }
+      sqDiv.addEventListener('click', ()=> onSquareClick(squareName, sqDiv));
+      boardEl.appendChild(sqDiv);
     }
   }
-
-  squares.forEach((s, idx) => {
-    const div = document.createElement('div');
-    div.className = 'square ' + (((Math.floor(idx/8) + (idx%8))%2===0) ? 'light' : 'dark');
-    div.dataset.square = s.sq;
-    if(s.piece){
-      const key = s.piece.type + '_' + (s.piece.color==='w' ? 'w' : 'b');
-      div.textContent = PIECE_UNICODE[key];
-      div.classList.add(s.piece.color==='w' ? 'W' : 'B');
-    }
-    div.addEventListener('click', ()=> onSquareClick(s.sq));
-    boardEl.appendChild(div);
-  });
   updateStatus();
 }
 
-/* utility: clear highlights */
-function clearHighlights(){
-  boardEl.querySelectorAll('.square').forEach(s => s.classList.remove('legal','from','winner'));
+/* get piece at square from game.board() */
+function getPieceAtSquareFromGame(squareName){
+  // squareName like 'e4' -> convert to indices
+  return game.get(squareName);
 }
 
-/* show legal moves from a square */
-function showLegal(from){
+/* clear highlights */
+function clearHighlights(){ boardEl.querySelectorAll('.square').forEach(s=> s.classList.remove('legal','from','winner')); }
+
+/* show legal moves */
+function showLegalMoves(fromSquare){
   clearHighlights();
-  const moves = game.moves({square: from, verbose:true});
-  boardEl.querySelectorAll(`[data-square="${from}"]`).forEach(e => e.classList.add('from'));
+  const moves = game.moves({square: fromSquare, verbose:true});
+  const fromEl = boardEl.querySelector(`[data-square="${fromSquare}"]`);
+  if(fromEl) fromEl.classList.add('from');
   moves.forEach(m => {
     const el = boardEl.querySelector(`[data-square="${m.to}"]`);
     if(el) el.classList.add('legal');
   });
 }
 
-/* handle click */
-function onSquareClick(square){
+/* square click */
+function onSquareClick(square, el){
   if(!gameActive) return;
   const piece = game.get(square);
-  if(selectedFrom){
-    // attempt move
-    const move = game.move({from: selectedFrom, to: square, promotion:'q'});
+  if(selected){
+    // try move selected -> square
+    const move = game.move({from:selected, to:square, promotion:'q'});
     if(move){
-      selectedFrom = null;
+      // animate move: we simply re-render with pop
+      selected = null;
       clearHighlights();
       renderBoard();
       afterMove();
       return;
     } else {
-      // invalid, if clicking own piece switch selection
-      if(piece && piece.color === game.turn()) {
-        selectedFrom = square;
-        showLegal(square);
+      // if clicked own piece, change selection
+      if(piece && piece.color === game.turn()){
+        selected = square;
+        showLegalMoves(square);
       } else {
-        selectedFrom = null;
-        clearHighlights();
+        selected = null; clearHighlights();
       }
     }
   } else {
     if(piece && piece.color === game.turn()){
-      selectedFrom = square;
-      showLegal(square);
+      selected = square;
+      showLegalMoves(square);
     }
   }
 }
@@ -291,7 +338,8 @@ function updateStatus(){
     const winner = game.turn() === 'w' ? 'Black' : 'White';
     statusEl.textContent = `Checkmate — ${winner} wins`;
     gameActive = false;
-    highlightWin();
+    highlightLastMove();
+    triggerConfetti();
     return;
   } else if(game.in_stalemate()){
     statusEl.textContent = 'Stalemate — Draw';
@@ -308,70 +356,78 @@ function updateStatus(){
   }
 }
 
-/* highlight winning pattern (approximation: highlight last move's attack) */
-function highlightWin(){
-  // try to find last move and highlight its to/from squares
-  const history = game.history({verbose:true});
-  if(history.length){
-    const last = history[history.length-1];
-    const from = last.from, to = last.to;
-    const elFrom = boardEl.querySelector(`[data-square="${from}"]`);
-    const elTo = boardEl.querySelector(`[data-square="${to}"]`);
-    if(elFrom) elFrom.classList.add('winner');
-    if(elTo) elTo.classList.add('winner');
+/* highlight squares of last move */
+function highlightLastMove(){
+  const hist = game.history({verbose:true});
+  if(hist.length){
+    const last = hist[hist.length-1];
+    const fromEl = boardEl.querySelector(`[data-square="${last.from}"]`);
+    const toEl = boardEl.querySelector(`[data-square="${last.to}"]`);
+    if(fromEl) fromEl.classList.add('winner');
+    if(toEl) toEl.classList.add('winner');
   }
 }
 
-/* after move: check and possibly let AI move */
+/* after move (human or AI) */
 function afterMove(){
   updateStatus();
   if(!gameActive) return;
-  // if it's AI turn and AI is set to move, do AI
-  if((game.turn() === 'w' && aiColor === 'w') || (game.turn() === 'b' && aiColor === 'b')){
+  // schedule AI if its turn
+  if((game.turn()==='w' && aiColor==='w') || (game.turn()==='b' && aiColor==='b')){
     setTimeout(()=> aiPlay(), 250);
   }
 }
 
-/* ---------- AI logic ---------- */
+/* ========== AI implementations ========== */
 
-/* evaluate board (material only) */
-function evaluateBoard(boardState){
-  let s = 0;
+/* helpers */
+function allLegalMovesVerbose(){
+  return game.moves({verbose:true});
+}
+
+/* random move */
+function pickRandomMove(){
+  const moves = allLegalMovesVerbose();
+  if(moves.length===0) return null;
+  return moves[Math.floor(Math.random()*moves.length)];
+}
+
+/* random with capture bias */
+function pickRandomCaptureBias(){
+  const moves = allLegalMovesVerbose();
+  const captures = moves.filter(m => m.captured);
+  if(Math.random() < 0.7 && captures.length) return captures[Math.floor(Math.random()*captures.length)];
+  return moves[Math.floor(Math.random()*moves.length)];
+}
+
+/* evaluate board (material + pst + mobility) from AI perspective */
+function evaluate(boardInstance){
+  // boardInstance is array-of-arrays from chess.board()
+  let score = 0;
   for(let r=0;r<8;r++){
     for(let f=0;f<8;f++){
-      const p = boardState[r][f];
-      if(p){
-        const val = VALUE[p.type];
-        s += (p.color === aiColor ? val : -val);
+      const cell = boardInstance[r][f];
+      if(cell){
+        const val = PIECE_VALUES[cell.type] || 0;
+        const pstArr = PST[cell.type] || new Array(64).fill(0);
+        // index into PST: we want a0..h7 order for white; chess.board() returns ranks 8->1 -> r=0 is rank8
+        const pstIndex = (7 - r) * 8 + f; // transform r->rank for white oriented
+        const pstVal = pstArr[pstIndex] || 0;
+        score += (cell.color === aiColor) ? (val + pstVal) : -(val + pstVal);
       }
     }
   }
-  return s;
+  // mobility
+  const aiMoves = game.moves({verbose:true}).filter(m => m.color === aiColor || true); // use current moves as approximation later
+  // For simplicity do not add mobility heavy computation here (would require per-side)
+  return score;
 }
 
-/* minimax with alpha-beta */
-function minimaxRoot(depth, isMaximizingPlayer){
-  const moves = game.moves({verbose:true});
-  let bestMove = null;
-  let bestScore = isMaximizingPlayer ? -Infinity : Infinity;
-  for(const m of moves){
-    game.move(m);
-    const score = minimax(depth-1, -Infinity, Infinity, !isMaximizingPlayer);
-    game.undo();
-    if(isMaximizingPlayer){
-      if(score > bestScore){ bestScore = score; bestMove = m; }
-    } else {
-      if(score < bestScore){ bestScore = score; bestMove = m; }
-    }
-  }
-  return {move: bestMove, score: bestScore};
-}
-
+/* minimax with alpha-beta; returns numeric evaluation for non-root calls */
 function minimax(depth, alpha, beta, isMaximizing){
-  const winner = checkWinnerState(game.board());
-  if(depth === 0 || winner || game.game_over()){
-    // evaluation: positive = good for AI
-    return evaluateBoard(game.board());
+  if(depth === 0 || game.game_over()){
+    const boardState = game.board();
+    return evaluate(boardState);
   }
   const moves = game.moves({verbose:true});
   if(isMaximizing){
@@ -399,144 +455,90 @@ function minimax(depth, alpha, beta, isMaximizing){
   }
 }
 
-/* helper: try to detect game.win from board via chess.js board (null-safe) */
-function checkWinnerState(boardArray){
-  // boardArray as returned by game.board()
-  // use chess.js game.status checks instead: return true if checkmate or winner exists? We'll rely on game.in_checkmate externally.
-  return null; // not used directly for minimax leaf detection (we use game.game_over())
-}
-
-/* AI pick move based on level */
-function pickAIMove(){
-  const level = LEVELS[difficulty];
-  if(level.type === 'random'){
-    const e = emptyIndices();
-    return e[Math.floor(Math.random()*e.length)];
-  } else if(level.type === 'random_capture_bias'){
-    // prefer captures 70% of time
-    const moves = game.moves({verbose:true});
-    const captureMoves = moves.filter(m => m.captured);
-    if(Math.random() < 0.7 && captureMoves.length){
-      const m = captureMoves[Math.floor(Math.random()*captureMoves.length)];
-      return m.to;
-    } else {
-      const m = moves[Math.floor(Math.random()*moves.length)];
-      return m.to;
-    }
-  } else if(level.type === 'minimax'){
-    const depth = level.depth;
-    // decide whether AI is maximizing: if aiColor equals side to move
-    const isMax = ( (aiColor === 'w' && game.turn() === 'w') || (aiColor === 'b' && game.turn() === 'b') );
-    // run root search
-    const best = minimaxRoot(depth, isMax);
-    if(!best.move) {
-      // fallback random
-      const m = game.moves({verbose:true})[0];
-      return m ? m.to : null;
-    }
-    return best.move.to;
-  }
-}
-
-/* get all empty indices (squares strings) */
-function emptyIndices(){
-  return game.moves({verbose:true}).map(m => m.to);
-}
-
-/* AI makes a move */
-function aiPlay(){
-  if(!gameActive) return;
-  // pick move differently first: we want full move (from,to). For random variants, we need to pick a move object
-  const level = LEVELS[difficulty];
-  if(level.type === 'random' || level.type === 'random_capture_bias'){
-    const moves = game.moves({verbose:true});
-    let chosen;
-    if(level.type === 'random_capture_bias'){
-      const captureMoves = moves.filter(m => m.captured);
-      if(Math.random() < 0.7 && captureMoves.length) chosen = captureMoves[Math.floor(Math.random()*captureMoves.length)];
-      else chosen = moves[Math.floor(Math.random()*moves.length)];
-    } else {
-      chosen = moves[Math.floor(Math.random()*moves.length)];
-    }
-    if(chosen){
-      game.move(chosen);
-      renderBoard();
-      afterMove();
-      return;
-    }
-  } else {
-    // minimax root returns a move object; reuse minimaxRoot to get move object
-    const isMax = ( (aiColor === 'w' && game.turn() === 'w') || (aiColor === 'b' && game.turn() === 'b') );
-    const best = minimaxRoot(level.depth, isMax);
-    if(best && best.move){
-      game.move(best.move);
-      renderBoard();
-      afterMove();
-      return;
-    } else {
-      // fallback random
-      const moves = game.moves({verbose:true});
-      if(moves.length){
-        game.move(moves[Math.floor(Math.random()*moves.length)]);
-        renderBoard();
-        afterMove();
-        return;
-      }
-    }
-  }
-}
-
-/* after a move (human or AI) */
-function afterMove(){
-  clearHighlights();
-  updateStatus();
-  if(!game.game_over()){
-    // if AI to play, schedule ai
-    if((game.turn() === 'w' && aiColor === 'w') || (game.turn() === 'b' && aiColor === 'b')){
-      setTimeout(()=> aiPlay(), 300);
-    }
-  } else {
-    updateStatus();
-  }
-}
-
-/* hint: compute best move for human using minimax with small depth if possible */
-function hint(){
-  if(!gameActive) return;
-  // Try to compute best move for human via minimax evaluation (search as human)
-  const tempIsMax = ( (humanColor === 'w' && game.turn()==='w') || (humanColor === 'b' && game.turn()==='b') );
-  const depth = LEVELS['medium'].depth; // simple search depth
+/* root search to get move object */
+function minimaxRoot(depth, isMaximizing){
   const moves = game.moves({verbose:true});
-  let bestMove = null, bestScore = tempIsMax ? -Infinity : Infinity;
+  let bestMove = null;
+  let bestScore = isMaximizing ? -Infinity : Infinity;
   for(const m of moves){
     game.move(m);
-    const score = minimax(depth-1, -Infinity, Infinity, !tempIsMax);
+    const score = minimax(depth-1, -Infinity, Infinity, !isMaximizing);
     game.undo();
-    if(tempIsMax){
+    if(isMaximizing){
       if(score > bestScore){ bestScore = score; bestMove = m; }
     } else {
       if(score < bestScore){ bestScore = score; bestMove = m; }
     }
   }
-  if(bestMove){
-    const el = boardEl.querySelector(`[data-square="${bestMove.to}"]`);
+  return bestMove;
+}
+
+/* AI move chooser */
+function chooseAIMove(){
+  const cfg = LEVELS[difficulty];
+  if(cfg.type === 'random') {
+    return pickRandomMove();
+  } else if(cfg.type === 'random_capture_bias'){
+    return pickRandomCaptureBias();
+  } else if(cfg.type === 'minimax'){
+    // determine maximizing side: if aiColor equals game.turn(), ai maximizes
+    const isMax = ( (aiColor === 'w' && game.turn() === 'w') || (aiColor === 'b' && game.turn() === 'b') );
+    // run root search; heavy for expert depth
+    // safety: allow small delay to avoid long freeze
+    const move = minimaxRoot(cfg.depth, isMax);
+    if(move) return move;
+    return pickRandomMove();
+  }
+}
+
+/* AI plays */
+function aiPlay(){
+  if(!gameActive) return;
+  const move = chooseAIMove();
+  if(!move) return;
+  game.move(move);
+  renderBoard();
+  afterMove();
+}
+
+/* ========== hint ========== */
+/* show a recommended move (based on minimax shallow search) */
+function hint(){
+  if(!gameActive) return;
+  // perform a shallow search for side to move
+  const depth = Math.max(1, (LEVELS['medium'].depth - 1));
+  const isMax = ( ( (game.turn() === aiColor) ) ? true : false );
+  const moves = game.moves({verbose:true});
+  let best = null; let bestScore = (isMax ? -Infinity : Infinity);
+  for(const m of moves){
+    game.move(m);
+    const score = minimax(Math.max(0, depth-1), -Infinity, Infinity, !isMax);
+    game.undo();
+    if(isMax){
+      if(score > bestScore){ bestScore = score; best = m; }
+    } else {
+      if(score < bestScore){ bestScore = score; best = m; }
+    }
+  }
+  if(best){
+    const el = boardEl.querySelector(`[data-square="${best.to}"]`);
     if(el){
-      el.style.outline = '4px solid rgba(11,115,222,0.24)';
-      setTimeout(()=> el.style.outline = '', 700);
+      el.style.outline = '4px solid rgba(11,115,222,0.28)';
+      setTimeout(()=> el.style.outline = '', 900);
     }
   }
 }
 
-/* ---------- UI wiring ---------- */
-document.querySelectorAll('.levels button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.levels button').forEach(x=>{ x.classList.remove('active'); x.classList.add('inactive'); });
-    btn.classList.add('active'); btn.classList.remove('inactive');
-    difficulty = btn.dataset.level;
-    startNew();
-  });
-});
+/* ========== UI wiring & events ========== */
+function setDifficulty(level){
+  difficulty = level;
+  document.querySelectorAll('.level-btn').forEach(b=> b.classList.toggle('active', b.dataset.level===level));
+  startNew();
+}
 
+document.querySelectorAll('.level-btn').forEach(b=>{
+  b.addEventListener('click', ()=> setDifficulty(b.dataset.level));
+});
 document.querySelectorAll('input[name="side"]').forEach(r=>{
   r.addEventListener('change', ()=>{
     humanColor = document.querySelector('input[name="side"]:checked').value === 'w' ? 'w' : 'b';
@@ -545,26 +547,30 @@ document.querySelectorAll('input[name="side"]').forEach(r=>{
   });
 });
 
-document.getElementById('newBtn').addEventListener('click', ()=> startNew());
-document.getElementById('undoBtn').addEventListener('click', ()=>{
-  game.undo(); game.undo(); // undo two half-moves (player+ai)
-  renderBoard(); gameActive = true; updateStatus();
+newBtn.addEventListener('click', startNew);
+undoBtn.addEventListener('click', ()=>{
+  // undo two halfmoves (player & ai) if possible
+  if(game.history().length >= 2){
+    game.undo(); game.undo();
+    gameActive = true;
+    renderBoard(); updateStatus();
+  }
 });
-document.getElementById('flipBtn').addEventListener('click', ()=>{
-  flipped = !flipped; renderBoard();
+flipBtn.addEventListener('click', ()=> { flipped = !flipped; renderBoard(); });
+hintBtn.addEventListener('click', hint);
+toggleAnimBtn.addEventListener('click', ()=>{
+  animations = !animations;
+  toggleAnimBtn.textContent = 'Animations: ' + (animations ? 'On' : 'Off');
 });
-document.getElementById('hintBtn').addEventListener('click', ()=> hint());
 
 /* start new game */
 function startNew(){
   game.reset();
   gameActive = true;
-  selectedFrom = null;
+  selected = null;
   renderBoard();
-  // set AI/Player colors
-  humanColor = document.querySelector('input[name="side"]:checked').value === 'w' ? 'w' : 'b';
-  aiColor = humanColor === 'w' ? 'b' : 'w';
-  // if AI is white, let AI start
+  statusEl.textContent = 'Game ready';
+  // if AI plays first
   if(aiColor === 'w'){
     statusEl.textContent = 'AI thinking...';
     setTimeout(()=> aiPlay(), 300);
@@ -573,9 +579,63 @@ function startNew(){
   }
 }
 
-/* initial render */
-startNew();
-</script>
+/* update performance note (approx) */
+function updatePerfNote(){
+  const noteEl = document.getElementById('perfNote');
+  if(LEVELS[difficulty].type === 'minimax'){
+    noteEl.textContent = `Search depth: ${LEVELS[difficulty].depth} — may be slower on weak devices`;
+  } else {
+    noteEl.textContent = '';
+  }
+}
 
+/* ========== confetti (simple) ========== */
+function initConfetti(){
+  confettiCtx = confettiCanvas.getContext('2d');
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+  window.addEventListener('resize', ()=>{
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  });
+}
+function triggerConfetti(){
+  confettiParticles = [];
+  const colors = ['#ffd54f','#ff6b6b','#7ed957','#5eb0ff','#d27bff'];
+  for(let i=0;i<80;i++){
+    confettiParticles.push({
+      x: Math.random() * confettiCanvas.width,
+      y: -20 - Math.random()*200,
+      vx: (Math.random()-0.5)*6,
+      vy: 2 + Math.random()*6,
+      r: 6 + Math.random()*8,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360,
+      omega: (Math.random()-0.5)*8
+    });
+  }
+  requestAnimationFrame(confettiLoop);
+}
+function confettiLoop(){
+  confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+  for(const p of confettiParticles){
+    p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.rot += p.omega;
+    confettiCtx.save();
+    confettiCtx.translate(p.x,p.y);
+    confettiCtx.rotate(p.rot * Math.PI/180);
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6);
+    confettiCtx.restore();
+  }
+  confettiParticles = confettiParticles.filter(p => p.y < confettiCanvas.height + 50);
+  if(confettiParticles.length) requestAnimationFrame(confettiLoop);
+}
+
+/* init on load */
+initConfetti();
+setTimeout(()=> { updatePerfNote(); startNew(); }, 80);
+
+/* helper: renderBoard exposed earlier already calls updateStatus */
+</script>
 </body>
-      </html>
+</html>
