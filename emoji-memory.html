@@ -1,207 +1,287 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Emoji Memory</title>
-  <link rel="stylesheet" href="styles.css">
+
+  <!-- AdSense loader (optional) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
+     crossorigin="anonymous"></script>
+
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; padding:0; display:flex; flex-direction:column; min-height:100vh; }
-    header, footer { background:#0b74de; color:#fff; padding:12px 16px; }
-    header h1 { margin:0; font-size:20px; display:inline-block; }
-    nav { margin-top:8px; }
-    nav a { color:#fff; margin-right:10px; text-decoration:none; font-weight:600; font-size:14px; }
-    main { flex:1; padding:20px; max-width:960px; margin:0 auto; }
+    :root{
+      --blue:#0b74de;
+      --panel:#fafafa;
+      --muted:#666;
+      --max-width:960px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:#f5f7fb;color:#111}
+    /* top bar */
+    .topbar{
+      background:var(--blue);
+      color:#fff;
+      height:56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      box-shadow:0 2px 6px rgba(11,115,222,0.06);
+      padding:0 12px;
+      font-weight:800;
+      font-size:20px;
+    }
+    .home-link{
+      position:absolute;
+      left:12px;
+      top:50%;
+      transform:translateY(-50%);
+      color:#fff;
+      text-decoration:none;
+      font-size:20px;
+      opacity:0.6;
+    }
 
-    .card { background:#fafafa; border-radius:10px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,.06); }
-    .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
-    .controls button { padding:8px 12px; border-radius:6px; border:1px solid #ccc; background:#fff; cursor:pointer; }
-    .status { margin-left:auto; font-weight:700; }
+    main{max-width:var(--max-width);margin:18px auto;padding:12px}
+    .card{background:var(--panel);padding:16px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+    .controls button, .difficulty button{padding:8px 12px;border-radius:8px;border:1px solid #d0d7e0;background:#fff;font-weight:700;cursor:pointer}
+    .status{margin-left:auto;font-weight:800}
+    .board{display:grid;gap:10px;margin-top:12px}
+    .card-item{background:#eee;border-radius:10px;height:80px;display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;user-select:none;position:relative}
+    .card-item .face{display:none}
+    .card-item.flipped .face, .card-item.matched .face{display:block}
+    .card-item.flipped .back{display:none}
+    .controls .info{font-size:14px;color:var(--muted); margin-left:8px}
 
-    .board { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:12px; }
-    .card-item { background:#eee; border-radius:10px; height:80px; display:flex; align-items:center; justify-content:center; font-size:36px; cursor:pointer; user-select:none; position:relative; }
-    .card-item.flipped, .card-item.matched { background:#fff; }
-    .card-item .face { display:none; }
-    .card-item.flipped .face, .card-item.matched .face { display:block; }
-    .card-item .back { display:block; font-size:20px; color:#666; }
-    .card-item.flipped .back { display:none; }
+    .difficulty{display:flex;gap:8px;align-items:center}
+    .difficulty button.active{background:var(--blue); color:#fff; border-color:var(--blue)}
 
-    @media (max-width:480px) {
-      .board { grid-template-columns: repeat(4, 1fr); gap:8px; }
-      .card-item { height:64px; font-size:28px; }
+    @media (max-width:480px){
+      .card-item{height:64px;font-size:28px}
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Emoji Memory</h1>
-    <nav>
-      <a href="/Game/index.html">Home</a>
-      <a href="/Game/color-clicker.html">Color Clicker</a>
-      <a href="/Game/emoji-memory.html">Emoji Memory</a>
-      <a href="/Game/about.html">About</a>
-      <a href="/Game/privacy.html">Privacy</a>
-    </nav>
+
+  <header class="topbar">
+    <a class="home-link" href="/Game/index.html" aria-label="Home">←</a>
+    <div>ArcadeOwl</div>
   </header>
 
   <main>
-    <div class="card">
-      <div class="controls">
-        <button id="startBtn">Start</button>
-        <button id="restartBtn">Restart</button>
-        <div>Moves: <strong><span id="moves">0</span></strong></div>
-        <div class="status">Time: <strong><span id="timer">0</span>s</strong></div>
-        <div>Best Moves: <span id="bestMoves">—</span></div>
+    <div class="card" role="application" aria-label="Emoji Memory game">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div class="difficulty" aria-hidden="false">
+            <button id="easyBtn" class="active" data-diff="easy">Easy</button>
+            <button id="medBtn" data-diff="med">Medium</button>
+            <button id="hardBtn" data-diff="hard">Hard</button>
+          </div>
+
+          <div style="margin-left:8px;">
+            <button id="startBtn">Start</button>
+            <button id="restartBtn">Restart</button>
+          </div>
+
+          <div class="controls" style="margin-left:12px;">
+            <div>Moves: <strong><span id="moves">0</span></strong></div>
+            <div class="info">Time: <strong><span id="timer">0</span>s</strong></div>
+            <div class="info">Best: <strong id="bestMoves">—</strong></div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;color:var(--muted)">Choose difficulty, then press Start. Preview will briefly reveal all cards.</div>
       </div>
 
-      <div class="board" id="board" aria-live="polite"></div>
+      <div id="board" class="board" aria-live="polite"></div>
 
       <div id="results" style="margin-top:12px;color:#333"></div>
     </div>
   </main>
 
-  <footer>
-    <p>© My Games Site</p>
-  </footer>
+<script>
+(function(){
+  // Difficulty presets
+  const DIFFS = {
+    easy:  {cols:4, rows:4, preview:2000}, // 8 pairs
+    med:   {cols:5, rows:4, preview:1200}, // 10 pairs
+    hard:  {cols:6, rows:6, preview:700}   // 18 pairs
+  };
 
-  <script>
-    (function(){
-      const boardEl = document.getElementById('board');
-      const movesEl = document.getElementById('moves');
-      const timerEl = document.getElementById('timer');
-      const startBtn = document.getElementById('startBtn');
-      const restartBtn = document.getElementById('restartBtn');
-      const resultsEl = document.getElementById('results');
-      const bestMovesEl = document.getElementById('bestMoves');
+  // Emoji pool (large enough)
+  const EMOJIS = ['🍎','🚀','🐶','⚽','🎵','🌟','🍀','🍩','🍓','🐱','🐼','🌈','🍕','🌮','🚗','🎲','🧩','🎯','🏀','🍉','🍌','🍇','🍪','🦄','👾','🛸','🐵','🐸','🐢','🌙','☀️'];
 
-      const BEST_KEY = 'emoji_memory_best_moves';
-      bestMovesEl.textContent = localStorage.getItem(BEST_KEY) || '—';
+  // DOM
+  const boardEl = document.getElementById('board');
+  const startBtn = document.getElementById('startBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const movesEl = document.getElementById('moves');
+  const timerEl = document.getElementById('timer');
+  const resultsEl = document.getElementById('results');
+  const bestMovesEl = document.getElementById('bestMoves');
 
-      const EMOJIS = ['🍎','🚀','🐶','⚽','🎵','🌟','🍀','🍩']; // 8 pairs -> 16 cards
-      let deck = [];
-      let flipped = [];
-      let matchedCount = 0;
-      let moves = 0;
-      let seconds = 0;
-      let timer = null;
-      let running = false;
+  const easyBtn = document.getElementById('easyBtn');
+  const medBtn = document.getElementById('medBtn');
+  const hardBtn = document.getElementById('hardBtn');
 
-      function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-      }
+  let difficulty = 'easy';
+  let deck = [];
+  let flipped = [];
+  let matchedCount = 0;
+  let moves = 0;
+  let seconds = 0;
+  let timer = null;
+  let running = false;
+  let cols = 4, rows = 4;
 
-      function buildDeck() {
-        deck = shuffle([...EMOJIS, ...EMOJIS]);
-      }
+  function storageKeyFor(diff){ return 'emoji_memory_best_moves_' + diff; }
+  function loadBest(){ bestMovesEl.textContent = localStorage.getItem(storageKeyFor(difficulty)) || '—'; }
+  loadBest();
 
-      function renderBoard() {
-        boardEl.innerHTML = '';
-        deck.forEach((emoji, i) => {
-          const card = document.createElement('button');
-          card.className = 'card-item';
-          card.type = 'button';
-          card.setAttribute('data-index', i);
-          card.innerHTML = '<span class="face">' + emoji + '</span><span class="back">?</span>';
-          boardEl.appendChild(card);
-        });
-      }
+  function setActiveButton(diff){
+    difficulty = diff;
+    [easyBtn,medBtn,hardBtn].forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
+    loadBest();
+  }
 
-      function resetGame() {
-        stopTimer();
-        seconds = 0;
-        timerEl.textContent = 0;
-        moves = 0;
-        movesEl.textContent = 0;
-        matchedCount = 0;
+  easyBtn.addEventListener('click', ()=> setActiveButton('easy'));
+  medBtn.addEventListener('click', ()=> setActiveButton('med'));
+  hardBtn.addEventListener('click', ()=> setActiveButton('hard'));
+
+  function shuffle(array){
+    for(let i = array.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  function buildDeck(){
+    const cfg = DIFFS[difficulty];
+    cols = cfg.cols; rows = cfg.rows;
+    const pairs = Math.floor((cols*rows)/2);
+    // ensure we have enough emoji
+    if (pairs > EMOJIS.length) throw new Error('Not enough emoji in pool');
+    const chosen = shuffle(EMOJIS.slice()).slice(0, pairs);
+    deck = shuffle([...chosen, ...chosen]);
+  }
+
+  function renderBoard(){
+    boardEl.innerHTML = '';
+    boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    deck.forEach((emoji, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'card-item';
+      btn.type = 'button';
+      btn.setAttribute('data-index', i);
+      btn.innerHTML = `<span class="face">${emoji}</span><span class="back">?</span>`;
+      boardEl.appendChild(btn);
+    });
+  }
+
+  function resetGame(){
+    stopTimer();
+    flipped = [];
+    matchedCount = 0;
+    moves = 0; seconds = 0;
+    movesEl.textContent = 0;
+    timerEl.textContent = 0;
+    resultsEl.textContent = '';
+    buildDeck();
+    renderBoard();
+    running = false;
+    startBtn.disabled = false;
+    loadBest();
+  }
+
+  function startGame(){
+    if (running) return;
+    moves = 0; movesEl.textContent = 0;
+    matchedCount = 0; flipped = [];
+    resultsEl.textContent = '';
+    buildDeck();
+    renderBoard();
+
+    const preview = DIFFS[difficulty].preview;
+    // reveal all briefly
+    const cards = Array.from(boardEl.querySelectorAll('.card-item'));
+    cards.forEach(c => c.classList.add('flipped'));
+    // after preview hide all
+    setTimeout(()=> {
+      cards.forEach(c => c.classList.remove('flipped'));
+      // now start timer and set running
+      running = true;
+      startBtn.disabled = true;
+      timer = setInterval(()=> {
+        seconds++;
+        timerEl.textContent = seconds;
+      }, 1000);
+    }, preview);
+  }
+
+  function stopTimer(){
+    running = false;
+    clearInterval(timer);
+    timer = null;
+    startBtn.disabled = false;
+  }
+
+  function gameWin(){
+    stopTimer();
+    resultsEl.textContent = `You won! Time: ${seconds}s · Moves: ${moves}`;
+    const key = storageKeyFor(difficulty);
+    const best = parseInt(localStorage.getItem(key) || '0', 10);
+    if (!best || moves < best) {
+      localStorage.setItem(key, moves);
+      bestMovesEl.textContent = moves;
+      resultsEl.textContent += ' — New best!';
+    }
+  }
+
+  boardEl.addEventListener('click', (e)=>{
+    if (!running) return;
+    const btn = e.target.closest('.card-item');
+    if (!btn) return;
+    if (btn.classList.contains('flipped') || btn.classList.contains('matched')) return;
+    const idx = Number(btn.dataset.index);
+
+    // flip
+    btn.classList.add('flipped');
+    flipped.push({ idx, btn });
+
+    if (flipped.length === 2){
+      moves++;
+      movesEl.textContent = moves;
+      const a = deck[flipped[0].idx];
+      const b = deck[flipped[1].idx];
+      if (a === b){
+        flipped[0].btn.classList.add('matched');
+        flipped[1].btn.classList.add('matched');
         flipped = [];
-        resultsEl.textContent = '';
-        buildDeck();
-        renderBoard();
-        running = false;
-        startBtn.disabled = false;
-      }
-
-      function startGame() {
-        if (running) return;
-        // fresh start: reset and start
-        moves = 0; movesEl.textContent = 0;
-        matchedCount = 0; flipped = [];
-        resultsEl.textContent = '';
-        buildDeck();
-        renderBoard();
-        seconds = 0; timerEl.textContent = 0;
-        running = true;
-        startBtn.disabled = true;
-        // start timer
-        timer = setInterval(() => {
-          seconds++;
-          timerEl.textContent = seconds;
-        }, 1000);
-      }
-
-      function stopTimer() {
-        running = false;
-        clearInterval(timer);
-        timer = null;
-        startBtn.disabled = false;
-      }
-
-      function gameWin() {
-        stopTimer();
-        resultsEl.textContent = `You won! Time: ${seconds}s · Moves: ${moves}`;
-        const best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
-        if (!best || moves < best) {
-          localStorage.setItem(BEST_KEY, moves);
-          bestMovesEl.textContent = moves;
-          resultsEl.textContent += ' — New best!';
+        matchedCount += 2;
+        if (matchedCount === deck.length) {
+          gameWin();
         }
+      } else {
+        // hide after a short delay
+        boardEl.style.pointerEvents = 'none';
+        setTimeout(()=> {
+          flipped.forEach(f => f.btn.classList.remove('flipped'));
+          flipped = [];
+          boardEl.style.pointerEvents = '';
+        }, 700);
       }
+    }
+  });
 
-      boardEl.addEventListener('click', (e) => {
-        if (!running) return; // clicks ignored until Start is pressed
-        const btn = e.target.closest('.card-item');
-        if (!btn || btn.classList.contains('flipped') || btn.classList.contains('matched')) return;
-        const idx = Number(btn.dataset.index);
+  startBtn.addEventListener('click', startGame);
+  restartBtn.addEventListener('click', resetGame);
 
-        // flip
-        btn.classList.add('flipped');
-        flipped.push({ idx, btn });
+  // initialize
+  resetGame();
 
-        if (flipped.length === 2) {
-          moves++;
-          movesEl.textContent = moves;
-          const a = deck[flipped[0].idx];
-          const b = deck[flipped[1].idx];
-          if (a === b) {
-            flipped[0].btn.classList.add('matched');
-            flipped[1].btn.classList.add('matched');
-            flipped = [];
-            matchedCount += 2;
-            if (matchedCount === deck.length) {
-              gameWin();
-            }
-          } else {
-            boardEl.style.pointerEvents = 'none';
-            setTimeout(() => {
-              flipped.forEach(f => f.btn.classList.remove('flipped'));
-              flipped = [];
-              boardEl.style.pointerEvents = '';
-            }, 700);
-          }
-        }
-      });
-
-      // controls
-      startBtn.addEventListener('click', startGame);
-      restartBtn.addEventListener('click', resetGame);
-
-      // initialize board (not running)
-      resetGame();
-    })();
-  </script>
+})();
+</script>
 </body>
-  </html>
+                                                           </html>
