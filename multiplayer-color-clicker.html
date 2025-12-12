@@ -13,6 +13,8 @@
   .box{width:100px;height:100px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;background:#eee;user-select:none;}
   .scoreboard{display:flex;gap:20px;justify-content:center;font-size:18px;font-weight:700;margin-top:10px;}
   button{padding:8px 12px;margin-top:12px;border-radius:8px;border:1px solid #d0d7e0;background:#fff;cursor:pointer;font-weight:700;}
+  .touch-buttons{display:flex;gap:12px;justify-content:center;margin-top:12px;}
+  .touch-buttons button{flex:1;padding:16px;font-size:20px;}
 </style>
 </head>
 <body>
@@ -24,13 +26,20 @@
 
 <main>
   <h2>Color Clicker Multiplayer</h2>
-  <p>Player 1: Key <strong>A</strong> | Player 2: Key <strong>L</strong></p>
+  <p>PC: Player 1 = <strong>A</strong> | Player 2 = <strong>L</strong></p>
   <div class="scoreboard">
     <div>Player 1: <span id="score1">0</span></div>
     <div>Player 2: <span id="score2">0</span></div>
   </div>
+
   <div class="board" id="board"></div>
+
   <button id="startBtn">Start Game</button>
+  <div class="touch-buttons">
+    <button id="p1Touch">Player 1</button>
+    <button id="p2Touch">Player 2</button>
+  </div>
+
   <div id="winner" style="margin-top:12px;font-size:18px;color:green;font-weight:700;"></div>
 </main>
 
@@ -40,6 +49,8 @@ const score1El = document.getElementById('score1');
 const score2El = document.getElementById('score2');
 const startBtn = document.getElementById('startBtn');
 const winnerEl = document.getElementById('winner');
+const p1Touch = document.getElementById('p1Touch');
+const p2Touch = document.getElementById('p2Touch');
 
 let score1 = 0, score2 = 0;
 let activeBox = null;
@@ -79,31 +90,31 @@ function startGame(){
   activateRandomBox();
 }
 
-document.addEventListener('keydown', (e)=>{
-  if(!running) return;
-  if(!activeBox) return;
-  const color = activeBox.style.background;
-  if(color === 'rgb(238, 238, 238)') return; // not active
-  if(e.key.toLowerCase() === 'a'){
-    score1++;
-    score1El.textContent = score1;
-  }
-  if(e.key.toLowerCase() === 'l'){
-    score2++;
-    score2El.textContent = score2;
-  }
+function clickBox(player){
+  if(!running || !activeBox) return;
   activeBox.style.background = '#eee';
+  if(player===1){ score1++; score1El.textContent = score1; }
+  if(player===2){ score2++; score2El.textContent = score2; }
   activateRandomBox();
-
   if(score1>=10 || score2>=10){
     running=false;
     winnerEl.textContent = score1>=10 ? 'Player 1 Wins!' : 'Player 2 Wins!';
   }
+}
+
+// Keyboard controls for PC
+document.addEventListener('keydown', (e)=>{
+  if(e.key.toLowerCase()==='a') clickBox(1);
+  if(e.key.toLowerCase()==='l') clickBox(2);
 });
+
+// Touch buttons for mobile
+p1Touch.addEventListener('click', ()=>clickBox(1));
+p2Touch.addEventListener('click', ()=>clickBox(2));
 
 startBtn.addEventListener('click', startGame);
 
-// initialize
+// initialize board
 createBoard();
 </script>
 </body>
