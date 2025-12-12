@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Tic-Tac-Toe KI</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+    }
+    .status {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    .board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 300px;
+        margin: 0 auto;
+        gap: 5px;
+    }
+    .cell {
+        background: #f0f0f0;
+        border: 2px solid #333;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        aspect-ratio: 1 / 1;
+        transition: background 0.2s, color 0.2s;
+    }
+    .cell:hover {
+        background: #e0e0ff;
+    }
+    .cell.winner {
+        background: #90ee90;
+        color: #000;
+        font-weight: bold;
+    }
+    button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<div class="status" id="status">Dein Zug (X)</div>
+<div class="board" id="board"></div>
+<button onclick="resetGame()">Neues Spiel</button>
+
+<script>
+const boardElement = document.getElementById('board');
+const statusElement = document.getElementById('status');
+
+let board = Array(9).fill('');
+let gameActive = true;
+const human = 'X';
+const ai = 'O';
+let currentPlayer = human;
+
+const winPatterns = [
+    [0,1,2], [3,4,5], [6,7,8], // Reihen
+    [0,3,6], [1,4,7], [2,5,8], // Spalten
+    [0,4,8], [2,4,6]           // Diagonalen
+];
+
+function createBoard() {
+    boardElement.innerHTML = '';
+    board.forEach((cellValue, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = index;
+        cell.textContent = cellValue;
+        cell.addEventListener('click', () => humanMove(index));
+        boardElement.appendChild(cell);
+    });
+}
+
+function humanMove(index) {
+    if (!gameActive || board[index] !== '' || currentPlayer !== human) return;
+
+    board[index] = human;
+    boardElement.children[index].textContent = human;
+
+    const winningPattern = checkWinner();
+    if (winningPattern) {
+        statusElement.textContent = 'Du hast gewonnen!';
+        gameActive = false;
+        highlightWinner(winningPattern);
+        return;
+    }
+
+    if (board.every(cell => cell !== '')) {
+        statusElement.textContent = 'Unentschieden!';
+        gameActive = false;
+        return;
+    }
+
+    currentPlayer = ai;
+    statusElement.textContent = 'Computer zieht...';
+    setTimeout(aiMove, 500); // kurze Verzögerung für realistischen Effekt
+}
+
+function aiMove() {
+    if (!gameActive) return;
+
+    // Einfache KI: zufälliger freier Platz
+    const emptyIndices = board.map((val, idx) => val === '' ? idx : null).filter(v => v !== null);
+    const move = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+
+    board[move] = ai;
+    boardElement.children[move].textContent = ai;
+
+    const winningPattern = checkWinner();
+    if (winningPattern) {
+        statusElement.textContent = 'Computer hat gewonnen!';
+        gameActive = false;
+        highlightWinner(winningPattern);
+        return;
+    }
+
+    if (board.every(cell => cell !== '')) {
+        statusElement.textContent = 'Unentschieden!';
+        gameActive = false;
+        return;
+    }
+
+    currentPlayer = human;
+    statusElement.textContent = 'Dein Zug (X)';
+}
+
+function checkWinner() {
+    for (const pattern of winPatterns) {
+        const [a,b,c] = pattern;
+        if (board[a] && board[a] === board[b] && board[b] === board[c]) return pattern;
+    }
+    return null;
+}
+
+function highlightWinner(pattern) {
+    pattern.forEach(index => {
+        boardElement.children[index].classList.add('winner');
+    });
+}
+
+function resetGame() {
+    board = Array(9).fill('');
+    currentPlayer = human;
+    gameActive = true;
+    statusElement.textContent = 'Dein Zug (X)';
+    createBoard();
+}
+
+createBoard();
+</script>
+
+</body>
+</html>
