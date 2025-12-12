@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Memory</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .setup-screen, .waiting-screen, .game-screen {
+            display: none;
+        }
+
+        .setup-screen.active, .waiting-screen.active, .game-screen.active {
+            display: block;
+        }
+
+        .setup-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .option-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+            flex: 1;
+            max-width: 250px;
+        }
+
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .option-card h2 {
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .option-card p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .connection-info {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .room-id {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 3px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+
+        .status-message {
+            color: #666;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .player-info {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .player-info.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .player-name {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .player-score {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em;
+            color: white;
+            transition: transform 0.3s;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .card:hover:not(.flipped):not(.matched) {
+            transform: scale(1.05);
+        }
+
+        .card.flipped, .card.matched {
+            background: white;
+            border: 3px solid #667eea;
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .card-content {
+            display: none;
+        }
+
+        .card.flipped .card-content, .card.matched .card-content {
+            display: block;
+        }
+
+        .winner-screen {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .winner-screen.active {
+            display: block;
+        }
+
+        .winner-screen h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .winner-screen .final-score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Multiplayer Memory</h1>
+
+        <div class="setup-screen active">
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">
+                Wählen Sie aus, ob Sie einen neuen Raum erstellen oder einem bestehenden Raum beitreten möchten.
+            </p>
+            <div class="setup-options">
+                <div class="option-card" onclick="showHostSetup()">
+                    <h2>🏠 Raum erstellen</h2>
+                    <p>Erstellen Sie einen neuen Spielraum und teilen Sie den Code</p>
+                </div>
+                <div class="option-card" onclick="showJoinSetup()">
+                    <h2>🔗 Raum beitreten</h2>
+                    <p>Treten Sie einem bestehenden Raum bei</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="waiting-screen" id="hostSetup">
+            <div class="input-group">
+                <label>Ihr Name:</label>
+                <input type="text" id="hostName" placeholder="Spieler 1" maxlength="20">
+            </div>
+            <button class="btn" onclick="createRoom()">Raum erstellen</button>
+            <button class="btn back-btn" onclick="backToSetup()">Zurück</button>
+        </div>
+
+        <div class="waiting-screen" id="joinSetup">
+            <div class="input-group">
+                <label>Ihr Name:</label>
+                <input type="text" id="guestName" placeholder="Spieler 2" maxlength="20">
+            </div>
+            <div class="input-group">
+                <label>Raum-Code:</label>
+                <input type="text" id="roomCode" placeholder="Geben Sie den Raum-Code ein" maxlength="10">
+            </div>
+            <button class="btn" onclick="joinRoom()">Raum beitreten</button>
+            <button class="btn back-btn" onclick="backToSetup()">Zurück</button>
+        </div>
+
+        <div class="waiting-screen" id="waitingRoom">
+            <div class="connection-info">
+                <p class="status-message">Warten auf zweiten Spieler...</p>
+                <p style="margin: 15px 0; color: #666;">Teilen Sie diesen Code mit Ihrem Mitspieler:</p>
+                <div class="room-id" id="displayRoomId"></div>
+                <p style="margin-top: 15px; font-size: 0.9em; color: #999;">
+                    Der andere Spieler muss diesen Code eingeben, um beizutreten.
+                </p>
+            </div>
+            <div class="loading">Verbindung wird hergestellt</div>
+        </div>
+
+        <div class="waiting-screen" id="connecting">
+            <div class="connection-info">
+                <p class="status-message">Verbindung wird hergestellt...</p>
+                <div class="loading">Bitte warten</div>
+            </div>
+            <button class="btn back-btn" onclick="backToSetup()">Abbrechen</button>
+        </div>
+
+        <div class="game-screen">
+            <div class="game-info">
+                <div class="player-info" id="player1Info">
+                    <div class="player-name" id="player1Name">Spieler 1</div>
+                    <div class="player-score" id="player1Score">0</div>
+                </div>
+                <div class="player-info" id="player2Info">
+                    <div class="player-name" id="player2Name">Spieler 2</div>
+                    <div class="player-score" id="player2Score">0</div>
+                </div>
+            </div>
+            <div class="game-board" id="gameBoard"></div>
+        </div>
+
+        <div class="winner-screen">
+            <h2 id="winnerText">🎉 Gewinner!</h2>
+            <div class="final-score" id="finalScore"></div>
+            <button class="btn" onclick="location.reload()">Neues Spiel</button>
+        </div>
+    </div>
+
+    <script>
+        let peer = null;
+        let connection = null;
+        let isHost = false;
+        let myName = '';
+        let opponentName = '';
+        let gameState = {
+            cards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            currentPlayer: 1,
+            scores: [0, 0],
+            canFlip: true
+        };
+
+        const emojis = ['🎮', '🎯', '🎨', '🎭', '🎪', '🎢', '🎡', '🎰'];
+
+        function showHostSetup() {
+            document.querySelector('.setup-screen').classList.remove('active');
+            document.getElementById('hostSetup').classList.add('active');
+        }
+
+        function showJoinSetup() {
+            document.querySelector('.setup-screen').classList.remove('active');
+            document.getElementById('joinSetup').classList.add('active');
+        }
+
+        function backToSetup() {
+            document.querySelectorAll('.waiting-screen').forEach(el => el.classList.remove('active'));
+            document.querySelector('.setup-screen').classList.add('active');
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
+            if (connection) {
+                connection.close();
+                connection = null;
+            }
+        }
+
+        function createRoom() {
+            myName = document.getElementById('hostName').value.trim() || 'Spieler 1';
+            isHost = true;
+
+            const roomId = generateRoomId();
+            peer = new Peer(roomId);
+
+            peer.on('open', (id) => {
+                document.getElementById('hostSetup').classList.remove('active');
+                document.getElementById('waitingRoom').classList.add('active');
+                document.getElementById('displayRoomId').textContent = id;
+            });
+
+            peer.on('connection', (conn) => {
+                connection = conn;
+                setupConnection();
+            });
+
+            peer.on('error', (err) => {
+                alert('Fehler beim Erstellen des Raums: ' + err.message);
+                backToSetup();
+            });
+        }
+
+        function joinRoom() {
+            myName = document.getElementById('guestName').value.trim() || 'Spieler 2';
+            const roomId = document.getElementById('roomCode').value.trim();
+
+            if (!roomId) {
+                alert('Bitte geben Sie einen Raum-Code ein.');
+                return;
+            }
+
+            isHost = false;
+            peer = new Peer();
+
+            peer.on('open', () => {
+                document.getElementById('joinSetup').classList.remove('active');
+                document.getElementById('connecting').classList.add('active');
+                
+                connection = peer.connect(roomId, {
+                    reliable: true
+                });
+                setupConnection();
+            });
+
+            peer.on('error', (err) => {
+                alert('Fehler beim Beitreten: ' + err.message);
+                backToSetup();
+            });
+        }
+
+        function setupConnection() {
+            connection.on('open', () => {
+                connection.send({
+                    type: 'name',
+                    name: myName
+                });
+
+                if (isHost) {
+                    initializeGame();
+                }
+            });
+
+            connection.on('data', (data) => {
+                handleMessage(data);
+            });
+
+            connection.on('close', () => {
+                alert('Verbindung getrennt. Das Spiel wird neu geladen.');
+                location.reload();
+            });
+
+            connection.on('error', (err) => {
+                alert('Verbindungsfehler: ' + err.message);
+                backToSetup();
+            });
+        }
+
+        function handleMessage(data) {
+            switch(data.type) {
+                case 'name':
+                    opponentName = data.name;
+                    if (isHost) {
+                        connection.send({
+                            type: 'name',
+                            name: myName
+                        });
+                    } else {
+                        document.getElementById('connecting').classList.remove('active');
+                    }
+                    break;
+
+                case 'gameStart':
+                    gameState = data.gameState;
+                    opponentName = data.player1Name;
+                    startGame();
+                    break;
+
+                case 'cardFlip':
+                    handleRemoteCardFlip(data.index);
+                    break;
+
+                case 'turnEnd':
+                    gameState.currentPlayer = data.currentPlayer;
+                    gameState.scores = data.scores;
+                    gameState.canFlip = true;
+                    updateGameDisplay();
+                    break;
+            }
+        }
+
+        function generateRoomId() {
+            return 'MEM' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+
+        function initializeGame() {
+            const cards = [...emojis, ...emojis];
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+
+            gameState.cards = cards;
+            gameState.flippedCards = [];
+            gameState.matchedPairs = 0;
+            gameState.currentPlayer = 1;
+            gameState.scores = [0, 0];
+            gameState.canFlip = true;
+
+            connection.send({
+                type: 'gameStart',
+                gameState: gameState,
+                player1Name: myName
+            });
+
+            startGame();
+        }
+
+        function startGame() {
+            document.querySelectorAll('.waiting-screen').forEach(el => el.classList.remove('active'));
+            document.querySelector('.game-screen').classList.add('active');
+
+            if (isHost) {
+                document.getElementById('player1Name').textContent = myName;
+                document.getElementById('player2Name').textContent = opponentName;
+            } else {
+                document.getElementById('player1Name').textContent = opponentName;
+                document.getElementById('player2Name').textContent = myName;
+            }
+
+            renderBoard();
+            updateGameDisplay();
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+
+            gameState.cards.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                card.innerHTML = `<span class="card-content">${emoji}</span>`;
+                card.addEventListener('click', () => handleCardClick(index));
+                board.appendChild(card);
+            });
+        }
+
+        function handleCardClick(index) {
+            const isMyTurn = (isHost && gameState.currentPlayer === 1) || 
+                           (!isHost && gameState.currentPlayer === 2);
+            
+            if (!isMyTurn || !gameState.canFlip) return;
+
+            const card = document.querySelector(`[data-index="${index}"]`);
+            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            if (gameState.flippedCards.length >= 2) return;
+
+            flipCard(index);
+            connection.send({
+                type: 'cardFlip',
+                index: index
+            });
+
+            if (gameState.flippedCards.length === 2) {
+                gameState.canFlip = false;
+                setTimeout(checkMatch, 1000);
+            }
+        }
+
+        function handleRemoteCardFlip(index) {
+            flipCard(index);
+            if (gameState.flippedCards.length === 2) {
+                gameState.canFlip = false;
+                setTimeout(checkMatch, 1000);
+            }
+        }
+
+        function flipCard(index) {
+            const card = document.querySelector(`[data-index="${index}"]`);
+            card.classList.add('flipped');
+            gameState.flippedCards.push(index);
+        }
+
+        function checkMatch() {
+            const [index1, index2] = gameState.flippedCards;
+            const card1 = document.querySelector(`[data-index="${index1}"]`);
+            const card2 = document.querySelector(`[data-index="${index2}"]`);
+
+            if (gameState.cards[index1] === gameState.cards[index2]) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                gameState.scores[gameState.currentPlayer - 1]++;
+                gameState.matchedPairs++;
+
+                if (gameState.matchedPairs === emojis.length) {
+                    setTimeout(endGame, 500);
+                }
+            } else {
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+                gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+            }
+
+            gameState.flippedCards = [];
+            gameState.canFlip = true;
+
+            if (isHost || (!isHost && gameState.currentPlayer === 2)) {
+                connection.send({
+                    type: 'turnEnd',
+                    currentPlayer: gameState.currentPlayer,
+                    scores: gameState.scores
+                });
+            }
+
+            updateGameDisplay();
+        }
+
+        function updateGameDisplay() {
+            document.getElementById('player1Score').textContent = gameState.scores[0];
+            document.getElementById('player2Score').textContent = gameState.scores[1];
+
+            document.getElementById('player1Info').classList.toggle('active', gameState.currentPlayer === 1);
+            document.getElementById('player2Info').classList.toggle('active', gameState.currentPlayer === 2);
+        }
+
+        function endGame() {
+            document.querySelector('.game-screen').classList.remove('active');
+            document.querySelector('.winner-screen').classList.add('active');
+
+            const myScore = isHost ? gameState.scores[0] : gameState.scores[1];
+            const opponentScore = isHost ? gameState.scores[1] : gameState.scores[0];
+
+            let winnerText = '';
+            if (myScore > opponentScore) {
+                winnerText = '🎉 Sie haben gewonnen!';
+            } else if (myScore < opponentScore) {
+                winnerText = '😔 Sie haben verloren';
+            } else {
+                winnerText = '🤝 Unentschieden!';
+            }
+
+            document.getElementById('winnerText').textContent = winnerText;
+            document.getElementById('finalScore').innerHTML = 
+                `${myName}: ${myScore} Punkte<br>${opponentName}: ${opponentScore} Punkte`;
+        }
+    </script>
+</body>
+</html>
