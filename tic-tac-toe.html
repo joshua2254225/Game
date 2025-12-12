@@ -2,54 +2,123 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tic-Tac-Toe</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        background: #f9f9f9;
-        margin: 0;
-        padding: 20px;
+    :root {
+        --blue: #0b74de;
+        --red: #ff4c4c;
+        --green: #28a745;
+        --bg: #f5f7fb;
+        --cell-bg: #ffffff;
     }
-    .status {
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    /* Topbar */
+    .topbar {
+        background: var(--blue);
+        color: #fff;
+        width: 100%;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .home-link {
+        position: absolute;
+        left: 12px;
         font-size: 24px;
-        margin-bottom: 20px;
+        color: #fff;
+        text-decoration: none;
+    }
+    .brand {
+        font-weight: 800;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .brand img {
+        height: 34px;
+        width: auto;
+        border-radius: 8px;
+    }
+
+    /* Game area */
+    .status {
+        margin: 20px;
+        font-size: 22px;
+        font-weight: bold;
     }
     .board {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        max-width: 300px;
-        margin: 0 auto;
         gap: 5px;
+        max-width: 320px;
+        width: 90vw;
     }
     .cell {
-        background: #f0f0f0;
+        background: var(--cell-bg);
+        border-radius: 10px;
         border: 2px solid #333;
-        font-size: 2rem;
+        font-size: 2.5rem;
         display: flex;
-        align-items: center;
         justify-content: center;
-        cursor: pointer;
+        align-items: center;
         aspect-ratio: 1 / 1;
-        transition: background 0.2s, color 0.2s;
+        cursor: pointer;
+        transition: transform 0.2s, background 0.3s;
     }
     .cell:hover {
-        background: #e0e0ff;
+        transform: scale(1.05);
+        background: #e0f0ff;
+    }
+    .cell.X {
+        color: var(--red);
+        animation: pop 0.2s ease;
+    }
+    .cell.O {
+        color: var(--green);
+        animation: pop 0.2s ease;
     }
     .cell.winner {
-        background: #90ee90;
-        color: #000;
-        font-weight: bold;
+        background: #ffe066;
     }
+    @keyframes pop {
+        0% { transform: scale(0); }
+        100% { transform: scale(1); }
+    }
+
     button {
         margin-top: 20px;
         padding: 10px 20px;
         font-size: 16px;
         cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        background: var(--blue);
+        color: #fff;
+        transition: background 0.2s;
+    }
+    button:hover {
+        background: #095cb0;
     }
 </style>
 </head>
 <body>
+
+<header class="topbar">
+    <a href="/index.html" class="home-link">←</a>
+    <div class="brand">ArcadeOwl</div>
+</header>
 
 <div class="status" id="status">Spieler X ist dran</div>
 <div class="board" id="board"></div>
@@ -59,24 +128,23 @@
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
 
-let currentPlayer = 'X';
 let board = Array(9).fill('');
+let currentPlayer = 'X';
 let gameActive = true;
 
 const winPatterns = [
-    [0,1,2], [3,4,5], [6,7,8], // Reihen
-    [0,3,6], [1,4,7], [2,5,8], // Spalten
-    [0,4,8], [2,4,6]           // Diagonalen
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
 ];
 
 function createBoard() {
     boardElement.innerHTML = '';
-    board.forEach((cellValue, index) => {
+    board.forEach((val, idx) => {
         const cell = document.createElement('div');
         cell.className = 'cell';
-        cell.dataset.index = index;
-        cell.textContent = cellValue;
-        cell.addEventListener('click', () => cellClicked(index));
+        cell.dataset.index = idx;
+        cell.addEventListener('click', () => cellClicked(idx));
         boardElement.appendChild(cell);
     });
 }
@@ -87,6 +155,7 @@ function cellClicked(index) {
     board[index] = currentPlayer;
     const cell = boardElement.children[index];
     cell.textContent = currentPlayer;
+    cell.classList.add(currentPlayer);
 
     const winningPattern = checkWinner();
     if (winningPattern) {
@@ -96,7 +165,7 @@ function cellClicked(index) {
         return;
     }
 
-    if (board.every(cell => cell !== '')) {
+    if (board.every(c => c !== '')) {
         statusElement.textContent = 'Unentschieden!';
         gameActive = false;
         return;
@@ -108,18 +177,14 @@ function cellClicked(index) {
 
 function checkWinner() {
     for (const pattern of winPatterns) {
-        const [a, b, c] = pattern;
-        if (board[a] && board[a] === board[b] && board[b] === board[c]) {
-            return pattern;
-        }
+        const [a,b,c] = pattern;
+        if (board[a] && board[a] === board[b] && board[b] === board[c]) return pattern;
     }
     return null;
 }
 
 function highlightWinner(pattern) {
-    pattern.forEach(index => {
-        boardElement.children[index].classList.add('winner');
-    });
+    pattern.forEach(i => boardElement.children[i].classList.add('winner'));
 }
 
 function resetGame() {
