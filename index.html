@@ -1,17 +1,188 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArcadeOwl Games</title>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ArcadeOwl</title>
+
+  <!-- AdSense account meta (as requested) -->
+  <meta name="google-adsense-account" content="ca-pub-1154368264564805">
+
+  <!-- AdSense loader (your publisher ID included) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
+     crossorigin="anonymous"></script>
+
+  <!-- Optional: if you also get a google-site-verification tag from Google, paste it here:
+       <meta name="google-site-verification" content="DEIN_VERIFIZIERUNGS_CODE">
+  -->
+
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root{
+      --blue: #0b74de;
+      --muted: #666;
+      --card: #ffffff;
+      --max-width: 980px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:#f5f7fb;color:#111}
+    .topbar{
+      background:var(--blue);
+      color:#fff;
+      height:56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      box-shadow:0 2px 6px rgba(11,115,222,0.06);
+      padding:0 12px;
+    }
+    .home-link{
+      position:absolute;
+      left:12px;
+      top:50%;
+      transform:translateY(-50%);
+      color:#fff;
+      text-decoration:none;
+      font-size:20px;
+      opacity:0.6;
+      display:flex;
+      align-items:center;
+    }
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:0.6px;
+      font-size:20px;
+    }
+    .brand img {
+      height:34px;
+      width:auto;
+      border-radius:8px;
+      display:inline-block;
+    }
+    .wrap{max-width:var(--max-width); margin:18px auto; padding:12px;}
+    .games-list{ list-style:none; padding:0; margin:0; }
+    .games-list li{
+      background:var(--card);
+      margin:12px 0;
+      padding:14px 16px;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(12,20,30,0.04);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .game-info{ display:flex; flex-direction:column; }
+    .game-title{ font-weight:700; color: #0b5fc7; text-decoration:none; font-size:16px; }
+    .game-desc{ font-size:13px; color:var(--muted); margin-top:4px; }
+    .play-btn{
+      background:var(--blue);
+      color:#fff;
+      padding:8px 12px;
+      border-radius:8px;
+      text-decoration:none;
+      font-weight:700;
+    }
+    footer{ max-width:var(--max-width); margin:28px auto 40px; padding:8px 12px; color:#666; font-size:13px; text-align:center; }
+    @media (max-width:480px){
+      .brand { font-size:18px; gap:8px;}
+      .brand img { height:28px; }
+      .games-list li { flex-direction:column; align-items:flex-start; gap:8px; }
+      .play-btn { align-self:flex-end; }
+    }
+  </style>
 </head>
 <body>
-<h1>Willkommen zu ArcadeOwl Games</h1>
-<ul>
-  <li><a href="/snake-game.html">Snake Game</a></li>
-  <li><a href="/color-clicker.html">Color Clicker</a></li>
-  <li><a href="/emoji-memory.html">Emoji Memory</a></li>
-</ul>
+
+  <header class="topbar" role="banner">
+    <a class="home-link" href="/Game/index.html" aria-label="Home">←</a>
+    <div class="brand" role="img" aria-label="ArcadeOwl">
+      <img src="logo.png" alt="ArcadeOwl Logo" onerror="this.style.display='none'">
+      <span>ArcadeOwl</span>
+    </div>
+  </header>
+
+  <main class="wrap" role="main">
+
+    <!-- Top banner ad (responsive) -->
+    <div style="text-align:center; margin:12px 0;">
+      <ins class="adsbygoogle"
+           style="display:block; max-width:728px; margin:0 auto;"
+           data-ad-client="ca-pub-1154368264564805"
+           data-ad-slot="REPLACE_WITH_SLOT_ID"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <div style="text-align:center; font-size:12px; color:#666; margin-bottom:10px;">
+      Ads will appear here once AdSense approves your site
+    </div>
+
+    <ul class="games-list" aria-label="Games list">
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/color-clicker.html">Color Clicker</a>
+          <div class="game-desc">Speed reaction game — click the colored boxes.</div>
+        </div>
+        <a class="play-btn" href="/Game/color-clicker.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/emoji-memory.html">Emoji Memory</a>
+          <div class="game-desc">Find all matching emoji pairs as fast as you can.</div>
+        </div>
+        <a class="play-btn" href="/Game/emoji-memory.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/jump-monkey.html">Monkey Jump</a>
+          <div class="game-desc">Jump over coconuts — Space / Tap to jump.</div>
+        </div>
+        <a class="play-btn" href="/Game/jump-monkey.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/banana-catcher.html">Banana Catcher</a>
+          <div class="game-desc">Catch falling bananas with a basket — avoid bombs.</div>
+        </div>
+        <a class="play-btn" href="/Game/banana-catcher.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/snake-game.html">Snake Game</a>
+          <div class="game-desc">Classic snake game — grow your snake by eating food.</div>
+        </div>
+        <a class="play-btn" href="/Game/snake-game.html">Play</a>
+      </li>
+    </ul>
+
+    <!-- Inline ad slot (optional) -->
+    <div style="text-align:center; margin:18px 0;">
+      <ins class="adsbygoogle"
+           style="display:block; max-width:728px; margin:0 auto;"
+           data-ad-client="ca-pub-1154368264564805"
+           data-ad-slot="REPLACE_WITH_SLOT_ID"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+  </main>
+
+  <footer>© ArcadeOwl — All rights reserved</footer>
+
+  <!-- Notes:
+       * Replace each data-ad-slot="REPLACE_WITH_SLOT_ID" with the specific ad slot IDs from your AdSense account.
+       * If Google also provided a <meta name="google-site-verification"> tag for verification, paste it in the <head> as commented above.
+       * Commit & push this file to your repo (for example at /Game/index.html). Then confirm in AdSense (Sites → Verify).
+  -->
 </body>
-</html>
+  </html>
