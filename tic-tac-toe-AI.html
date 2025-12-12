@@ -116,7 +116,7 @@ button#newGame{
 
 <div class="levels">
   <button data-level="easy" class="active">Easy</button>
-  <button data-level="mid">Mid</button>
+  <button data-level="mid">Medium</button>
   <button data-level="hard">Hard</button>
 </div>
 
@@ -187,7 +187,22 @@ function makeMove(i,p){
 function highlight(pattern){pattern.forEach(i=>{boardEl.querySelector(`[data-index="${i}"]`).classList.add('winner');});}
 
 function emptyIndices(){return board.map((v,i)=>v===''?i:null).filter(n=>n!==null);}
-function aiEasyMove(){const e=emptyIndices();return e[Math.floor(Math.random()*e.length)];}
+
+// EASY AI: mostly random, easy to beat
+function aiEasyMove(){
+  const e = emptyIndices();
+  if(Math.random() < 0.8){
+    return e[Math.floor(Math.random() * e.length)];
+  }
+  for(const i of e){
+    const copy = board.slice();
+    copy[i] = human;
+    if(checkWinnerState(copy)) return i; // occasional block
+  }
+  return e[Math.floor(Math.random() * e.length)];
+}
+
+// MID AI: tries to block and win
 function aiMidMove(){
   for(const i of emptyIndices()){const copy=board.slice();copy[i]=ai;if(checkWinnerState(copy))return i;}
   for(const i of emptyIndices()){const copy=board.slice();copy[i]=human;if(checkWinnerState(copy))return i;}
@@ -196,10 +211,13 @@ function aiMidMove(){
   if(corners.length) return corners[Math.floor(Math.random()*corners.length)];
   return aiEasyMove();
 }
+
+// HARD AI: perfect
 function aiHardMove(){
   const best=minimax(board,ai);
   return best.index;
 }
+
 function minimax(nb,player){
   const avail=nb.map((v,i)=>v===''?i:null).filter(n=>n!==null);
   const w=checkWinnerState(nb);
