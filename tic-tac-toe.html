@@ -1,141 +1,169 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tic-Tac-Toe - ArcadeOwl</title>
+<title>ArcadeOwl - Tic Tac Toe</title>
 <style>
-    :root {
-        --blue: #0b74de;
-        --red: #ff4d4d;
-        --green: #4CAF50;
-        --bg: #f5f7fb;
-        --cell: #ffffff;
-    }
-    body {
-        margin:0;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-        background: var(--bg);
-        color: #111;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        animation: fadeIn 1s ease-in-out;
-    }
-    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
-    .topbar {
-        background: var(--blue);
-        color: #fff;
-        height: 56px;
-        width: 100%;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        position: relative;
-        box-shadow:0 2px 6px rgba(11,115,222,0.2);
-        margin-bottom: 20px;
-    }
-    .home-link {
-        position:absolute;
-        left:12px;
-        top:50%;
-        transform: translateY(-50%);
-        color:#fff;
-        text-decoration:none;
-        font-size:24px;
-        font-weight:bold;
-        opacity:0.8;
-        transition: transform 0.3s ease;
-    }
-    .home-link:hover { transform: translateX(-10px); }
-    .brand { font-size:20px; font-weight:800; }
-
-    .board {
-        display: grid;
-        grid-template-columns: repeat(3, 100px);
-        grid-gap: 5px;
-        margin-bottom: 20px;
-    }
-    .cell {
-        width:100px; height:100px;
-        background: var(--cell);
-        border-radius:12px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:48px;
-        cursor:pointer;
-        transition: transform 0.2s ease, background 0.3s ease;
-    }
-    .cell:hover { transform: scale(1.1); background: #e0e0ff; }
-    .status { font-size:24px; margin-bottom:10px; text-align:center; }
-    button { 
-        background: var(--blue);
-        color:#fff; border:none; padding:10px 20px; border-radius:8px; font-size:16px;
-        cursor:pointer; transition: background 0.3s ease;
-    }
-    button:hover { background: #0749a3; }
+:root{
+  --blue:#0b74de;
+  --red:#ff4d4d;
+  --green:#28a745;
+  --yellow:#ffd54f;
+  --bg:#f5f7fb;
+  --card:#fff;
+}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+  background: var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  padding:12px;
+}
+.topbar{
+  background:var(--blue);
+  color:#fff;
+  width:100%;
+  max-width:980px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  border-radius:10px;
+  margin-bottom:18px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  font-weight:800;
+  font-size:20px;
+}
+.home-link{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#fff;
+  text-decoration:none;
+  font-size:20px;
+}
+.board{
+  display:grid;
+  grid-template-columns:repeat(3,100px);
+  grid-gap:8px;
+  justify-content:center;
+  margin-bottom:12px;
+}
+.cell{
+  width:100px;
+  height:100px;
+  background:var(--card);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:3rem;
+  cursor:pointer;
+  transition:0.15s;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+.cell:hover{ transform:scale(1.1); background:#eef6ff;}
+.cell.X{ color: var(--red);}
+.cell.O{ color: var(--green);}
+.cell.winner{ background: var(--yellow); color:#111; font-weight:800; transform:scale(1.2);}
+.status{
+  margin-top:12px;
+  font-size:18px;
+  font-weight:700;
+  text-align:center;
+}
+button#newGame{
+  margin-top:12px;
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  background:var(--blue);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.2s;
+}
+button#newGame:hover{ background:#095ab5; }
 </style>
 </head>
 <body>
 
 <header class="topbar">
-    <a href="index.html" class="home-link">←</a>
-    <div class="brand">ArcadeOwl</div>
+  <a class="home-link" href="index.html">←</a>
+  ArcadeOwl — Tic Tac Toe
 </header>
 
-<div class="status" id="status">Spieler X ist dran</div>
 <div class="board" id="board"></div>
-<button onclick="resetGame()">Neues Spiel</button>
+<div class="status" id="status">Player X's turn</div>
+<button id="newGame">New Game</button>
 
 <script>
-let currentPlayer='X';
-let boardArray=['','','','','','','','',''];
-let gameActive=true;
+let board = Array(9).fill('');
+let currentPlayer = 'X';
+let gameActive = true;
+
+const boardEl = document.getElementById('board');
+const statusEl = document.getElementById('status');
+const newBtn = document.getElementById('newGame');
 
 function createBoard(){
-    const boardElement=document.getElementById('board');
-    boardElement.innerHTML='';
-    for(let i=0;i<9;i++){
-        const cell=document.createElement('div');
-        cell.className='cell';
-        cell.setAttribute('data-index',i);
-        cell.addEventListener('click',()=>cellClicked(i));
-        boardElement.appendChild(cell);
-    }
+  boardEl.innerHTML='';
+  board.forEach((v,i)=>{
+    const cell = document.createElement('div');
+    cell.className='cell'+(v?(' '+v):'');
+    cell.dataset.index=i;
+    cell.textContent=v;
+    cell.addEventListener('click',()=>cellClicked(i));
+    boardEl.appendChild(cell);
+  });
 }
 
-function cellClicked(index){
-    if(!gameActive || boardArray[index]!=='') return;
-    boardArray[index]=currentPlayer;
-    document.querySelector(`[data-index="${index}"]`).textContent=currentPlayer;
-    if(checkWinner()){
-        document.getElementById('status').textContent=`Spieler ${currentPlayer} hat gewonnen!`;
-        gameActive=false;
-        return;
-    }
-    if(boardArray.every(c=>c!=='')){
-        document.getElementById('status').textContent='Unentschieden!';
-        gameActive=false;
-        return;
-    }
-    currentPlayer=currentPlayer==='X'?'O':'X';
-    document.getElementById('status').textContent=`Spieler ${currentPlayer} ist dran`;
+function cellClicked(i){
+  if(!gameActive || board[i]!=='') return;
+  board[i]=currentPlayer;
+  createBoard();
+  const winner = checkWinner();
+  if(winner){
+    statusEl.textContent=`Player ${currentPlayer} wins!`;
+    highlightWinner(winner);
+    gameActive=false;
+    return;
+  }
+  if(board.every(c=>c!=='') && !winner){
+    statusEl.textContent='Draw!';
+    gameActive=false;
+    return;
+  }
+  currentPlayer = currentPlayer==='X'?'O':'X';
+  statusEl.textContent=`Player ${currentPlayer}'s turn`;
 }
 
 function checkWinner(){
-    const winPatterns=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    return winPatterns.some(p=>boardArray[p[0]]!=='' && boardArray[p[0]]===boardArray[p[1]] && boardArray[p[1]]===boardArray[p[2]]);
+  const winPatterns=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  for(const p of winPatterns){
+    const [a,b,c]=p;
+    if(board[a] && board[a]===board[b] && board[b]===board[c]) return p;
+  }
+  return null;
 }
 
-function resetGame(){
-    boardArray=['','','','','','','','',''];
-    currentPlayer='X';
-    gameActive=true;
-    document.getElementById('status').textContent='Spieler X ist dran';
-    createBoard();
+function highlightWinner(pattern){
+  pattern.forEach(i=>boardEl.querySelector(`[data-index="${i}"]`).classList.add('winner'));
 }
+
+newBtn.addEventListener('click',()=>{
+  board=Array(9).fill('');
+  currentPlayer='X';
+  gameActive=true;
+  statusEl.textContent="Player X's turn";
+  createBoard();
+});
 
 createBoard();
 </script>
