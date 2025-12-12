@@ -1,100 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-    <title>Tic-Tac-Toe</title>
-    <style>
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 100px);
-            grid-gap: 5px;
-            margin: 20px auto;
-            width: 310px;
-        }
-        .cell {
-            width: 100px;
-            height: 100px;
-            background: #f0f0f0;
-            border: 2px solid #333;
-            font-size: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-        .status {
-            text-align: center;
-            font-size: 24px;
-            margin: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Tic-Tac-Toe</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+    }
+    .status {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    .board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 300px;
+        margin: 0 auto;
+        gap: 5px;
+    }
+    .cell {
+        background: #f0f0f0;
+        border: 2px solid #333;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        aspect-ratio: 1 / 1;
+        transition: background 0.2s, color 0.2s;
+    }
+    .cell:hover {
+        background: #e0e0ff;
+    }
+    .cell.winner {
+        background: #90ee90;
+        color: #000;
+        font-weight: bold;
+    }
+    button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
 </head>
 <body>
-    <div class="status" id="status">Spieler X ist dran</div>
-    <div class="board" id="board"></div>
-    <button onclick="resetGame()" style="display: block; margin: 20px auto;">Neues Spiel</button>
 
-    <script>
-        let currentPlayer = 'X';
-        let board = ['', '', '', '', '', '', '', '', ''];
-        let gameActive = true;
+<div class="status" id="status">Spieler X ist dran</div>
+<div class="board" id="board"></div>
+<button onclick="resetGame()">Neues Spiel</button>
 
-        function createBoard() {
-            const boardElement = document.getElementById('board');
-            boardElement.innerHTML = '';
-            for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.setAttribute('data-index', i);
-                cell.addEventListener('click', () => cellClicked(i));
-                boardElement.appendChild(cell);
-            }
+<script>
+const boardElement = document.getElementById('board');
+const statusElement = document.getElementById('status');
+
+let currentPlayer = 'X';
+let board = Array(9).fill('');
+let gameActive = true;
+
+const winPatterns = [
+    [0,1,2], [3,4,5], [6,7,8], // Reihen
+    [0,3,6], [1,4,7], [2,5,8], // Spalten
+    [0,4,8], [2,4,6]           // Diagonalen
+];
+
+function createBoard() {
+    boardElement.innerHTML = '';
+    board.forEach((cellValue, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = index;
+        cell.textContent = cellValue;
+        cell.addEventListener('click', () => cellClicked(index));
+        boardElement.appendChild(cell);
+    });
+}
+
+function cellClicked(index) {
+    if (!gameActive || board[index] !== '') return;
+
+    board[index] = currentPlayer;
+    const cell = boardElement.children[index];
+    cell.textContent = currentPlayer;
+
+    const winningPattern = checkWinner();
+    if (winningPattern) {
+        statusElement.textContent = `Spieler ${currentPlayer} hat gewonnen!`;
+        gameActive = false;
+        highlightWinner(winningPattern);
+        return;
+    }
+
+    if (board.every(cell => cell !== '')) {
+        statusElement.textContent = 'Unentschieden!';
+        gameActive = false;
+        return;
+    }
+
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    statusElement.textContent = `Spieler ${currentPlayer} ist dran`;
+}
+
+function checkWinner() {
+    for (const pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+            return pattern;
         }
+    }
+    return null;
+}
 
-        function cellClicked(index) {
-            if (!gameActive || board[index] !== '') return;
-            
-            board[index] = currentPlayer;
-            document.querySelector(`[data-index="${index}"]`).textContent = currentPlayer;
-            
-            if (checkWinner()) {
-                document.getElementById('status').textContent = `Spieler ${currentPlayer} hat gewonnen!`;
-                gameActive = false;
-                return;
-            }
-            
-            if (board.every(cell => cell !== '')) {
-                document.getElementById('status').textContent = 'Unentschieden!';
-                gameActive = false;
-                return;
-            }
-            
-            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-            document.getElementById('status').textContent = `Spieler ${currentPlayer} ist dran`;
-        }
+function highlightWinner(pattern) {
+    pattern.forEach(index => {
+        boardElement.children[index].classList.add('winner');
+    });
+}
 
-        function checkWinner() {
-            const winPatterns = [
-                [0,1,2], [3,4,5], [6,7,8], // Reihen
-                [0,3,6], [1,4,7], [2,5,8], // Spalten
-                [0,4,8], [2,4,6]           // Diagonalen
-            ];
-            
-            return winPatterns.some(pattern => 
-                board[pattern[0]] !== '' &&
-                board[pattern[0]] === board[pattern[1]] &&
-                board[pattern[1]] === board[pattern[2]]
-            );
-        }
+function resetGame() {
+    board = Array(9).fill('');
+    currentPlayer = 'X';
+    gameActive = true;
+    statusElement.textContent = 'Spieler X ist dran';
+    createBoard();
+}
 
-        function resetGame() {
-            board = ['', '', '', '', '', '', '', '', ''];
-            currentPlayer = 'X';
-            gameActive = true;
-            document.getElementById('status').textContent = 'Spieler X ist dran';
-            createBoard();
-        }
+createBoard();
+</script>
 
-        createBoard();
-    </script>
 </body>
 </html>
