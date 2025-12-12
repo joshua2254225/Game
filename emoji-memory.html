@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Emoji Memory</title>
 
-  <!-- AdSense loader (optional) -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
-     crossorigin="anonymous"></script>
-
   <style>
     :root{
       --blue:#0b74de;
@@ -50,8 +46,9 @@
     .board{display:grid;gap:10px;margin-top:12px}
     .card-item{background:#eee;border-radius:10px;height:80px;display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;user-select:none;position:relative}
     .card-item .face{display:none}
+    .card-item .back{display:block}
     .card-item.flipped .face, .card-item.matched .face{display:block}
-    .card-item.flipped .back{display:none}
+    .card-item.flipped .back, .card-item.matched .back{display:none}
     .controls .info{font-size:14px;color:var(--muted); margin-left:8px}
 
     .difficulty{display:flex;gap:8px;align-items:center}
@@ -73,6 +70,7 @@
     <div class="card" role="application" aria-label="Emoji Memory game">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+
           <div class="difficulty" aria-hidden="false">
             <button id="easyBtn" class="active" data-diff="easy">Easy</button>
             <button id="medBtn" data-diff="med">Medium</button>
@@ -91,7 +89,7 @@
           </div>
         </div>
 
-        <div style="font-size:13px;color:var(--muted)">Choose difficulty, then press Start. Preview will briefly reveal all cards.</div>
+        <div style="font-size:13px;color:var(--muted)">Select difficulty — board updates immediately. Easy has preview on Start only.</div>
       </div>
 
       <div id="board" class="board" aria-live="polite"></div>
@@ -105,11 +103,10 @@
   // Difficulty presets
   const DIFFS = {
     easy:  {cols:4, rows:4, preview:2000}, // 8 pairs
-    med:   {cols:5, rows:4, preview:1200}, // 10 pairs
-    hard:  {cols:6, rows:6, preview:700}   // 18 pairs
+    med:   {cols:5, rows:4, preview:0},    // no preview
+    hard:  {cols:6, rows:6, preview:0}     // no preview
   };
 
-  // Emoji pool (large enough)
   const EMOJIS = ['🍎','🚀','🐶','⚽','🎵','🌟','🍀','🍩','🍓','🐱','🐼','🌈','🍕','🌮','🚗','🎲','🧩','🎯','🏀','🍉','🍌','🍇','🍪','🦄','👾','🛸','🐵','🐸','🐢','🌙','☀️'];
 
   // DOM
@@ -136,12 +133,21 @@
   let cols = 4, rows = 4;
 
   function storageKeyFor(diff){ return 'emoji_memory_best_moves_' + diff; }
+
   function loadBest(){ bestMovesEl.textContent = localStorage.getItem(storageKeyFor(difficulty)) || '—'; }
-  loadBest();
 
   function setActiveButton(diff){
     difficulty = diff;
     [easyBtn,medBtn,hardBtn].forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
+    // Immediately change board to new difficulty
+    buildDeck();
+    renderBoard();
+    // reset counters but don't start timer
+    moves = 0; seconds = 0; flipped = []; matchedCount = 0; running = false;
+    movesEl.textContent = 0;
+    timerEl.textContent = 0;
+    resultsEl.textContent = '';
+    startBtn.disabled = false;
     loadBest();
   }
 
@@ -161,8 +167,6 @@
     const cfg = DIFFS[difficulty];
     cols = cfg.cols; rows = cfg.rows;
     const pairs = Math.floor((cols*rows)/2);
-    // ensure we have enough emoji
-    if (pairs > EMOJIS.length) throw new Error('Not enough emoji in pool');
     const chosen = shuffle(EMOJIS.slice()).slice(0, pairs);
     deck = shuffle([...chosen, ...chosen]);
   }
@@ -180,16 +184,14 @@
     });
   }
 
-  function resetGame(){
-    stopTimer();
+  function resetGameForDifficulty(){
+    // Build and render board for current difficulty without starting
+    buildDeck();
+    renderBoard();
     flipped = [];
     matchedCount = 0;
     moves = 0; seconds = 0;
-    movesEl.textContent = 0;
-    timerEl.textContent = 0;
-    resultsEl.textContent = '';
-    buildDeck();
-    renderBoard();
+    movesEl.textContent = 0; timerEl.textContent = 0; resultsEl.textContent = '';
     running = false;
     startBtn.disabled = false;
     loadBest();
@@ -197,27 +199,38 @@
 
   function startGame(){
     if (running) return;
+    // Reset counters
     moves = 0; movesEl.textContent = 0;
     matchedCount = 0; flipped = [];
     resultsEl.textContent = '';
+    // rebuild deck to randomize at start
     buildDeck();
     renderBoard();
 
-    const preview = DIFFS[difficulty].preview;
-    // reveal all briefly
-    const cards = Array.from(boardEl.querySelectorAll('.card-item'));
-    cards.forEach(c => c.classList.add('flipped'));
-    // after preview hide all
-    setTimeout(()=> {
-      cards.forEach(c => c.classList.remove('flipped'));
-      // now start timer and set running
-      running = true;
-      startBtn.disabled = true;
-      timer = setInterval(()=> {
-        seconds++;
-        timerEl.textContent = seconds;
-      }, 1000);
-    }, preview);
+    const preview = DIFFS[difficulty].preview || 0;
+    if (preview > 0) {
+      // show preview only for Easy (as configured)
+      const cards = Array.from(boardEl.querySelectorAll('.card-item'));
+      cards.forEach(c => c.classList.add('flipped'));
+      setTimeout(()=> {
+        cards.forEach(c => c.classList.remove('flipped'));
+        beginTimer();
+      }, preview);
+    } else {
+      // start immediately without preview
+      beginTimer();
+    }
+  }
+
+  function beginTimer(){
+    running = true;
+    startBtn.disabled = true;
+    seconds = 0;
+    timerEl.textContent = 0;
+    timer = setInterval(()=> {
+      seconds++;
+      timerEl.textContent = seconds;
+    }, 1000);
   }
 
   function stopTimer(){
@@ -246,7 +259,6 @@
     if (btn.classList.contains('flipped') || btn.classList.contains('matched')) return;
     const idx = Number(btn.dataset.index);
 
-    // flip
     btn.classList.add('flipped');
     flipped.push({ idx, btn });
 
@@ -276,10 +288,10 @@
   });
 
   startBtn.addEventListener('click', startGame);
-  restartBtn.addEventListener('click', resetGame);
+  restartBtn.addEventListener('click', resetGameForDifficulty);
 
-  // initialize
-  resetGame();
+  // initialize for default difficulty
+  resetGameForDifficulty();
 
 })();
 </script>
