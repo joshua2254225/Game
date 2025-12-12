@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ArcadeOwl</title>
 
-  <!-- Optional: AdSense (nur wenn du es verwenden willst) -->
+  <!-- AdSense loader: keep only one per page -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
      crossorigin="anonymous"></script>
 
@@ -39,7 +39,7 @@
       color:#fff;
       text-decoration:none;
       font-size:20px;
-      opacity:0.6; /* 60% sichtbar */
+      opacity:0.6; /* 60% visible */
       display:flex;
       align-items:center;
     }
@@ -105,7 +105,7 @@
     <a class="home-link" href="/Game/index.html" aria-label="Home">←</a>
 
     <div class="brand" role="img" aria-label="ArcadeOwl">
-      <!-- Logo: bitte als Game/logo.png hochladen oder Pfad anpassen -->
+      <!-- Logo: upload your logo file to /Game/logo.png or adjust the path -->
       <img src="logo.png" alt="ArcadeOwl Logo" onerror="this.style.display='none'">
       <span>ArcadeOwl</span>
     </div>
@@ -113,23 +113,28 @@
 
   <main class="wrap" role="main">
 
-    <!-- optional ad block (zentriert) -->
-    <div style="text-align:center; margin:10px 0;">
+    <!-- Top banner ad (responsive) -->
+    <div style="text-align:center; margin:12px 0;">
       <ins class="adsbygoogle"
            style="display:block; max-width:728px; margin:0 auto;"
            data-ad-client="ca-pub-1154368264564805"
            data-ad-slot="REPLACE_WITH_SLOT_ID"
            data-ad-format="auto"
            data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <!-- Small note (optional) -->
+    <div style="text-align:center; font-size:12px; color:#666; margin-bottom:10px;">
+      Ads will appear here once AdSense approves your site
     </div>
 
     <!-- Games list: links use lowercase-with-hyphens -->
-    <ul class="games-list" aria-label="Spiele-Liste">
+    <ul class="games-list" aria-label="Games list">
       <li>
         <div class="game-info">
           <a class="game-title" href="/Game/color-clicker.html">Color Clicker</a>
-          <div class="game-desc">Schnelligkeits-Reaktionsspiel — klicke die farbigen Kästchen.</div>
+          <div class="game-desc">Speed reaction game — click the colored boxes.</div>
         </div>
         <a class="play-btn" href="/Game/color-clicker.html">Play</a>
       </li>
@@ -137,7 +142,7 @@
       <li>
         <div class="game-info">
           <a class="game-title" href="/Game/emoji-memory.html">Emoji Memory</a>
-          <div class="game-desc">Finde alle Emoji-Paare so schnell wie möglich.</div>
+          <div class="game-desc">Find all matching emoji pairs as fast as you can.</div>
         </div>
         <a class="play-btn" href="/Game/emoji-memory.html">Play</a>
       </li>
@@ -145,7 +150,7 @@
       <li>
         <div class="game-info">
           <a class="game-title" href="/Game/jump-monkey.html">Monkey Jump</a>
-          <div class="game-desc">Springe mit dem Affen über Kokosnüsse — Leertaste / Tippen zum Springen.</div>
+          <div class="game-desc">Jump over coconuts — Space / Tap to jump.</div>
         </div>
         <a class="play-btn" href="/Game/jump-monkey.html">Play</a>
       </li>
@@ -153,16 +158,31 @@
       <li>
         <div class="game-info">
           <a class="game-title" href="/Game/banana-catcher.html">Banana Catcher</a>
-          <div class="game-desc">Fange fallende Bananen mit dem Korb — vermeide Bomben.</div>
+          <div class="game-desc">Catch falling bananas with a basket — avoid bombs.</div>
         </div>
         <a class="play-btn" href="/Game/banana-catcher.html">Play</a>
       </li>
     </ul>
+
+    <!-- Inline ad between games and footer (optional second slot) -->
+    <div style="text-align:center; margin:18px 0;">
+      <ins class="adsbygoogle"
+           style="display:block; max-width:728px; margin:0 auto;"
+           data-ad-client="ca-pub-1154368264564805"
+           data-ad-slot="REPLACE_WITH_SLOT_ID"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
   </main>
 
-  <footer>© ArcadeOwl — Alle Rechte vorbehalten</footer>
+  <footer>© ArcadeOwl — All rights reserved</footer>
 
-  <!-- Hinweis: Wenn das Logo nicht angezeigt wird, lade die Bilddatei in den Ordner /Game/ als "logo.png" hoch
-       (oder passe den src-Pfad oben an: z.B. "logo.svg" oder "/Game/logo.png"). -->
+  <!-- Notes:
+       * Replace both data-ad-slot="REPLACE_WITH_SLOT_ID" with your AdSense slot ID(s).
+       * If your logo filename is not "logo.png" place the correct filename or path in the <img src="...">.
+       * To show ads inside each game, add the same ins.adsbygoogle block under the game's controls (just after the Start/Restart row).
+  -->
 </body>
-              </html>
+                                                                                 </html>
