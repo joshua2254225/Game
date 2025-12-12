@@ -1,91 +1,178 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>My Games Site</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ArcadeOwl — Home</title>
 
-  <!-- AdSense Script -->
+  <!-- AdSense script (falls genehmigt / erwünscht) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
      crossorigin="anonymous"></script>
 
+  <link rel="stylesheet" href="styles.css">
   <style>
-    body{font-family:system-ui, Arial; margin:40px; color:#222;}
-    header, footer{background:#0b74de; color:#fff; padding:12px 16px;}
-    header h1{margin:0; display:inline-block;}
-    nav{margin-top:8px;}
-    nav a{color:#fff; margin-right:10px; text-decoration:none; font-weight:600;}
-    .wrap{max-width:980px; margin:18px auto; padding:0 12px;}
-    .games{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px;}
-    .game-card{background:#fafafa; border-radius:10px; padding:12px; box-shadow:0 8px 24px rgba(12,20,30,.05);}
-    .game-card h3{margin:0 0 6px 0;}
-    .game-card p{margin:0 0 8px 0; font-size:13px; color:#666;}
-    .game-card a{display:inline-block; padding:6px 12px; background:#0b74de; color:#fff; border-radius:6px; text-decoration:none; font-weight:600;}
-    @media (max-width:480px){.games{grid-template-columns:1fr;}}
+    :root{
+      --blue:#0b74de;
+      --muted:#666;
+      --card:#fafafa;
+      --maxwide:980px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;color:#222;background:#fff}
+    /* TOP BLUE BAR: only ArcadeOwl */
+    .topbar{
+      background:var(--blue);
+      color:white;
+      padding:14px 16px;
+      text-align:center;
+      font-weight:800;
+      letter-spacing:0.6px;
+      font-size:20px;
+      box-shadow:0 2px 6px rgba(11,115,222,0.06);
+    }
+
+    /* hero area with large semi-transparent home icon */
+    .hero{
+      max-width:var(--maxwide);
+      margin:18px auto 6px;
+      padding:18px 12px;
+      text-align:center;
+    }
+    .home-icon{
+      display:inline-block;
+      width:98px;
+      height:98px;
+      opacity:0.6;           /* 60% sichtbar */
+      transition:transform .12s ease, opacity .12s;
+      cursor:pointer;
+      border-radius:12px;
+      background:linear-gradient(180deg,#ffffff,#f3f8ff);
+      box-shadow:0 8px 20px rgba(11,115,222,0.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 12px;
+    }
+    .home-icon:hover{ transform:translateY(-4px); opacity:0.85; }
+
+    .hero h1{ margin:0; font-size:18px; color:#111; }
+    .hero p{ margin:8px 0 0; color:var(--muted); font-size:14px; }
+
+    /* games list: vertical (old arrangement) */
+    .games-wrap{
+      max-width:var(--maxwide);
+      margin:14px auto;
+      padding:12px;
+    }
+    .games-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:block;
+    }
+    .games-list li{
+      background:var(--card);
+      margin:10px 0;
+      padding:14px 16px;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(12,20,30,0.04);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .game-info{display:flex;flex-direction:column;}
+    .game-info .title{font-weight:700; color:#0b5fc7; text-decoration:none; font-size:16px;}
+    .game-info .desc{font-size:13px; color:var(--muted); margin-top:4px;}
+    .play-btn{
+      background:var(--blue);
+      color:#fff;
+      border:none;
+      padding:8px 12px;
+      border-radius:8px;
+      text-decoration:none;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    /* small footer */
+    footer{ max-width:var(--maxwide); margin:18px auto 40px; padding:8px 12px; color:#666; font-size:13px; text-align:center;}
+    @media (max-width:480px){
+      .home-icon{ width:80px; height:80px; }
+      .games-list li{ flex-direction:column; align-items:flex-start; gap:8px; }
+      .play-btn{ align-self:flex-end; }
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>My Games Site</h1>
-  <nav>
-    <a href="/Game/index.html">Home</a>
-    <a href="/Game/color-clicker.html">Color Clicker</a>
-    <a href="/Game/emoji-memory.html">Emoji Memory</a>
-    <a href="/Game/jump-monkey.html">Monkey Jump</a>
-    <a href="/Game/banana-catcher.html">Banana Catcher</a>
-    <a href="/Game/about.html">About</a>
-    <a href="/Game/privacy.html">Privacy</a>
-  </nav>
-</header>
+  <!-- Top blue bar: only ArcadeOwl -->
+  <div class="topbar">ArcadeOwl</div>
 
-<div class="wrap">
-  <h2>Willkommen bei My Games Site</h2>
-  <p>Kleine HTML5-Spiele, direkt im Browser. Spiele sind clientseitig — keine Installation nötig.</p>
+  <!-- Hero: big semi-transparent Home icon (clickable) -->
+  <div class="hero">
+    <a href="/Game/index.html" title="Home" aria-label="Home">
+      <div class="home-icon" role="img" aria-hidden="true">
+        <!-- simple house SVG -->
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10.5z" fill="#0b74de"></path>
+        </svg>
+      </div>
+    </a>
 
-  <!-- AdSense Platzhalter -->
-  <div style="margin:20px 0; text-align:center;">
-    <p>Anzeige (wird sichtbar, sobald AdSense die Domain genehmigt hat)</p>
+    <h1 style="margin-top:6px;">Willkommen</h1>
+    <p>Kleine HTML5-Spiele — klicke auf ein Spiel, um zu starten.</p>
   </div>
 
-  <h2>Wähle ein Spiel</h2>
-  <div class="games">
-
-    <!-- Color Clicker -->
-    <div class="game-card">
-      <h3><a href="/Game/color-clicker.html">Color Clicker</a></h3>
-      <p>Schnelligkeits-Reaktionsspiel</p>
-      <a href="/Game/color-clicker.html">Play</a>
-    </div>
-
-    <!-- Emoji Memory -->
-    <div class="game-card">
-      <h3><a href="/Game/emoji-memory.html">Emoji Memory</a></h3>
-      <p>Finde alle Emoji-Paare</p>
-      <a href="/Game/emoji-memory.html">Play</a>
-    </div>
-
-    <!-- Monkey Jump -->
-    <div class="game-card">
-      <h3><a href="/Game/jump-monkey.html">Monkey Jump</a></h3>
-      <p>Springe mit dem Affen über Kokosnüsse</p>
-      <a href="/Game/jump-monkey.html">Play</a>
-    </div>
-
-    <!-- Banana Catcher -->
-    <div class="game-card">
-      <h3><a href="/Game/banana-catcher.html">Banana Catcher</a></h3>
-      <p>Fange fallende Bananen mit dem Korb</p>
-      <a href="/Game/banana-catcher.html">Play</a>
-    </div>
-
+  <!-- optional ad block (centered) -->
+  <div style="max-width:var(--maxwide); margin:6px auto; text-align:center;">
+    <ins class="adsbygoogle"
+         style="display:block; max-width:728px; margin:0 auto;"
+         data-ad-client="ca-pub-1154368264564805"
+         data-ad-slot="REPLACE_WITH_SLOT_ID"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
   </div>
-</div>
 
-<footer>
-  <p>© My Games Site</p>
-</footer>
+  <!-- Games list: old vertical arrangement -->
+  <div class="games-wrap">
+    <ul class="games-list" aria-label="Spiele-Liste">
+      <li>
+        <div class="game-info">
+          <a class="title" href="/Game/color-clicker.html">Color Clicker</a>
+          <div class="desc">Schnelligkeits-Reaktionsspiel — klicke die farbigen Kästchen.</div>
+        </div>
+        <a class="play-btn" href="/Game/color-clicker.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="title" href="/Game/emoji-memory.html">Emoji Memory</a>
+          <div class="desc">Finde alle Emoji-Paare so schnell wie möglich.</div>
+        </div>
+        <a class="play-btn" href="/Game/emoji-memory.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="title" href="/Game/jump-monkey.html">Monkey Jump</a>
+          <div class="desc">Springe mit dem Affen über Kokosnüsse — Leertaste / Tippen zum Springen.</div>
+        </div>
+        <a class="play-btn" href="/Game/jump-monkey.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="title" href="/Game/banana-catcher.html">Banana Catcher</a>
+          <div class="desc">Fange fallende Bananen mit dem Korb — vermeide Bomben.</div>
+        </div>
+        <a class="play-btn" href="/Game/banana-catcher.html">Play</a>
+      </li>
+
+    </ul>
+  </div>
+
+  <footer>© ArcadeOwl — Alle Rechte vorbehalten</footer>
 
 </body>
-</html>
+  </html>
