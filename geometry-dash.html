@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArcadeOwl - Geometry Dash</title>
+<style>
+:root {--blue:#0b74de;--card:#fff;--max-width:980px;}
+body {margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:#f5f7fb;color:#111;}
+.topbar{background:var(--blue); color:#fff; height:56px; display:flex; align-items:center; justify-content:center; position:relative; box-shadow:0 2px 6px rgba(11,115,222,0.06);}
+.home-link{position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#fff; text-decoration:none; font-size:20px; opacity:0.8;}
+.brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:0.6px; font-size:20px;}
+.brand img{height:34px;width:auto;border-radius:8px;}
+.wrap{max-width:var(--max-width); margin:18px auto; padding:12px; text-align:center;}
+canvas{background:#87ceeb; display:block; margin:0 auto; border-radius:12px;}
+.status{margin-top:10px;font-size:18px;}
+button#reset{margin-top:15px;padding:8px 12px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="home-link" href="index.html">←</a>
+  <div class="brand">
+    <img src="logo.png" alt="ArcadeOwl Logo">
+    <span>ArcadeOwl</span>
+  </div>
+</header>
+
+<main class="wrap">
+    <canvas id="gameCanvas" width="480" height="320"></canvas>
+    <div class="status">Score: <span id="score">0</span> | Best: <span id="bestScore">0</span></div>
+    <button id="reset" onclick="resetGame()">New Game</button>
+</main>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let player = {x:50, y:250, width:30, height:30, dy:0, jumpPower: -8, gravity:0.4};
+let obstacles = [];
+let frame=0;
+let score=0;
+let bestScore = localStorage.getItem('dashBest') || 0;
+document.getElementById('bestScore').textContent=bestScore;
+let gameOver=false;
+
+function resetGame(){
+    player.y=250; player.dy=0;
+    obstacles=[];
+    frame=0;
+    score=0;
+    gameOver=false;
+    document.getElementById('score').textContent=score;
+    document.getElementById('status').textContent='';
+    requestAnimationFrame(loop);
+}
+
+function spawnObstacle(){
+    const height=Math.random()*60+20;
+    obstacles.push({x:canvas.width, y:canvas.height-height, width:20, height:height});
+}
+
+function update(){
+    if(gameOver) return;
+    frame++;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    
+    // player physics
+    player.dy += player.gravity;
+    player.y += player.dy;
+    if(player.y + player.height > canvas.height){
+        player.y = canvas.height - player.height;
+        player.dy=0;
+    }
+    
+    // spawn obstacles
+    if(frame%90===0) spawnObstacle();
+    
+    // move obstacles
+    for(let i=0;i<obstacles.length;i++){
+        obstacles[i].x -=4;
+        ctx.fillStyle='red';
+        ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+        
+        // collision
+        if(player.x < obstacles[i].x+obstacles[i].width &&
+           player.x+player.width > obstacles[i].x &&
+           player.y < obstacles[i].y+obstacles[i].height &&
+           player.y+player.height > obstacles[i].y){
+               gameOver=true;
+               document.getElementById('status').textContent='Game Over!';
+               if(score>bestScore){bestScore=score;localStorage.setItem('dashBest',bestScore);document.getElementById('bestScore').textContent=bestScore;}
+           }
+    }
+    
+    // draw player
+    ctx.fillStyle='green';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+    
+    // score
+    if(frame%90===0 && !gameOver) score++;
+    document.getElementById('score').textContent=score;
+    
+    if(!gameOver) requestAnimationFrame(update);
+}
+
+function jump(){
+    if(player.y + player.height >= canvas.height) player.dy = player.jumpPower;
+}
+
+document.addEventListener('keydown', e=>{if(e.code==='Space') jump();});
+canvas.addEventListener('click', jump);
+
+resetGame();
+</script>
+
+</body>
+</html>
