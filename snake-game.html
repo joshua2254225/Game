@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Snake Game - ArcadeOwl</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
+     crossorigin="anonymous"></script>
+
+  <style>
+    :root{
+      --blue: #0b74de;
+      --muted: #666;
+      --card: #ffffff;
+      --max-width: 980px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:#f5f7fb;color:#111}
+    
+    .topbar{
+      background:var(--blue);
+      color:#fff;
+      height:56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      box-shadow:0 2px 6px rgba(11,115,222,0.06);
+      padding:0 12px;
+    }
+    .home-link{
+      position:absolute;
+      left:12px;
+      top:50%;
+      transform:translateY(-50%);
+      color:#fff;
+      text-decoration:none;
+      font-size:20px;
+      opacity:0.6;
+      display:flex;
+      align-items:center;
+    }
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:0.6px;
+      font-size:20px;
+    }
+    .brand img {
+      height:34px;
+      width:auto;
+      border-radius:8px;
+      display:inline-block;
+    }
+
+    .wrap{max-width:var(--max-width); margin:18px auto; padding:12px;}
+    .game-card{
+      background:var(--card);
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 6px 18px rgba(12,20,30,0.04);
+      margin-bottom:18px;
+    }
+    .game-title-main{
+      font-size:24px;
+      font-weight:700;
+      color:#111;
+      margin:0 0 8px 0;
+      text-align:center;
+    }
+    .game-instructions{
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      margin-bottom:16px;
+    }
+    .game-canvas-wrapper{
+      display:flex;
+      justify-content:center;
+      margin:16px 0;
+    }
+    canvas{
+      border:2px solid #ddd;
+      border-radius:8px;
+      background:#000;
+    }
+    .controls{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+    .btn{
+      padding:10px 24px;
+      border:none;
+      border-radius:8px;
+      font-weight:700;
+      cursor:pointer;
+      font-size:15px;
+      transition:transform 0.1s;
+    }
+    .btn:active{transform:scale(0.95);}
+    .btn-primary{background:var(--blue); color:#fff;}
+    .btn-secondary{background:#eee; color:#333;}
+    .score-display{
+      text-align:center;
+      font-size:18px;
+      font-weight:600;
+      margin:12px 0;
+    }
+    .high-score{
+      text-align:center;
+      font-size:14px;
+      color:var(--muted);
+      margin-bottom:12px;
+    }
+
+    footer{ max-width:var(--max-width); margin:28px auto 40px; padding:8px 12px; color:#666; font-size:13px; text-align:center; }
+
+    @media (max-width:480px){
+      canvas{max-width:100%; height:auto;}
+      .btn{padding:8px 16px; font-size:14px;}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="home-link" href="/Game/index.html" aria-label="Home">←</a>
+    <div class="brand">
+      <img src="logo.png" alt="ArcadeOwl Logo" onerror="this.style.display='none'">
+      <span>ArcadeOwl</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    
+    <div style="text-align:center; margin:12px 0;">
+      <ins class="adsbygoogle"
+           style="display:block; max-width:728px; margin:0 auto;"
+           data-ad-client="ca-pub-1154368264564805"
+           data-ad-slot="REPLACE_WITH_SLOT_ID"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <div class="game-card">
+      <h1 class="game-title-main">🐍 Snake Game</h1>
+      <p class="game-instructions">Use arrow keys or swipe to control the snake. Eat the red apples to grow and score points. Don't hit the walls or yourself!</p>
+      
+      <div class="high-score">High Score: <span id="highScore">0</span></div>
+      <div class="score-display">Score: <span id="score">0</span></div>
+
+      <div class="game-canvas-wrapper">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-primary" id="startBtn">Start Game</button>
+        <button class="btn btn-secondary" id="pauseBtn" disabled>Pause</button>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin:18px 0;">
+      <ins class="adsbygoogle"
+           style="display:block; max-width:728px; margin:0 auto;"
+           data-ad-client="ca-pub-1154368264564805"
+           data-ad-slot="REPLACE_WITH_SLOT_ID"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+  </main>
+
+  <footer>© ArcadeOwl — All rights reserved</footer>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('highScore');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    let snake = [{x: 10, y: 10}];
+    let dx = 0;
+    let dy = 0;
+    let foodX = 15;
+    let foodY = 15;
+    let score = 0;
+    let highScore = localStorage.getItem('snakeHighScore') || 0;
+    let gameRunning = false;
+    let gamePaused = false;
+    let gameLoop;
+
+    highScoreEl.textContent = highScore;
+
+    function drawGame() {
+      if (gamePaused) return;
+
+      moveSnake();
+      
+      if (checkCollision()) {
+        gameOver();
+        return;
+      }
+
+      if (snake[0].x === foodX && snake[0].y === foodY) {
+        score++;
+        scoreEl.textContent = score;
+        generateFood();
+      } else {
+        snake.pop();
+      }
+
+      clearCanvas();
+      drawFood();
+      drawSnake();
+    }
+
+    function clearCanvas() {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawSnake() {
+      ctx.fillStyle = '#00ff00';
+      snake.forEach((segment, index) => {
+        if (index === 0) {
+          ctx.fillStyle = '#00cc00';
+        } else {
+          ctx.fillStyle = '#00ff00';
+        }
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+      });
+    }
+
+    function drawFood() {
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(foodX * gridSize, foodY * gridSize, gridSize - 2, gridSize - 2);
+    }
+
+    function moveSnake() {
+      const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+      snake.unshift(head);
+    }
+
+    function checkCollision() {
+      const head = snake[0];
+      
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        return true;
+      }
+
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    function generateFood() {
+      foodX = Math.floor(Math.random() * tileCount);
+      foodY = Math.floor(Math.random() * tileCount);
+
+      for (let segment of snake) {
+        if (segment.x === foodX && segment.y === foodY) {
+          generateFood();
+          return;
+        }
+      }
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      clearInterval(gameLoop);
+      
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('snakeHighScore', highScore);
+        highScoreEl.textContent = highScore;
+      }
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 30px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2 - 20);
+      ctx.font = '20px Arial';
+      ctx.fillText('Score: ' + score, canvas.width / 2, canvas.height / 2 + 20);
+
+      startBtn.textContent = 'Restart';
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    }
+
+    function startGame() {
+      snake = [{x: 10, y: 10}];
+      dx = 1;
+      dy = 0;
+      score = 0;
+      scoreEl.textContent = score;
+      gameRunning = true;
+      gamePaused = false;
+      
+      generateFood();
+      
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      pauseBtn.textContent = 'Pause';
+
+      clearInterval(gameLoop);
+      gameLoop = setInterval(drawGame, 100);
+    }
+
+    function togglePause() {
+      gamePaused = !gamePaused;
+      pauseBtn.textContent = gamePaused ? 'Resume' : 'Pause';
+      
+      if (!gamePaused) {
+        gameLoop = setInterval(drawGame, 100);
+      } else {
+        clearInterval(gameLoop);
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (!gameRunning) return;
+
+      switch(e.key) {
+        case 'ArrowUp':
+          if (dy === 0) { dx = 0; dy = -1; }
+          e.preventDefault();
+          break;
+        case 'ArrowDown':
+          if (dy === 0) { dx = 0; dy = 1; }
+          e.preventDefault();
+          break;
+        case 'ArrowLeft':
+          if (dx === 0) { dx = -1; dy = 0; }
+          e.preventDefault();
+          break;
+        case 'ArrowRight':
+          if (dx === 0) { dx = 1; dy = 0; }
+          e.preventDefault();
+          break;
+      }
+    });
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    canvas.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    });
+
+    canvas.addEventListener('touchend', (e) => {
+      if (!gameRunning) return;
+
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX > 0 && dx === 0) { dx = 1; dy = 0; }
+        else if (diffX < 0 && dx === 0) { dx = -1; dy = 0; }
+      } else {
+        if (diffY > 0 && dy === 0) { dx = 0; dy = 1; }
+        else if (diffY < 0 && dy === 0) { dx = 0; dy = -1; }
+      }
+    });
+
+    startBtn.addEventListener('click', startGame);
+    pauseBtn.addEventListener('click', togglePause);
+
+    clearCanvas();
+  </script>
+
+</body>
+</html>
