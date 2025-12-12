@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ArcadeOwl — Chess vs AI</title>
+
+<!-- chess.js for move generation and rules -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
+
+<style>
+:root{
+  --blue:#0b74de;
+  --bg:#f5f7fb;
+  --card:#fff;
+  --muted:#6b7280;
+  --accent:#ffd54f;
+  --win:#4caf50;
+  --lose:#ff4d4d;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+  background:var(--bg);
+  color:#111;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:14px;
+  min-height:100vh;
+}
+
+/* Topbar */
+.topbar{
+  width:100%;
+  max-width:980px;
+  background:var(--blue);
+  color:#fff;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  border-radius:10px;
+  box-shadow:0 6px 18px rgba(11,115,222,0.08);
+  margin-bottom:12px;
+}
+.home-link{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+  font-size:18px;
+}
+
+/* Panel */
+.panel{
+  width:100%;
+  max-width:980px;
+  background:var(--card);
+  border-radius:12px;
+  padding:12px;
+  box-shadow:0 6px 22px rgba(10,20,40,0.04);
+  margin-bottom:12px;
+}
+.controls{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:space-between;
+}
+.left-controls, .right-controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.levels{ display:flex; gap:8px; }
+.levels button{
+  padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700;
+}
+.levels button.active{ background:var(--blue); color:#fff; }
+.levels button.inactive{ background:#eef3ff; color:var(--blue); }
+
+.side-select{ display:flex; gap:8px; align-items:center;}
+.small{ color:var(--muted); font-size:13px; }
+
+/* Board area */
+.board-wrap{
+  display:flex;
+  justify-content:center;
+  margin-top:12px;
+}
+.board{
+  display:grid;
+  grid-template-columns: repeat(8, min(44px, 11vw));
+  gap:4px;
+  background:linear-gradient(180deg,#e6eefc,#f8fbff);
+  padding:8px;
+  border-radius:10px;
+  box-shadow:0 10px 30px rgba(2,6,23,0.06);
+}
+.square{
+  width:100%;
+  aspect-ratio:1/1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: clamp(18px, 3.5vw, 28px);
+  cursor:pointer;
+  border-radius:8px;
+  user-select:none;
+  transition: transform .12s ease, background .12s ease;
+}
+.square:hover{ transform:scale(1.04); }
+.light{ background: #fff; }
+.dark{ background: #d9e8ff; }
+
+/* highlights */
+.square.legal{ outline: 3px solid rgba(11,115,222,0.16); transform:scale(1.06); }
+.square.from{ box-shadow: 0 8px 18px rgba(11,115,222,0.12) inset; }
+.square.winner{ background: var(--accent); color:#111; font-weight:800; transform:scale(1.08); }
+
+/* bottom status */
+.status-bar{ margin-top:12px; text-align:center; font-weight:700; font-size:16px; }
+.actions{ display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
+.btn{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; background:var(--blue); color:#fff; }
+.btn.secondary{ background:#eef3ff; color:var(--blue); }
+.btn.warn{ background:var(--lose); }
+.smallcenter{ font-size:13px; color:var(--muted); margin-top:6px; }
+
+/* responsive tweaks */
+@media (max-width:520px){
+  .controls{ flex-direction:column; align-items:stretch; gap:8px; }
+  .board{ grid-template-columns: repeat(8, min(36px, 11vw)); gap:3px; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="home-link" href="index.html">←</a>
+  <div>ArcadeOwl — Chess vs AI</div>
+</header>
+
+<section class="panel">
+  <div class="controls">
+    <div class="left-controls">
+      <div class="levels" aria-label="Difficulty levels">
+        <button data-level="very_easy" class="active">Very Easy</button>
+        <button data-level="easy" class="inactive">Easy</button>
+        <button data-level="medium" class="inactive">Medium</button>
+        <button data-level="hard" class="inactive">Hard</button>
+        <button data-level="expert" class="inactive">Expert</button>
+      </div>
+      <div class="side-select small" style="margin-left:8px;">
+        <label><input type="radio" name="side" value="w" checked> Play White</label>
+        <label style="margin-left:6px;"><input type="radio" name="side" value="b"> Play Black</label>
+      </div>
+    </div>
+
+    <div class="right-controls">
+      <button id="newBtn" class="btn">New Game</button>
+      <button id="undoBtn" class="btn secondary">Undo</button>
+      <button id="flipBtn" class="btn secondary">Flip</button>
+      <button id="hintBtn" class="btn secondary">Hint</button>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div id="board" class="board" role="grid" aria-label="Chess board"></div>
+  </div>
+
+  <div class="status-bar" id="status">Loading...</div>
+  <div class="smallcenter">Click a piece to see legal moves. AI uses a simple material evaluation on higher levels.</div>
+</section>
+
+<script>
+/* --------- Setup chess.js --------- */
+const game = new Chess(); // chess.js (global from CDN)
+let humanColor = 'w'; // 'w' or 'b'
+let aiColor = 'b';
+let flipped = false;
+let difficulty = 'very_easy'; // levels map below
+let gameActive = true;
+let selectedFrom = null;
+
+/* difficulty -> algorithm parameters */
+const LEVELS = {
+  'very_easy': {type:'random'},
+  'easy': {type:'random_capture_bias'},
+  'medium': {type:'minimax', depth: 2},
+  'hard': {type:'minimax', depth: 3},
+  'expert': {type:'minimax', depth: 4}
+};
+
+/* piece values */
+const VALUE = {'p':100,'n':320,'b':330,'r':500,'q':900,'k':20000};
+
+/* element refs */
+const boardEl = document.getElementById('board');
+const statusEl = document.getElementById('status');
+
+/* Unicode pieces */
+const PIECE_UNICODE = {
+  'p_w':'♙','r_w':'♖','n_w':'♘','b_w':'♗','q_w':'♕','k_w':'♔',
+  'p_b':'♟','r_b':'♜','n_b':'♞','b_b':'♝','q_b':'♛','k_b':'♚'
+};
+
+/* initialize DOM board */
+function renderBoard(){
+  boardEl.innerHTML = '';
+  // chess.js uses ranks 8->1; files a->h
+  const board = game.board(); // array [rank8...rank1], each rank is array file a->h
+  const squares = [];
+  for(let rankIdx=0; rankIdx<8; rankIdx++){
+    const rank = flipped ? rankIdx : 7 - rankIdx; // if not flipped, we show rank 8 first
+    for(let file=0; file<8; file++){
+      const fileIdx = flipped ? 7 - file : file;
+      const sq = ( 'abcdefgh'[fileIdx] ) + (8 - rank);
+      const piece = board[rank][file];
+      squares.push({sq, piece});
+    }
+  }
+
+  squares.forEach((s, idx) => {
+    const div = document.createElement('div');
+    div.className = 'square ' + (((Math.floor(idx/8) + (idx%8))%2===0) ? 'light' : 'dark');
+    div.dataset.square = s.sq;
+    if(s.piece){
+      const key = s.piece.type + '_' + (s.piece.color==='w' ? 'w' : 'b');
+      div.textContent = PIECE_UNICODE[key];
+      div.classList.add(s.piece.color==='w' ? 'W' : 'B');
+    }
+    div.addEventListener('click', ()=> onSquareClick(s.sq));
+    boardEl.appendChild(div);
+  });
+  updateStatus();
+}
+
+/* utility: clear highlights */
+function clearHighlights(){
+  boardEl.querySelectorAll('.square').forEach(s => s.classList.remove('legal','from','winner'));
+}
+
+/* show legal moves from a square */
+function showLegal(from){
+  clearHighlights();
+  const moves = game.moves({square: from, verbose:true});
+  boardEl.querySelectorAll(`[data-square="${from}"]`).forEach(e => e.classList.add('from'));
+  moves.forEach(m => {
+    const el = boardEl.querySelector(`[data-square="${m.to}"]`);
+    if(el) el.classList.add('legal');
+  });
+}
+
+/* handle click */
+function onSquareClick(square){
+  if(!gameActive) return;
+  const piece = game.get(square);
+  if(selectedFrom){
+    // attempt move
+    const move = game.move({from: selectedFrom, to: square, promotion:'q'});
+    if(move){
+      selectedFrom = null;
+      clearHighlights();
+      renderBoard();
+      afterMove();
+      return;
+    } else {
+      // invalid, if clicking own piece switch selection
+      if(piece && piece.color === game.turn()) {
+        selectedFrom = square;
+        showLegal(square);
+      } else {
+        selectedFrom = null;
+        clearHighlights();
+      }
+    }
+  } else {
+    if(piece && piece.color === game.turn()){
+      selectedFrom = square;
+      showLegal(square);
+    }
+  }
+}
+
+/* update status text */
+function updateStatus(){
+  if(game.in_checkmate()){
+    const winner = game.turn() === 'w' ? 'Black' : 'White';
+    statusEl.textContent = `Checkmate — ${winner} wins`;
+    gameActive = false;
+    highlightWin();
+    return;
+  } else if(game.in_stalemate()){
+    statusEl.textContent = 'Stalemate — Draw';
+    gameActive = false;
+    return;
+  } else if(game.in_draw() || game.insufficient_material()){
+    statusEl.textContent = 'Draw';
+    gameActive = false;
+    return;
+  } else {
+    const turn = game.turn() === 'w' ? 'White' : 'Black';
+    const check = game.in_check() ? ' — check!' : '';
+    statusEl.textContent = `${turn} to move${check}`;
+  }
+}
+
+/* highlight winning pattern (approximation: highlight last move's attack) */
+function highlightWin(){
+  // try to find last move and highlight its to/from squares
+  const history = game.history({verbose:true});
+  if(history.length){
+    const last = history[history.length-1];
+    const from = last.from, to = last.to;
+    const elFrom = boardEl.querySelector(`[data-square="${from}"]`);
+    const elTo = boardEl.querySelector(`[data-square="${to}"]`);
+    if(elFrom) elFrom.classList.add('winner');
+    if(elTo) elTo.classList.add('winner');
+  }
+}
+
+/* after move: check and possibly let AI move */
+function afterMove(){
+  updateStatus();
+  if(!gameActive) return;
+  // if it's AI turn and AI is set to move, do AI
+  if((game.turn() === 'w' && aiColor === 'w') || (game.turn() === 'b' && aiColor === 'b')){
+    setTimeout(()=> aiPlay(), 250);
+  }
+}
+
+/* ---------- AI logic ---------- */
+
+/* evaluate board (material only) */
+function evaluateBoard(boardState){
+  let s = 0;
+  for(let r=0;r<8;r++){
+    for(let f=0;f<8;f++){
+      const p = boardState[r][f];
+      if(p){
+        const val = VALUE[p.type];
+        s += (p.color === aiColor ? val : -val);
+      }
+    }
+  }
+  return s;
+}
+
+/* minimax with alpha-beta */
+function minimaxRoot(depth, isMaximizingPlayer){
+  const moves = game.moves({verbose:true});
+  let bestMove = null;
+  let bestScore = isMaximizingPlayer ? -Infinity : Infinity;
+  for(const m of moves){
+    game.move(m);
+    const score = minimax(depth-1, -Infinity, Infinity, !isMaximizingPlayer);
+    game.undo();
+    if(isMaximizingPlayer){
+      if(score > bestScore){ bestScore = score; bestMove = m; }
+    } else {
+      if(score < bestScore){ bestScore = score; bestMove = m; }
+    }
+  }
+  return {move: bestMove, score: bestScore};
+}
+
+function minimax(depth, alpha, beta, isMaximizing){
+  const winner = checkWinnerState(game.board());
+  if(depth === 0 || winner || game.game_over()){
+    // evaluation: positive = good for AI
+    return evaluateBoard(game.board());
+  }
+  const moves = game.moves({verbose:true});
+  if(isMaximizing){
+    let maxEval = -Infinity;
+    for(const m of moves){
+      game.move(m);
+      const evalScore = minimax(depth-1, alpha, beta, false);
+      game.undo();
+      if(evalScore > maxEval) maxEval = evalScore;
+      if(evalScore > alpha) alpha = evalScore;
+      if(beta <= alpha) break;
+    }
+    return maxEval;
+  } else {
+    let minEval = Infinity;
+    for(const m of moves){
+      game.move(m);
+      const evalScore = minimax(depth-1, alpha, beta, true);
+      game.undo();
+      if(evalScore < minEval) minEval = evalScore;
+      if(evalScore < beta) beta = evalScore;
+      if(beta <= alpha) break;
+    }
+    return minEval;
+  }
+}
+
+/* helper: try to detect game.win from board via chess.js board (null-safe) */
+function checkWinnerState(boardArray){
+  // boardArray as returned by game.board()
+  // use chess.js game.status checks instead: return true if checkmate or winner exists? We'll rely on game.in_checkmate externally.
+  return null; // not used directly for minimax leaf detection (we use game.game_over())
+}
+
+/* AI pick move based on level */
+function pickAIMove(){
+  const level = LEVELS[difficulty];
+  if(level.type === 'random'){
+    const e = emptyIndices();
+    return e[Math.floor(Math.random()*e.length)];
+  } else if(level.type === 'random_capture_bias'){
+    // prefer captures 70% of time
+    const moves = game.moves({verbose:true});
+    const captureMoves = moves.filter(m => m.captured);
+    if(Math.random() < 0.7 && captureMoves.length){
+      const m = captureMoves[Math.floor(Math.random()*captureMoves.length)];
+      return m.to;
+    } else {
+      const m = moves[Math.floor(Math.random()*moves.length)];
+      return m.to;
+    }
+  } else if(level.type === 'minimax'){
+    const depth = level.depth;
+    // decide whether AI is maximizing: if aiColor equals side to move
+    const isMax = ( (aiColor === 'w' && game.turn() === 'w') || (aiColor === 'b' && game.turn() === 'b') );
+    // run root search
+    const best = minimaxRoot(depth, isMax);
+    if(!best.move) {
+      // fallback random
+      const m = game.moves({verbose:true})[0];
+      return m ? m.to : null;
+    }
+    return best.move.to;
+  }
+}
+
+/* get all empty indices (squares strings) */
+function emptyIndices(){
+  return game.moves({verbose:true}).map(m => m.to);
+}
+
+/* AI makes a move */
+function aiPlay(){
+  if(!gameActive) return;
+  // pick move differently first: we want full move (from,to). For random variants, we need to pick a move object
+  const level = LEVELS[difficulty];
+  if(level.type === 'random' || level.type === 'random_capture_bias'){
+    const moves = game.moves({verbose:true});
+    let chosen;
+    if(level.type === 'random_capture_bias'){
+      const captureMoves = moves.filter(m => m.captured);
+      if(Math.random() < 0.7 && captureMoves.length) chosen = captureMoves[Math.floor(Math.random()*captureMoves.length)];
+      else chosen = moves[Math.floor(Math.random()*moves.length)];
+    } else {
+      chosen = moves[Math.floor(Math.random()*moves.length)];
+    }
+    if(chosen){
+      game.move(chosen);
+      renderBoard();
+      afterMove();
+      return;
+    }
+  } else {
+    // minimax root returns a move object; reuse minimaxRoot to get move object
+    const isMax = ( (aiColor === 'w' && game.turn() === 'w') || (aiColor === 'b' && game.turn() === 'b') );
+    const best = minimaxRoot(level.depth, isMax);
+    if(best && best.move){
+      game.move(best.move);
+      renderBoard();
+      afterMove();
+      return;
+    } else {
+      // fallback random
+      const moves = game.moves({verbose:true});
+      if(moves.length){
+        game.move(moves[Math.floor(Math.random()*moves.length)]);
+        renderBoard();
+        afterMove();
+        return;
+      }
+    }
+  }
+}
+
+/* after a move (human or AI) */
+function afterMove(){
+  clearHighlights();
+  updateStatus();
+  if(!game.game_over()){
+    // if AI to play, schedule ai
+    if((game.turn() === 'w' && aiColor === 'w') || (game.turn() === 'b' && aiColor === 'b')){
+      setTimeout(()=> aiPlay(), 300);
+    }
+  } else {
+    updateStatus();
+  }
+}
+
+/* hint: compute best move for human using minimax with small depth if possible */
+function hint(){
+  if(!gameActive) return;
+  // Try to compute best move for human via minimax evaluation (search as human)
+  const tempIsMax = ( (humanColor === 'w' && game.turn()==='w') || (humanColor === 'b' && game.turn()==='b') );
+  const depth = LEVELS['medium'].depth; // simple search depth
+  const moves = game.moves({verbose:true});
+  let bestMove = null, bestScore = tempIsMax ? -Infinity : Infinity;
+  for(const m of moves){
+    game.move(m);
+    const score = minimax(depth-1, -Infinity, Infinity, !tempIsMax);
+    game.undo();
+    if(tempIsMax){
+      if(score > bestScore){ bestScore = score; bestMove = m; }
+    } else {
+      if(score < bestScore){ bestScore = score; bestMove = m; }
+    }
+  }
+  if(bestMove){
+    const el = boardEl.querySelector(`[data-square="${bestMove.to}"]`);
+    if(el){
+      el.style.outline = '4px solid rgba(11,115,222,0.24)';
+      setTimeout(()=> el.style.outline = '', 700);
+    }
+  }
+}
+
+/* ---------- UI wiring ---------- */
+document.querySelectorAll('.levels button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.levels button').forEach(x=>{ x.classList.remove('active'); x.classList.add('inactive'); });
+    btn.classList.add('active'); btn.classList.remove('inactive');
+    difficulty = btn.dataset.level;
+    startNew();
+  });
+});
+
+document.querySelectorAll('input[name="side"]').forEach(r=>{
+  r.addEventListener('change', ()=>{
+    humanColor = document.querySelector('input[name="side"]:checked').value === 'w' ? 'w' : 'b';
+    aiColor = humanColor === 'w' ? 'b' : 'w';
+    startNew();
+  });
+});
+
+document.getElementById('newBtn').addEventListener('click', ()=> startNew());
+document.getElementById('undoBtn').addEventListener('click', ()=>{
+  game.undo(); game.undo(); // undo two half-moves (player+ai)
+  renderBoard(); gameActive = true; updateStatus();
+});
+document.getElementById('flipBtn').addEventListener('click', ()=>{
+  flipped = !flipped; renderBoard();
+});
+document.getElementById('hintBtn').addEventListener('click', ()=> hint());
+
+/* start new game */
+function startNew(){
+  game.reset();
+  gameActive = true;
+  selectedFrom = null;
+  renderBoard();
+  // set AI/Player colors
+  humanColor = document.querySelector('input[name="side"]:checked').value === 'w' ? 'w' : 'b';
+  aiColor = humanColor === 'w' ? 'b' : 'w';
+  // if AI is white, let AI start
+  if(aiColor === 'w'){
+    statusEl.textContent = 'AI thinking...';
+    setTimeout(()=> aiPlay(), 300);
+  } else {
+    updateStatus();
+  }
+}
+
+/* initial render */
+startNew();
+</script>
+
+</body>
+      </html>
