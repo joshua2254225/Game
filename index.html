@@ -1,10 +1,37 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Home</title>
+
+  <!-- AdSense (Einmal pro Seite) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
+     crossorigin="anonymous"></script>
+
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Kleines, sauberes Layout für die Index-Seite */
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; color:#222; background:#fff; }
+    header { background:#0b74de; color:#fff; padding:14px 16px; }
+    header h1 { margin:0; font-size:20px; display:inline-block; }
+    nav { margin-top:8px; }
+    nav a { color:#fff; margin-right:10px; text-decoration:none; font-weight:600; font-size:14px; }
+    main { max-width:980px; margin:20px auto; padding:0 16px; }
+    .hero { background:#f7fbff; border-radius:12px; padding:18px; box-shadow:0 6px 20px rgba(10,30,80,.05); margin-bottom:16px; }
+    .games { background:#fff; padding:16px; border-radius:10px; box-shadow:0 8px 24px rgba(12,20,30,.04); }
+    .games ul { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+    .games li { padding:12px; border-radius:8px; background:#f6f8fb; display:flex; align-items:center; justify-content:space-between; }
+    .games a { color:#0b5fc7; font-weight:700; text-decoration:none; }
+    footer { padding:12px 16px; background:#f3f3f3; text-align:center; font-size:13px; color:#555; margin-top:20px; }
+
+    /* Ad container styling (zentriert, responsive) */
+    .ad-container { margin:14px 0; display:flex; justify-content:center; }
+    .ad-note { font-size:12px; color:#666; text-align:center; margin-top:6px; }
+    @media (max-width:480px){
+      .games li { padding:10px; font-size:15px; }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -19,18 +46,62 @@
     </nav>
   </header>
 
-  <main style="padding:20px;max-width:900px;margin:0 auto;">
-    <h2>Welcome to My Game Site</h2>
-    <p>Choose a game below to start playing:</p>
-    <ul>
-      <li><a href="/Game/color-clicker.html">Color Clicker</a></li>
-      <li><a href="/Game/emoji-memory.html">Emoji Memory</a></li>
-      <li><a href="/Game/jump-monkey.html">Monkey Jump — Spring über Kokosnüsse 🐒🥥</a></li>
-    </ul>
+  <main>
+    <section class="hero">
+      <h2 style="margin:0 0 8px 0">Willkommen bei My Games Site</h2>
+      <p style="margin:0;color:#444;">Kleine HTML5-Spiele, direkt im Browser. Spiele sind clientseitig — keine Installation nötig.</p>
+    </section>
+
+    <!-- AD: responsive, mittig -->
+    <div class="ad-container" aria-hidden="false">
+      <!--
+        Ersetze data-ad-slot durch deinen Ad Slot (optional).
+        data-ad-client ist bereits deine Publisher-ID (ca-pub-1154368264564805).
+      -->
+      <ins class="adsbygoogle"
+           style="display:block; max-width: 100%;"
+           data-ad-client="ca-pub-1154368264564805"
+           data-ad-slot="REPLACE_WITH_SLOT_ID"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+           (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </div>
+    <div class="ad-note">Anzeige (wird sichtbar, sobald AdSense die Domain genehmigt hat)</div>
+
+    <section class="games" aria-label="Spiele-Liste" style="margin-top:12px;">
+      <h3 style="margin-top:0">Wähle ein Spiel</h3>
+      <ul>
+        <li>
+          <div>
+            <div style="font-weight:700"><a href="/Game/color-clicker.html">Color Clicker</a></div>
+            <div style="font-size:13px;color:#666">Schnelligkeits-Reaktionsspiel</div>
+          </div>
+          <div><a href="/Game/color-clicker.html">Play</a></div>
+        </li>
+
+        <li>
+          <div>
+            <div style="font-weight:700"><a href="/Game/emoji-memory.html">Emoji Memory</a></div>
+            <div style="font-size:13px;color:#666">Finde alle Emoji-Paare</div>
+          </div>
+          <div><a href="/Game/emoji-memory.html">Play</a></div>
+        </li>
+
+        <li>
+          <div>
+            <div style="font-weight:700"><a href="/Game/jump-monkey.html">Monkey Jump</a></div>
+            <div style="font-size:13px;color:#666">Springe mit dem Affen über Kokosnüsse</div>
+          </div>
+          <div><a href="/Game/jump-monkey.html">Play</a></div>
+        </li>
+      </ul>
+    </section>
   </main>
 
-  <footer style="padding:12px 16px;background:#f3f3f3;">
+  <footer>
     <p>© My Games Site</p>
   </footer>
 </body>
-</html>
+                                           </html>
