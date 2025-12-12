@@ -1,124 +1,200 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArcadeOwl Games</title>
-<style>
-    :root {
-        --blue: #0b74de;
-        --muted: #666;
-        --card: #ffffff;
-        --max-width: 980px;
-    }
-    body {
-        margin:0;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-        background:#f5f7fb;
-        color:#111;
-    }
-    /* Topbar */
-    .topbar {
-        background: var(--blue);
-        color: #fff;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        box-shadow:0 2px 6px rgba(11,115,222,0.06);
-        padding: 0 12px;
-    }
-    .home-link {
-        position: absolute;
-        left:12px;
-        top:50%;
-        transform: translateY(-50%);
-        color: #fff;
-        text-decoration: none;
-        font-size: 20px;
-        opacity: 0.6;
-        display:flex;
-        align-items:center;
-    }
-    .brand {
-        display:flex;
-        align-items:center;
-        gap:10px;
-        font-weight:800;
-        letter-spacing:0.6px;
-        font-size:20px;
-    }
-    .brand img {
-        height:34px;
-        width:auto;
-        border-radius:8px;
-        display:inline-block;
-    }
-    /* main container */
-    .wrap {
-        max-width: var(--max-width);
-        margin: 18px auto;
-        padding: 12px;
-    }
-    .games-list {
-        list-style:none;
-        padding:0;
-        margin:0;
-    }
-    .games-list li {
-        background:var(--card);
-        margin:12px 0;
-        padding:14px 16px;
-        border-radius:10px;
-        box-shadow:0 6px 18px rgba(12,20,30,0.04);
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-    }
-    .game-info {
-        display:flex;
-        flex-direction:column;
-    }
-    .game-title {
-        font-weight:700;
-        color: #0b5fc7;
-        text-decoration:none;
-        font-size:16px;
-    }
-    .game-desc {
-        font-size:13px;
-        color:var(--muted);
-        margin-top:4px;
-    }
-    .play-btn {
-        background: var(--blue);
-        color:#fff;
-        padding:8px 12px;
-        border-radius:8px;
-        text-decoration:none;
-        font-weight:700;
-    }
-    footer {
-        max-width: var(--max-width);
-        margin:28px auto 40px;
-        padding:8px 12px;
-        color:#666;
-        font-size:13px;
-        text-align:center;
-    }
-    @media (max-width:480px){
-        .brand { font-size:18px; gap:8px;}
-        .brand img { height:28px; }
-        .games-list li { flex-direction:column; align-items:flex-start; gap:8px; }
-        .play-btn { align-self:flex-end; }
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcadeOwl - Spiele für dich</title>
+    <style>
+        :root {
+            --blue: #0b74de;
+            --muted: #666;
+            --card: #ffffff;
+            --max-width: 980px;
+        }
+        body {
+            margin:0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+            background:#f5f7fb;
+            color:#111;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .topbar {
+            background: var(--blue);
+            color: #fff;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 2px 6px rgba(11, 115, 222, 0.06);
+            padding: 0 12px;
+            animation: slideIn 2s ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .home-link {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .home-link:hover {
+            transform: translateX(-10px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            font-size: 20px;
+            animation: titleBounce 1s ease-in-out infinite;
+        }
+
+        @keyframes titleBounce {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .brand img {
+            height: 34px;
+            width: auto;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .wrap {
+            max-width: var(--max-width);
+            margin: 18px auto;
+            padding: 12px;
+        }
+
+        .games-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .games-list li {
+            background: var(--card);
+            margin: 12px 0;
+            padding: 14px 16px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(12, 20, 30, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .games-list li:hover {
+            background: #f1f1f1;
+        }
+
+        .game-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-title {
+            font-weight: 700;
+            color: #0b5fc7;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .game-title:hover {
+            color: #0b74de;
+        }
+
+        .game-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .play-btn {
+            background: var(--blue);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background 0.3s ease;
+        }
+
+        .play-btn:hover {
+            background: #0749a3;
+        }
+
+        footer {
+            max-width: var(--max-width);
+            margin: 28px auto 40px;
+            padding: 8px 12px;
+            color: #666;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .brand {
+                font-size: 18px;
+                gap: 8px;
+            }
+            .brand img {
+                height: 28px;
+            }
+            .games-list li {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .play-btn {
+                align-self: flex-end;
+            }
+        }
+    </style>
 </head>
 <body>
 
 <header class="topbar" role="banner">
+    <a class="home-link" href="/index.html" aria-label="Home">←</a>
     <div class="brand" role="img" aria-label="ArcadeOwl">
         <img src="logo.png" alt="ArcadeOwl Logo" onerror="this.style.display='none'">
         <span>ArcadeOwl</span>
@@ -126,7 +202,6 @@
 </header>
 
 <main class="wrap" role="main">
-
     <ul class="games-list" aria-label="Games list">
         <li>
             <div class="game-info">
@@ -160,25 +235,24 @@
             <a class="play-btn" href="/Game/banana-catcher.html">Play</a>
         </li>
 
-        <!-- Neue Tic-Tac-Toe Spiele -->
+        <!-- Tic-Tac-Toe Spiele -->
         <li>
             <div class="game-info">
-                <a class="game-title" href="/tic-tac-toe.html">Tic-Tac-Toe</a>
+                <a class="game-title" href="/Game/tic-tac-toe.html">Tic-Tac-Toe</a>
                 <div class="game-desc">2-Spieler-Modus auf einem Gerät</div>
             </div>
-            <a class="play-btn" href="/tic-tac-toe.html">Play</a>
+            <a class="play-btn" href="/Game/tic-tac-toe.html">Play</a>
         </li>
 
         <li>
             <div class="game-info">
-                <a class="game-title" href="/tic-tac-toe-AI.html">Tic-Tac-Toe KI</a>
+                <a class="game-title" href="/Game/tic-tac-toe-AI.html">Tic-Tac-Toe KI</a>
                 <div class="game-desc">Spiele gegen den Computer (KI)</div>
             </div>
-            <a class="play-btn" href="/tic-tac-toe-AI.html">Play</a>
+            <a class="play-btn" href="/Game/tic-tac-toe-AI.html">Play</a>
         </li>
 
     </ul>
-
 </main>
 
 <footer>© ArcadeOwl — Alle Rechte vorbehalten</footer>
