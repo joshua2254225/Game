@@ -37,7 +37,7 @@ button#reset{margin-top:15px;padding:8px 12px;border-radius:8px;border:none;back
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let player = {x:50, y:250, width:30, height:30, dy:0, jumpPower: -8, gravity:0.4};
+let player = {x:50, y:250, width:30, height:30, dy:0, jumpPower:-10, gravity:0.5};
 let obstacles = [];
 let frame=0;
 let score=0;
@@ -61,7 +61,7 @@ function spawnObstacle(){
     obstacles.push({x:canvas.width, y:canvas.height-height, width:20, height:height});
 }
 
-function update(){
+function loop(){
     if(gameOver) return;
     frame++;
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -91,6 +91,7 @@ function update(){
                gameOver=true;
                document.getElementById('status').textContent='Game Over!';
                if(score>bestScore){bestScore=score;localStorage.setItem('dashBest',bestScore);document.getElementById('bestScore').textContent=bestScore;}
+               return;
            }
     }
     
@@ -102,7 +103,7 @@ function update(){
     if(frame%90===0 && !gameOver) score++;
     document.getElementById('score').textContent=score;
     
-    if(!gameOver) requestAnimationFrame(update);
+    requestAnimationFrame(loop);
 }
 
 function jump(){
