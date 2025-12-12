@@ -1,208 +1,132 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArcadeOwl - Spiele für dich</title>
-    <style>
-        :root {
-            --blue: #0b74de;
-            --muted: #666;
-            --card: #ffffff;
-            --max-width: 980px;
-        }
-        body {
-            margin:0;
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-            background:#f5f7fb;
-            color:#111;
-            animation: fadeIn 1.5s ease-in-out;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArcadeOwl - Spiele für dich</title>
+<style>
+    :root {
+        --blue: #0b74de;
+        --muted: #666;
+        --card: #ffffff;
+        --max-width: 980px;
+    }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
+    body {
+        margin:0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        background:#f5f7fb;
+        color:#111;
+        animation: fadeIn 1s ease-in-out;
+    }
 
-        .topbar {
-            background: var(--blue);
-            color: #fff;
-            height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 2px 6px rgba(11, 115, 222, 0.06);
-            padding: 0 12px;
-            animation: slideIn 2s ease-in-out;
-        }
+    @keyframes fadeIn {
+        from { opacity:0; }
+        to { opacity:1; }
+    }
 
-        @keyframes slideIn {
-            from {
-                transform: translateY(-100%);
-            }
-            to {
-                transform: translateY(0);
-            }
-        }
+    .topbar {
+        background: var(--blue);
+        color: #fff;
+        height: 80px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow: 0 2px 6px rgba(11,115,222,0.2);
+        margin-bottom: 20px;
+    }
 
-        .home-link {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #fff;
-            text-decoration: none;
-            font-size: 20px;
-            opacity: 0.8;
-            display: flex;
-            align-items: center;
-            transition: transform 0.3s ease;
-        }
+    .brand {
+        font-size: 48px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        display: flex;
+        gap: 4px;
+    }
 
-        .home-link:hover {
-            transform: translateX(-10px);
-        }
+    .brand span {
+        display: inline-block;
+        animation: wave 1.2s infinite;
+    }
 
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            letter-spacing: 0.6px;
-            font-size: 20px;
-            animation: titleBounce 1s ease-in-out infinite;
-        }
+    .brand span:nth-child(1) { animation-delay: 0s; }
+    .brand span:nth-child(2) { animation-delay: 0.1s; }
+    .brand span:nth-child(3) { animation-delay: 0.2s; }
+    .brand span:nth-child(4) { animation-delay: 0.3s; }
+    .brand span:nth-child(5) { animation-delay: 0.4s; }
+    .brand span:nth-child(6) { animation-delay: 0.5s; }
+    .brand span:nth-child(7) { animation-delay: 0.6s; }
+    .brand span:nth-child(8) { animation-delay: 0.7s; }
+    .brand span:nth-child(9) { animation-delay: 0.8s; }
 
-        @keyframes titleBounce {
-            0% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-5px);
-            }
-            100% {
-                transform: translateY(0);
-            }
-        }
+    @keyframes wave {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-10px); }
+    }
 
-        .brand img {
-            height: 34px;
-            width: auto;
-            border-radius: 8px;
-            display: inline-block;
-        }
+    .wrap {
+        max-width: var(--max-width);
+        margin: 18px auto;
+        padding: 12px;
+    }
 
-        .wrap {
-            max-width: var(--max-width);
-            margin: 18px auto;
-            padding: 12px;
-        }
+    .games-list {
+        list-style:none;
+        padding:0;
+        margin:0;
+    }
 
-        .games-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+    .games-list li {
+        background: var(--card);
+        margin: 12px 0;
+        padding: 14px 16px;
+        border-radius: 10px;
+        box-shadow:0 6px 18px rgba(12,20,30,0.04);
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        transition: background 0.3s ease;
+    }
 
-        .games-list li {
-            background: var(--card);
-            margin: 12px 0;
-            padding: 14px 16px;
-            border-radius: 10px;
-            box-shadow: 0 6px 18px rgba(12, 20, 30, 0.04);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            transition: background 0.3s ease;
-        }
+    .games-list li:hover { background:#f1f1f1; }
 
-        .games-list li:hover {
-            background: #f1f1f1;
-        }
+    .game-info { display:flex; flex-direction:column; }
+    .game-title { font-weight:700; color:#0b5fc7; text-decoration:none; font-size:16px; transition: color 0.3s; }
+    .game-title:hover { color:#0b74de; }
+    .game-desc { font-size:13px; color:var(--muted); margin-top:4px; }
 
-        .game-info {
-            display: flex;
-            flex-direction: column;
-        }
+    .play-btn {
+        background:var(--blue);
+        color:#fff;
+        padding:8px 12px;
+        border-radius:8px;
+        text-decoration:none;
+        font-weight:700;
+        transition: background 0.3s;
+    }
 
-        .game-title {
-            font-weight: 700;
-            color: #0b5fc7;
-            text-decoration: none;
-            font-size: 16px;
-            transition: color 0.3s ease;
-        }
+    .play-btn:hover { background:#0749a3; }
 
-        .game-title:hover {
-            color: #0b74de;
-        }
+    footer { max-width:var(--max-width); margin:28px auto 40px; padding:8px 12px; color:#666; font-size:13px; text-align:center; }
 
-        .game-desc {
-            font-size: 13px;
-            color: var(--muted);
-            margin-top: 4px;
-        }
-
-        .play-btn {
-            background: var(--blue);
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 700;
-            transition: background 0.3s ease;
-        }
-
-        .play-btn:hover {
-            background: #0749a3;
-        }
-
-        footer {
-            max-width: var(--max-width);
-            margin: 28px auto 40px;
-            padding: 8px 12px;
-            color: #666;
-            font-size: 13px;
-            text-align: center;
-        }
-
-        @media (max-width: 480px) {
-            .brand {
-                font-size: 18px;
-                gap: 8px;
-            }
-            .brand img {
-                height: 28px;
-            }
-            .games-list li {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            .play-btn {
-                align-self: flex-end;
-            }
-        }
-    </style>
+    @media (max-width:480px){
+        .brand { font-size:36px; gap:4px; }
+        .games-list li { flex-direction:column; align-items:flex-start; gap:8px; }
+        .play-btn { align-self:flex-end; }
+    }
+</style>
 </head>
 <body>
 
-<header class="topbar" role="banner">
-    <a class="home-link" href="/index.html" aria-label="Home">←</a>
-    <div class="brand" role="img" aria-label="ArcadeOwl">
-        <img src="logo.png" alt="ArcadeOwl Logo" onerror="this.style.display='none'">
-        <span>ArcadeOwl</span>
+<header class="topbar">
+    <div class="brand">
+        <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span><span>O</span><span>w</span><span>l</span>
     </div>
 </header>
 
-<main class="wrap" role="main">
-    <ul class="games-list" aria-label="Games list">
+<main class="wrap">
+    <ul class="games-list">
         <li>
             <div class="game-info">
                 <a class="game-title" href="/Game/color-clicker.html">Color Clicker</a>
@@ -210,7 +134,6 @@
             </div>
             <a class="play-btn" href="/Game/color-clicker.html">Play</a>
         </li>
-
         <li>
             <div class="game-info">
                 <a class="game-title" href="/Game/emoji-memory.html">Emoji Memory</a>
@@ -218,7 +141,6 @@
             </div>
             <a class="play-btn" href="/Game/emoji-memory.html">Play</a>
         </li>
-
         <li>
             <div class="game-info">
                 <a class="game-title" href="/Game/jump-monkey.html">Monkey Jump</a>
@@ -226,7 +148,6 @@
             </div>
             <a class="play-btn" href="/Game/jump-monkey.html">Play</a>
         </li>
-
         <li>
             <div class="game-info">
                 <a class="game-title" href="/Game/banana-catcher.html">Banana Catcher</a>
@@ -234,8 +155,6 @@
             </div>
             <a class="play-btn" href="/Game/banana-catcher.html">Play</a>
         </li>
-
-        <!-- Tic-Tac-Toe Spiele -->
         <li>
             <div class="game-info">
                 <a class="game-title" href="/Game/tic-tac-toe.html">Tic-Tac-Toe</a>
@@ -243,7 +162,6 @@
             </div>
             <a class="play-btn" href="/Game/tic-tac-toe.html">Play</a>
         </li>
-
         <li>
             <div class="game-info">
                 <a class="game-title" href="/Game/tic-tac-toe-AI.html">Tic-Tac-Toe KI</a>
@@ -251,7 +169,6 @@
             </div>
             <a class="play-btn" href="/Game/tic-tac-toe-AI.html">Play</a>
         </li>
-
     </ul>
 </main>
 
