@@ -1,118 +1,168 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ArcadeOwl</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ArcadeOwl</title>
 
-    <link rel="stylesheet" href="styles.css" />
+  <!-- Optional: AdSense (nur wenn du es verwenden willst) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
+     crossorigin="anonymous"></script>
 
-    <!-- AdSense Code -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1154368264564805"
-        crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root{
+      --blue: #0b74de;
+      --muted: #666;
+      --card: #ffffff;
+      --max-width: 980px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:#f5f7fb;color:#111}
+    /* Topbar */
+    .topbar{
+      background:var(--blue);
+      color:#fff;
+      height:56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      box-shadow:0 2px 6px rgba(11,115,222,0.06);
+      padding:0 12px;
+    }
+    /* small home arrow top-left */
+    .home-link{
+      position:absolute;
+      left:12px;
+      top:50%;
+      transform:translateY(-50%);
+      color:#fff;
+      text-decoration:none;
+      font-size:20px;
+      opacity:0.6; /* 60% sichtbar */
+      display:flex;
+      align-items:center;
+    }
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
-        }
+    /* centered brand with logo and text */
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:0.6px;
+      font-size:20px;
+    }
+    .brand img {
+      height:34px;      /* logo size */
+      width:auto;
+      border-radius:8px;
+      display:inline-block;
+    }
 
-        /* Top Bar */
-        .topbar {
-            width: 100%;
-            background: #1e88e5;
-            color: white;
-            padding: 12px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            font-size: 24px;
-            font-weight: bold;
-        }
+    /* main container */
+    .wrap{max-width:var(--max-width); margin:18px auto; padding:12px;}
 
-        .home-btn {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0.6;       /* 60% sichtbar */
-            font-size: 22px;
-            text-decoration: none;
-            color: white;
-        }
+    /* games list - vertical */
+    .games-list{ list-style:none; padding:0; margin:0; }
+    .games-list li{
+      background:var(--card);
+      margin:12px 0;
+      padding:14px 16px;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(12,20,30,0.04);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .game-info{ display:flex; flex-direction:column; }
+    .game-title{ font-weight:700; color: #0b5fc7; text-decoration:none; font-size:16px; }
+    .game-desc{ font-size:13px; color:var(--muted); margin-top:4px; }
+    .play-btn{
+      background:var(--blue);
+      color:#fff;
+      padding:8px 12px;
+      border-radius:8px;
+      text-decoration:none;
+      font-weight:700;
+    }
 
-        /* Game List */
-        .container {
-            padding: 20px;
-        }
+    footer{ max-width:var(--max-width); margin:28px auto 40px; padding:8px 12px; color:#666; font-size:13px; text-align:center; }
 
-        .game-card {
-            background: white;
-            padding: 15px;
-            margin-bottom: 12px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-        }
-
-        .game-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .play-btn {
-            margin-top: 10px;
-            display: inline-block;
-            background: #1e88e5;
-            color: white;
-            padding: 8px 12px;
-            text-decoration: none;
-            border-radius: 8px;
-        }
-
-    </style>
+    @media (max-width:480px){
+      .brand { font-size:18px; gap:8px;}
+      .brand img { height:28px; }
+      .games-list li { flex-direction:column; align-items:flex-start; gap:8px; }
+      .play-btn { align-self:flex-end; }
+    }
+  </style>
 </head>
-
 <body>
 
-    <!-- TOP BAR -->
-    <div class="topbar">
-        <a href="index.html" class="home-btn">←</a>
-        ArcadeOwl
+  <!-- TOP BAR: home arrow left, brand centered (logo + ArcadeOwl) -->
+  <header class="topbar" role="banner">
+    <a class="home-link" href="/Game/index.html" aria-label="Home">←</a>
+
+    <div class="brand" role="img" aria-label="ArcadeOwl">
+      <!-- Logo: bitte als Game/logo.png hochladen oder Pfad anpassen -->
+      <img src="logo.png" alt="ArcadeOwl Logo" onerror="this.style.display='none'">
+      <span>ArcadeOwl</span>
+    </div>
+  </header>
+
+  <main class="wrap" role="main">
+
+    <!-- optional ad block (zentriert) -->
+    <div style="text-align:center; margin:10px 0;">
+      <ins class="adsbygoogle"
+           style="display:block; max-width:728px; margin:0 auto;"
+           data-ad-client="ca-pub-1154368264564805"
+           data-ad-slot="REPLACE_WITH_SLOT_ID"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
     </div>
 
-    <div class="container">
-
-        <!-- Color Clicker -->
-        <div class="game-card">
-            <div class="game-title">Color Clicker</div>
-            <div>Reaktionsspiel mit Farben</div>
-            <a class="play-btn" href="color-clicker/index.html">Play</a>
+    <!-- Games list: links use lowercase-with-hyphens -->
+    <ul class="games-list" aria-label="Spiele-Liste">
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/color-clicker.html">Color Clicker</a>
+          <div class="game-desc">Schnelligkeits-Reaktionsspiel — klicke die farbigen Kästchen.</div>
         </div>
+        <a class="play-btn" href="/Game/color-clicker.html">Play</a>
+      </li>
 
-        <!-- Emoji Memory -->
-        <div class="game-card">
-            <div class="game-title">Emoji Memory</div>
-            <div>Finde alle Paare</div>
-            <a class="play-btn" href="emoji-memory/index.html">Play</a>
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/emoji-memory.html">Emoji Memory</a>
+          <div class="game-desc">Finde alle Emoji-Paare so schnell wie möglich.</div>
         </div>
+        <a class="play-btn" href="/Game/emoji-memory.html">Play</a>
+      </li>
 
-        <!-- Monkey Jump -->
-        <div class="game-card">
-            <div class="game-title">Monkey Jump</div>
-            <div>Springe über Kokosnüsse</div>
-            <a class="play-btn" href="monkey-jump/index.html">Play</a>
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/jump-monkey.html">Monkey Jump</a>
+          <div class="game-desc">Springe mit dem Affen über Kokosnüsse — Leertaste / Tippen zum Springen.</div>
         </div>
+        <a class="play-btn" href="/Game/jump-monkey.html">Play</a>
+      </li>
 
-        <!-- Neues Spiel -->
-        <div class="game-card">
-            <div class="game-title">Space Runner</div>
-            <div>Weiche Asteroiden aus</div>
-            <a class="play-btn" href="space-runner/index.html">Play</a>
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="/Game/banana-catcher.html">Banana Catcher</a>
+          <div class="game-desc">Fange fallende Bananen mit dem Korb — vermeide Bomben.</div>
         </div>
+        <a class="play-btn" href="/Game/banana-catcher.html">Play</a>
+      </li>
+    </ul>
+  </main>
 
-    </div>
+  <footer>© ArcadeOwl — Alle Rechte vorbehalten</footer>
 
+  <!-- Hinweis: Wenn das Logo nicht angezeigt wird, lade die Bilddatei in den Ordner /Game/ als "logo.png" hoch
+       (oder passe den src-Pfad oben an: z.B. "logo.svg" oder "/Game/logo.png"). -->
 </body>
-</html>
+              </html>
