@@ -1,436 +1,253 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tic-Tac-Toe — Play vs AI</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArcadeOwl - Tic Tac Toe AI</title>
 <style>
-  :root{
-    --blue:#0b74de;
-    --bg:#f5f7fb;
-    --card:#fff;
-    --red:#ff4d4d;
-    --green:#28a745;
-    --accent:#ffd54f;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0;
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-    background:var(--bg);
-    color:#111;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    min-height:100vh;
-    padding:18px 12px 40px;
-  }
-
-  /* Topbar */
-  .topbar{
-    background:var(--blue);
-    color:#fff;
-    width:100%;
-    max-width:980px;
-    height:56px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    position:relative;
-    border-radius:10px;
-    box-shadow:0 6px 18px rgba(11,115,222,0.08);
-    margin-bottom:18px;
-  }
-  .home-link{
-    position:absolute;
-    left:14px;
-    top:50%;
-    transform:translateY(-50%);
-    color:#fff;
-    text-decoration:none;
-    font-weight:700;
-    font-size:20px;
-  }
-  .brand{font-weight:800; font-size:18px;}
-
-  /* Controls + status */
-  .panel{
-    width:100%;
-    max-width:980px;
-    background:var(--card);
-    border-radius:12px;
-    padding:14px;
-    box-shadow:0 6px 22px rgba(10,20,40,0.04);
-    margin-bottom:14px;
-  }
-  .controls{
-    display:flex;
-    gap:12px;
-    align-items:center;
-    flex-wrap:wrap;
-  }
-  .label{font-weight:700; margin-right:6px;}
-  .btn{
-    background:var(--blue);
-    color:#fff;
-    border:none;
-    padding:8px 12px;
-    border-radius:8px;
-    font-weight:700;
-    cursor:pointer;
-  }
-  .btn.secondary{
-    background:#e9eefc;
-    color:#0b4f9a;
-    border:2px solid transparent;
-  }
-  .radio-group{display:flex; gap:8px; align-items:center;}
-  .status{margin-top:12px; font-size:18px; font-weight:700; text-align:center;}
-
-  /* Board */
-  .board-wrap{display:flex; justify-content:center; padding:12px 0;}
-  .board{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:8px;
-    width:min(360px, 92vw);
-  }
-  .cell{
-    background:var(--card);
-    border-radius:10px;
-    aspect-ratio:1/1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:2.6rem;
-    cursor:pointer;
-    user-select:none;
-    transition:transform .12s ease, background .18s ease;
-    box-shadow: 0 6px 14px rgba(10,20,40,0.06);
-  }
-  .cell:hover{ transform:scale(1.05); background:#eef6ff }
-  .cell.X{ color:var(--red); transform:scale(1); animation:pop .12s ease; }
-  .cell.O{ color:var(--green); transform:scale(1); animation:pop .12s ease; }
-  @keyframes pop{ from{transform:scale(0)} to{transform:scale(1)} }
-  .cell.winner{ background:var(--accent); color:#111; font-weight:800; }
-
-  /* footer actions */
-  .actions{ display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;}
-  .small{ font-size:13px; color:#666; }
-
-  @media (max-width:520px){
-    .topbar{height:64px}
-    .brand{font-size:16px}
-    .cell{font-size:2.2rem}
-  }
+:root{
+  --blue:#0b74de;
+  --green:#28a745;
+  --red:#ff4d4d;
+  --bg:#f5f7fb;
+  --card:#fff;
+  --accent:#ffd54f;
+}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+  background: var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  padding:12px;
+}
+.topbar{
+  background:var(--blue);
+  color:#fff;
+  width:100%;
+  max-width:980px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  border-radius:10px;
+  margin-bottom:18px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+.home-link{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#fff;
+  text-decoration:none;
+  font-size:20px;
+}
+.brand{
+  font-weight:800;
+  font-size:20px;
+}
+.levels{
+  display:flex;
+  gap:10px;
+  margin-bottom:14px;
+  justify-content:center;
+}
+.levels button{
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.2s;
+}
+.levels button.active{ background: var(--blue); color:#fff;}
+.levels button:not(.active){ background:#e9eefc; color: var(--blue);}
+.board{
+  display:grid;
+  grid-template-columns:repeat(3,100px);
+  grid-gap:8px;
+  justify-content:center;
+}
+.cell{
+  width:100px;
+  height:100px;
+  background:var(--card);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2.6rem;
+  cursor:pointer;
+  transition:0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.cell:hover{ transform:scale(1.05); background:#eef6ff;}
+.cell.X{ color: var(--red);}
+.cell.O{ color: var(--green);}
+.cell.winner{ background: var(--accent); color:#111; font-weight:800;}
+.status{
+  margin-top:12px;
+  font-size:18px;
+  font-weight:700;
+  text-align:center;
+}
+button#newGame{
+  margin-top:12px;
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  background:var(--blue);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
 
 <header class="topbar">
-  <a class="home-link" href="index.html" aria-label="Home">←</a>
-  <div class="brand">ArcadeOwl — Tic-Tac-Toe (AI)</div>
+  <a class="home-link" href="index.html">←</a>
+  <div class="brand">ArcadeOwl — Tic Tac Toe AI</div>
 </header>
 
-<section class="panel" aria-labelledby="controlsTitle">
-  <div class="controls" id="controlsTitle">
-    <div class="label">Difficulty:</div>
-    <div class="radio-group" role="radiogroup" aria-label="Difficulty">
-      <label><input type="radio" name="difficulty" value="easy" checked> Easy</label>
-      <label><input type="radio" name="difficulty" value="mid"> Mid</label>
-      <label><input type="radio" name="difficulty" value="hard"> Hard</label>
-    </div>
-
-    <div style="flex:1"></div>
-
-    <div class="label">You play:</div>
-    <div class="radio-group">
-      <label><input type="radio" name="side" value="X" checked> X (you)</label>
-      <label><input type="radio" name="side" value="O"> O (AI starts)</label>
-    </div>
-
-    <button class="btn" id="newBtn">New Game</button>
-  </div>
-
-  <div class="status" id="status">Loading...</div>
-</section>
-
-<section class="board-wrap">
-  <div class="board" role="grid" id="board" aria-label="Tic tac toe board"></div>
-</section>
-
-<div class="panel small">
-  <div class="small">Easy = random moves. Mid = try to win or block. Hard = optimal (Minimax).</div>
-  <div class="actions">
-    <button class="btn secondary" id="hintBtn">Hint (one best move)</button>
-    <button class="btn secondary" id="toggleAnim">Toggle Anim</button>
-  </div>
+<div class="levels">
+  <button data-level="easy" class="active">Easy</button>
+  <button data-level="mid">Mid</button>
+  <button data-level="hard">Hard</button>
 </div>
 
-<script>
-/* ---------- Game state ---------- */
-const boardEl = document.getElementById('board');
-const statusEl = document.getElementById('status');
-const newBtn = document.getElementById('newBtn');
-const hintBtn = document.getElementById('hintBtn');
-const toggleAnimBtn = document.getElementById('toggleAnim');
+<div class="board" id="board"></div>
+<div class="status" id="status">Select your level!</div>
+<button id="newGame">New Game</button>
 
+<script>
 let board = Array(9).fill('');
 let human = 'X';
 let ai = 'O';
 let current = 'X';
-let gameActive = true;
+let gameActive = false;
 let difficulty = 'easy';
-let animations = true;
+const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-/* Win patterns */
-const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const boardEl = document.getElementById('board');
+const statusEl = document.getElementById('status');
+const newBtn = document.getElementById('newGame');
 
-/* ---------- Helpers ---------- */
-const setStatus = txt => statusEl.textContent = txt;
-const renderBoard = () => {
-  boardEl.innerHTML = '';
-  board.forEach((v,i) => {
-    const d = document.createElement('div');
-    d.className = 'cell' + (v?(' '+v):'');
-    d.dataset.index = i;
-    d.setAttribute('role','button');
-    d.setAttribute('aria-label', v ? `Cell ${i+1} ${v}` : `Cell ${i+1} empty`);
-    if(!v && gameActive && current===human) d.tabIndex = 0;
-    d.textContent = v;
-    d.addEventListener('click', ()=> onHuman(i));
-    boardEl.appendChild(d);
+function renderBoard(){
+  boardEl.innerHTML='';
+  board.forEach((v,i)=>{
+    const cell = document.createElement('div');
+    cell.className='cell'+(v?(' '+v):'');
+    cell.dataset.index=i;
+    cell.textContent=v;
+    cell.addEventListener('click', ()=>onHuman(i));
+    boardEl.appendChild(cell);
   });
-};
+}
 
-/* ---------- Win check ---------- */
 function checkWinnerState(b){
   for(const p of wins){
-    const [a,b1,c] = p;
-    if(b[a] && b[a] === b[b1] && b[b1] === b[c]) return { winner: b[a], pattern: p };
+    const [a,b1,c]=p;
+    if(b[a] && b[a]===b[b1] && b[b1]===b[c]) return {winner:b[a],pattern:p};
   }
   return null;
 }
 
-/* ---------- Moves ---------- */
-function onHuman(index){
-  if(!gameActive || current !== human) return;
-  if(board[index] !== '') return;
-  makeMove(index, human);
+function onHuman(i){
+  if(!gameActive || current!==human || board[i]!=='') return;
+  makeMove(i,human);
 }
 
-function makeMove(index, player){
-  board[index] = player;
-  updateUI();
-  const outcome = checkWinnerState(board);
+function makeMove(i,p){
+  board[i]=p;
+  renderBoard();
+  const outcome=checkWinnerState(board);
   if(outcome){
-    gameActive = false;
-    highlightPattern(outcome.pattern);
-    setStatus(outcome.winner === human ? 'You win!' : 'AI wins!');
+    gameActive=false;
+    highlight(outcome.pattern);
+    statusEl.textContent=outcome.winner===human?'You win!':'AI wins!';
     return;
   }
-  if(board.every(x=>x !== '')){
-    gameActive = false;
-    setStatus("Draw!");
+  if(board.every(c=>c!=='')){
+    gameActive=false;
+    statusEl.textContent='Draw!';
     return;
   }
-  current = (player === 'X') ? 'O' : 'X';
-  if(current === ai){
-    setStatus("AI thinking...");
-    setTimeout(aiTurn, 300);
-  } else {
-    setStatus("Your turn");
-  }
+  current=p==='X'?'O':'X';
+  if(current===ai){
+    statusEl.textContent='AI thinking...';
+    setTimeout(aiTurn,300);
+  } else statusEl.textContent='Your turn';
 }
 
-function highlightPattern(pattern){
-  pattern.forEach(i => {
-    const el = boardEl.querySelector(`[data-index="${i}"]`);
-    if(el) el.classList.add('winner');
-  });
-}
+function highlight(pattern){pattern.forEach(i=>{boardEl.querySelector(`[data-index="${i}"]`).classList.add('winner');});}
 
-/* ---------- AI Strategies ---------- */
-
-/* Easy: random free cell */
-function aiEasyMove(){
-  const empty = board.map((v,i)=>v===''?i:null).filter(n=>n!==null);
-  return empty[Math.floor(Math.random()*empty.length)];
-}
-
-/* Mid: win if possible, else block if needed, else random */
+function emptyIndices(){return board.map((v,i)=>v===''?i:null).filter(n=>n!==null);}
+function aiEasyMove(){const e=emptyIndices();return e[Math.floor(Math.random()*e.length)];}
 function aiMidMove(){
-  // 1. Win
-  for(const i of emptyIndices()){
-    const copy = board.slice(); copy[i] = ai;
-    if(checkWinnerState(copy)) return i;
-  }
-  // 2. Block human win
-  for(const i of emptyIndices()){
-    const copy = board.slice(); copy[i] = human;
-    if(checkWinnerState(copy)) return i;
-  }
-  // 3. take center
-  if(board[4] === '') return 4;
-  // 4. random corner if available
-  const corners = [0,2,6,8].filter(i => board[i]==='');
+  for(const i of emptyIndices()){const copy=board.slice();copy[i]=ai;if(checkWinnerState(copy))return i;}
+  for(const i of emptyIndices()){const copy=board.slice();copy[i]=human;if(checkWinnerState(copy))return i;}
+  if(board[4]==='') return 4;
+  const corners=[0,2,6,8].filter(i=>board[i]==='');
   if(corners.length) return corners[Math.floor(Math.random()*corners.length)];
-  // 5. fallback random
   return aiEasyMove();
 }
-
-/* Hard: Minimax (optimal) */
 function aiHardMove(){
-  const best = minimax(board, ai);
+  const best=minimax(board,ai);
   return best.index;
 }
-
-/* Minimax implementation */
-function minimax(newBoard, player){
-  const avail = newBoard.map((v,i)=>v===''?i:null).filter(n=>n!==null);
-  const winnerObj = checkWinnerState(newBoard);
-  if(winnerObj){
-    if(winnerObj.winner === ai) return {score: 10};
-    else if(winnerObj.winner === human) return {score: -10};
-  } else if(avail.length === 0){
-    return {score: 0};
-  }
-
-  const moves = [];
+function minimax(nb,player){
+  const avail=nb.map((v,i)=>v===''?i:null).filter(n=>n!==null);
+  const w=checkWinnerState(nb);
+  if(w){if(w.winner===ai)return {score:10}; else if(w.winner===human) return {score:-10};}
+  else if(avail.length===0) return {score:0};
+  const moves=[];
   for(const i of avail){
-    const move = {};
-    move.index = i;
-    newBoard[i] = player;
-    if(player === ai){
-      const result = minimax(newBoard, human);
-      move.score = result.score;
-    } else {
-      const result = minimax(newBoard, ai);
-      move.score = result.score;
-    }
-    newBoard[i] = '';
+    const move={index:i};
+    nb[i]=player;
+    const result=player===ai?minimax(nb,human):minimax(nb,ai);
+    move.score=result.score;
+    nb[i]='';
     moves.push(move);
   }
-
-  // choose best
   let bestMove;
-  if(player === ai){
-    let bestScore = -Infinity;
-    for(const m of moves) if(m.score > bestScore){ bestScore = m.score; bestMove = m; }
-  } else {
-    let bestScore = Infinity;
-    for(const m of moves) if(m.score < bestScore){ bestScore = m.score; bestMove = m; }
-  }
+  if(player===ai){let bestScore=-Infinity;for(const m of moves) if(m.score>bestScore){bestScore=m.score;bestMove=m;}}
+  else {let bestScore=Infinity;for(const m of moves) if(m.score<bestScore){bestScore=m.score;bestMove=m;}}
   return bestMove;
 }
 
-/* ---------- Utilities ---------- */
-function emptyIndices(){ return board.map((v,i)=>v===''?i:null).filter(n=>n!==null); }
-function updateUI(){
-  renderBoard();
-  // animate optional - we keep animation on insert via CSS classes X/O
-}
-
-/* ---------- AI turn ---------- */
 function aiTurn(){
   if(!gameActive) return;
   let move;
-  if(difficulty === 'easy') move = aiEasyMove();
-  else if(difficulty === 'mid') move = aiMidMove();
-  else move = aiHardMove();
-  // safety if undefined
-  if(move === undefined) move = aiEasyMove();
-  makeMove(move, ai);
+  if(difficulty==='easy') move=aiEasyMove();
+  else if(difficulty==='mid') move=aiMidMove();
+  else move=aiHardMove();
+  makeMove(move,ai);
 }
 
-/* ---------- Hint (best move for human) ---------- */
-function hintOnce(){
-  if(!gameActive) return;
-  // compute best move for human using minimax scoring (human wants minimize AI score)
-  // We'll find move that gives best immediate outcome for human:
-  const avail = emptyIndices();
-  let best = null;
-  if(difficulty === 'hard'){
-    // use minimax to evaluate each move as human
-    let bestScore = Infinity;
-    for(const i of avail){
-      const copy = board.slice(); copy[i] = human;
-      const result = minimax(copy, ai);
-      if(result.score < bestScore){
-        bestScore = result.score;
-        best = i;
-      }
-    }
-  } else if(difficulty === 'mid'){
-    // mid: try immediate winning or blocking
-    for(const i of avail){
-      const copy = board.slice(); copy[i] = human;
-      if(checkWinnerState(copy)){ best = i; break; }
-    }
-    if(best === null){
-      for(const i of avail){
-        const copy = board.slice(); copy[i] = ai;
-        if(checkWinnerState(copy)){ best = i; break; }
-      }
-    }
-    if(best === null && board[4]==='') best = 4;
-    if(best === null) best = avail[Math.floor(Math.random()*avail.length)];
-  } else {
-    best = avail[Math.floor(Math.random()*avail.length)];
-  }
-  // show a little highlight
-  if(best!==null && best!==undefined){
-    const el = boardEl.querySelector(`[data-index="${best}"]`);
-    if(el){
-      el.style.outline = '4px solid rgba(11,115,222,0.24)';
-      setTimeout(()=> el.style.outline = '', 700);
-    }
-  }
+function startNew(){
+  board=Array(9).fill('');
+  current='X';
+  gameActive=true;
+  statusEl.textContent='Your turn';
+  renderBoard();
+  if(ai==='X'){current=ai;statusEl.textContent='AI thinking...'; setTimeout(aiTurn,400);}
 }
 
-/* ---------- Event wiring ---------- */
-document.querySelectorAll('input[name="difficulty"]').forEach(r=>{
-  r.addEventListener('change', e=>{
-    difficulty = e.target.value;
-    setStatus(`Difficulty: ${difficulty.toUpperCase()}. ${gameActive? (current===human? 'Your turn':'AI thinking...') : 'Game over.'}`);
-  });
-});
-document.querySelectorAll('input[name="side"]').forEach(r=>{
-  r.addEventListener('change', e=>{
-    human = e.target.value;
-    ai = human === 'X' ? 'O' : 'X';
+document.querySelectorAll('.levels button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.levels button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    difficulty=b.dataset.level;
     startNew();
   });
 });
 newBtn.addEventListener('click', startNew);
-hintBtn.addEventListener('click', hintOnce);
-toggleAnimBtn.addEventListener('click', ()=> {
-  animations = !animations;
-  document.querySelectorAll('.cell').forEach(c=> c.style.animation = animations ? '' : 'none');
-  toggleAnimBtn.textContent = animations ? 'Turn Anim Off' : 'Turn Anim On';
-});
 
-/* ---------- Start / reset ---------- */
-function startNew(){
-  board = Array(9).fill('');
-  gameActive = true;
-  current = 'X';
-  setStatus('Ready');
-  renderBoard();
-  // if AI plays X and user selected O, let AI start
-  if(ai === 'X'){
-    current = ai;
-    setStatus('AI thinking...');
-    setTimeout(aiTurn, 400);
-  } else {
-    current = human;
-    setStatus('Your turn');
-  }
-}
-
-function setStatus(s){ statusEl.textContent = s; }
-
-/* init */
 startNew();
 </script>
 
