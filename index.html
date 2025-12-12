@@ -1,178 +1,138 @@
-<!DOCTYPE html>
-<html lang="de">
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArcadeOwl - Spiele für dich</title>
-<style>
-    :root {
-        --blue: #0b74de;
-        --muted: #666;
-        --card: #ffffff;
-        --max-width: 980px;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ArcadeOwl</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root{
+      --blue: #0b74de;
+      --muted: #666;
+      --card: #ffffff;
+      --max-width: 980px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;background:#f5f7fb;color:#111}
+
+    /* Topbar */
+    .topbar{
+      background:var(--blue);
+      color:#fff;
+      height:56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      box-shadow:0 2px 6px rgba(11,115,222,0.06);
+      padding:0 12px;
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:1px;
     }
 
-    body {
-        margin:0;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-        background:#f5f7fb;
-        color:#111;
-        animation: fadeIn 1s ease-in-out;
+    /* main container */
+    .wrap{max-width:var(--max-width); margin:18px auto; padding:12px;}
+
+    /* games list - vertical */
+    .games-list{ list-style:none; padding:0; margin:0; }
+    .games-list li{
+      background:var(--card);
+      margin:12px 0;
+      padding:14px 16px;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(12,20,30,0.04);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      transition:0.2s;
+    }
+    .games-list li:hover{ transform:translateY(-2px); box-shadow:0 8px 22px rgba(12,20,30,0.08); }
+
+    .game-info{ display:flex; flex-direction:column; }
+    .game-title{ font-weight:700; color: #0b5fc7; text-decoration:none; font-size:16px; }
+    .game-desc{ font-size:13px; color:var(--muted); margin-top:4px; }
+    .play-btn{
+      background:var(--blue);
+      color:#fff;
+      padding:8px 12px;
+      border-radius:8px;
+      text-decoration:none;
+      font-weight:700;
     }
 
-    @keyframes fadeIn {
-        from { opacity:0; }
-        to { opacity:1; }
-    }
-
-    .topbar {
-        background: var(--blue);
-        color: #fff;
-        height: 80px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        box-shadow: 0 2px 6px rgba(11,115,222,0.2);
-        margin-bottom: 20px;
-    }
-
-    .brand {
-        font-size: 48px;
-        font-weight: 900;
-        letter-spacing: 2px;
-        display: flex;
-        gap: 4px;
-    }
-
-    .brand span {
-        display: inline-block;
-        animation: wave 1.2s infinite;
-    }
-
-    .brand span:nth-child(1) { animation-delay: 0s; }
-    .brand span:nth-child(2) { animation-delay: 0.1s; }
-    .brand span:nth-child(3) { animation-delay: 0.2s; }
-    .brand span:nth-child(4) { animation-delay: 0.3s; }
-    .brand span:nth-child(5) { animation-delay: 0.4s; }
-    .brand span:nth-child(6) { animation-delay: 0.5s; }
-    .brand span:nth-child(7) { animation-delay: 0.6s; }
-    .brand span:nth-child(8) { animation-delay: 0.7s; }
-    .brand span:nth-child(9) { animation-delay: 0.8s; }
-
-    @keyframes wave {
-        0%, 60%, 100% { transform: translateY(0); }
-        30% { transform: translateY(-10px); }
-    }
-
-    .wrap {
-        max-width: var(--max-width);
-        margin: 18px auto;
-        padding: 12px;
-    }
-
-    .games-list {
-        list-style:none;
-        padding:0;
-        margin:0;
-    }
-
-    .games-list li {
-        background: var(--card);
-        margin: 12px 0;
-        padding: 14px 16px;
-        border-radius: 10px;
-        box-shadow:0 6px 18px rgba(12,20,30,0.04);
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-        transition: background 0.3s ease;
-    }
-
-    .games-list li:hover { background:#f1f1f1; }
-
-    .game-info { display:flex; flex-direction:column; }
-    .game-title { font-weight:700; color:#0b5fc7; text-decoration:none; font-size:16px; transition: color 0.3s; }
-    .game-title:hover { color:#0b74de; }
-    .game-desc { font-size:13px; color:var(--muted); margin-top:4px; }
-
-    .play-btn {
-        background:var(--blue);
-        color:#fff;
-        padding:8px 12px;
-        border-radius:8px;
-        text-decoration:none;
-        font-weight:700;
-        transition: background 0.3s;
-    }
-
-    .play-btn:hover { background:#0749a3; }
-
-    footer { max-width:var(--max-width); margin:28px auto 40px; padding:8px 12px; color:#666; font-size:13px; text-align:center; }
+    footer{ max-width:var(--max-width); margin:28px auto 40px; padding:8px 12px; color:#666; font-size:13px; text-align:center; }
 
     @media (max-width:480px){
-        .brand { font-size:36px; gap:4px; }
-        .games-list li { flex-direction:column; align-items:flex-start; gap:8px; }
-        .play-btn { align-self:flex-end; }
+      .games-list li { flex-direction:column; align-items:flex-start; gap:8px; }
+      .play-btn { align-self:flex-end; }
     }
-</style>
+  </style>
 </head>
 <body>
 
-<header class="topbar">
-    <div class="brand">
-        <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span><span>O</span><span>w</span><span>l</span>
-    </div>
-</header>
+  <!-- TOP BAR -->
+  <header class="topbar" role="banner">
+    ArcadeOwl
+  </header>
 
-<main class="wrap">
-    <ul class="games-list">
-        <li>
-            <div class="game-info">
-                <a class="game-title" href="/Game/color-clicker.html">Color Clicker</a>
-                <div class="game-desc">Speed reaction game — click the colored boxes.</div>
-            </div>
-            <a class="play-btn" href="/Game/color-clicker.html">Play</a>
-        </li>
-        <li>
-            <div class="game-info">
-                <a class="game-title" href="/Game/emoji-memory.html">Emoji Memory</a>
-                <div class="game-desc">Find all matching emoji pairs as fast as you can.</div>
-            </div>
-            <a class="play-btn" href="/Game/emoji-memory.html">Play</a>
-        </li>
-        <li>
-            <div class="game-info">
-                <a class="game-title" href="/Game/jump-monkey.html">Monkey Jump</a>
-                <div class="game-desc">Jump over coconuts — Space / Tap to jump.</div>
-            </div>
-            <a class="play-btn" href="/Game/jump-monkey.html">Play</a>
-        </li>
-        <li>
-            <div class="game-info">
-                <a class="game-title" href="/Game/banana-catcher.html">Banana Catcher</a>
-                <div class="game-desc">Catch falling bananas with a basket — avoid bombs.</div>
-            </div>
-            <a class="play-btn" href="/Game/banana-catcher.html">Play</a>
-        </li>
-        <li>
-            <div class="game-info">
-                <a class="game-title" href="/Game/tic-tac-toe.html">Tic-Tac-Toe</a>
-                <div class="game-desc">2-Spieler-Modus auf einem Gerät</div>
-            </div>
-            <a class="play-btn" href="/Game/tic-tac-toe.html">Play</a>
-        </li>
-        <li>
-            <div class="game-info">
-                <a class="game-title" href="/Game/tic-tac-toe-AI.html">Tic-Tac-Toe KI</a>
-                <div class="game-desc">Spiele gegen den Computer (KI)</div>
-            </div>
-            <a class="play-btn" href="/Game/tic-tac-toe-AI.html">Play</a>
-        </li>
+  <main class="wrap" role="main">
+
+    <!-- Games list -->
+    <ul class="games-list" aria-label="Games list">
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="color-clicker.html">Color Clicker</a>
+          <div class="game-desc">Speed reaction game — click the colored boxes.</div>
+        </div>
+        <a class="play-btn" href="color-clicker.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="emoji-memory.html">Emoji Memory</a>
+          <div class="game-desc">Find all matching emoji pairs as fast as you can.</div>
+        </div>
+        <a class="play-btn" href="emoji-memory.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="jump-monkey.html">Monkey Jump</a>
+          <div class="game-desc">Jump over coconuts — Space / Tap to jump.</div>
+        </div>
+        <a class="play-btn" href="jump-monkey.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="banana-catcher.html">Banana Catcher</a>
+          <div class="game-desc">Catch falling bananas with a basket — avoid bombs.</div>
+        </div>
+        <a class="play-btn" href="banana-catcher.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="tic-tac-toe.html">Tic Tac Toe</a>
+          <div class="game-desc">Classic Tic Tac Toe game against a friend or local player.</div>
+        </div>
+        <a class="play-btn" href="tic-tac-toe.html">Play</a>
+      </li>
+
+      <li>
+        <div class="game-info">
+          <a class="game-title" href="tic-tac-toe-AI.html">Tic Tac Toe AI</a>
+          <div class="game-desc">Play against the AI — choose Easy, Medium or Hard.</div>
+        </div>
+        <a class="play-btn" href="tic-tac-toe-AI.html">Play</a>
+      </li>
     </ul>
-</main>
 
-<footer>© ArcadeOwl — Alle Rechte vorbehalten</footer>
+  </main>
+
+  <footer>© ArcadeOwl — All rights reserved</footer>
 
 </body>
 </html>
