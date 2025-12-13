@@ -2,118 +2,209 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Geometry Dash – ArcadeOwl</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArcadeOwl - Geometry Dash</title>
+
 <style>
-:root {--blue:#0b74de;--card:#fff;--max-width:980px;}
-body {margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:#f5f7fb;color:#111;}
-.topbar{background:var(--blue); color:#fff; height:56px; display:flex; align-items:center; justify-content:center; position:relative; box-shadow:0 2px 6px rgba(11,115,222,0.06);}
-.home-link{position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#fff; text-decoration:none; font-size:20px; opacity:0.8;}
-.brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:0.6px; font-size:20px;}
-.brand img{height:34px;width:auto;border-radius:8px;}
-.wrap{max-width:var(--max-width); margin:18px auto; padding:12px; text-align:center;}
-canvas{background:#87ceeb; display:block; margin:0 auto; border-radius:12px;}
-.status{margin-top:10px;font-size:18px;}
-button#reset{margin-top:15px;padding:8px 12px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;}
+body{
+  margin:0;
+  background:#111;
+  color:white;
+  font-family:Arial, sans-serif;
+  text-align:center;
+}
+
+/* TOP BAR */
+.topbar{
+  background:#0b74de;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  font-size:22px;
+  font-weight:900;
+}
+.home{
+  position:absolute;
+  left:12px;
+  color:white;
+  text-decoration:none;
+  font-size:24px;
+}
+
+/* GAME AREA */
+.game{
+  width:360px;
+  height:220px;
+  background:#222;
+  margin:30px auto;
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  border:4px solid #444;
+}
+
+/* PLAYER */
+.player{
+  width:32px;
+  height:32px;
+  background:#00eaff;
+  position:absolute;
+  bottom:20px;
+  left:40px;
+  border-radius:6px;
+}
+
+/* GROUND */
+.ground{
+  position:absolute;
+  bottom:0;
+  height:20px;
+  width:100%;
+  background:#555;
+}
+
+/* OBSTACLE */
+.obstacle{
+  width:28px;
+  height:40px;
+  background:#ff0055;
+  position:absolute;
+  bottom:20px;
+  right:-30px;
+  border-radius:6px;
+}
+
+/* INFO */
+.info{
+  margin:10px;
+  font-size:16px;
+}
+
+/* BUTTON */
+button{
+  padding:10px 20px;
+  font-size:16px;
+  border:none;
+  border-radius:12px;
+  background:#ffb703;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:active{
+  transform:scale(.95);
+}
 </style>
 </head>
+
 <body>
 
-<header class="topbar">
-  <a class="home-link" href="index.html">←</a>
-  <div class="brand">
-    <img src="logo.png" alt="ArcadeOwl Logo">
-    <span>ArcadeOwl</span>
-  </div>
-</header>
+<div class="topbar">
+  <a class="home" href="index.html">←</a>
+  Geometry Dash
+</div>
 
-<main class="wrap">
-    <canvas id="gameCanvas" width="480" height="320"></canvas>
-    <div class="status">Score: <span id="score">0</span> | Best: <span id="bestScore">0</span></div>
-    <button id="reset" onclick="resetGame()">New Game</button>
-</main>
+<div class="info">
+  Score: <span id="score">0</span> |
+  Time: <span id="time">0</span>s
+</div>
+
+<div class="game" id="game">
+  <div class="player" id="player"></div>
+  <div class="ground"></div>
+</div>
+
+<button onclick="restart()">Restart</button>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-let player = {x:50, y:250, width:30, height:30, dy:0, jumpPower:-10, gravity:0.5};
-let obstacles = [];
-let frame=0;
+const player=document.getElementById("player");
+const game=document.getElementById("game");
+let jumping=false;
+let gravity=0;
+let y=0;
+let obstacle=null;
 let score=0;
-let bestScore = localStorage.getItem('dashBest') || 0;
-document.getElementById('bestScore').textContent=bestScore;
-let gameOver=false;
+let time=0;
+let alive=true;
 
-function resetGame(){
-    player.y=250; player.dy=0;
-    obstacles=[];
-    frame=0;
-    score=0;
-    gameOver=false;
-    document.getElementById('score').textContent=score;
-    document.getElementById('status').textContent='';
-    requestAnimationFrame(loop);
-}
+/* TIMER */
+setInterval(()=>{
+  if(alive){
+    time++;
+    document.getElementById("time").textContent=time;
+  }
+},1000);
 
-function spawnObstacle(){
-    const height=Math.random()*60+20;
-    obstacles.push({x:canvas.width, y:canvas.height-height, width:20, height:height});
-}
-
-function loop(){
-    if(gameOver) return;
-    frame++;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    
-    // player physics
-    player.dy += player.gravity;
-    player.y += player.dy;
-    if(player.y + player.height > canvas.height){
-        player.y = canvas.height - player.height;
-        player.dy=0;
-    }
-    
-    // spawn obstacles
-    if(frame%90===0) spawnObstacle();
-    
-    // move obstacles
-    for(let i=0;i<obstacles.length;i++){
-        obstacles[i].x -=4;
-        ctx.fillStyle='red';
-        ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
-        
-        // collision
-        if(player.x < obstacles[i].x+obstacles[i].width &&
-           player.x+player.width > obstacles[i].x &&
-           player.y < obstacles[i].y+obstacles[i].height &&
-           player.y+player.height > obstacles[i].y){
-               gameOver=true;
-               document.getElementById('status').textContent='Game Over!';
-               if(score>bestScore){bestScore=score;localStorage.setItem('dashBest',bestScore);document.getElementById('bestScore').textContent=bestScore;}
-               return;
-           }
-    }
-    
-    // draw player
-    ctx.fillStyle='green';
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-    
-    // score
-    if(frame%90===0 && !gameOver) score++;
-    document.getElementById('score').textContent=score;
-    
-    requestAnimationFrame(loop);
-}
+/* JUMP */
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space")jump();
+});
+game.addEventListener("click",jump);
 
 function jump(){
-    if(player.y + player.height >= canvas.height) player.dy = player.jumpPower;
+  if(!jumping){
+    gravity=12;
+    jumping=true;
+  }
 }
 
-document.addEventListener('keydown', e=>{if(e.code==='Space') jump();});
-canvas.addEventListener('click', jump);
+/* OBSTACLE */
+function createObstacle(){
+  obstacle=document.createElement("div");
+  obstacle.className="obstacle";
+  game.appendChild(obstacle);
+}
 
-resetGame();
+createObstacle();
+
+/* GAME LOOP */
+function loop(){
+  if(!alive)return;
+
+  /* PLAYER PHYSICS */
+  gravity-=1;
+  y+=gravity;
+  if(y<0){y=0;jumping=false;}
+  player.style.bottom=20+y+"px";
+
+  /* OBSTACLE MOVE */
+  let ox=obstacle.offsetLeft-5;
+  obstacle.style.left=ox+"px";
+
+  /* COLLISION */
+  if(
+    ox<72 && ox>30 &&
+    y<30
+  ){
+    alive=false;
+    alert("Game Over! Score: "+score);
+  }
+
+  /* RESET OBSTACLE */
+  if(ox<-30){
+    obstacle.style.left="360px";
+    score++;
+    document.getElementById("score").textContent=score;
+  }
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+
+/* RESTART */
+function restart(){
+  score=0;
+  time=0;
+  y=0;
+  gravity=0;
+  alive=true;
+  document.getElementById("score").textContent=0;
+  document.getElementById("time").textContent=0;
+  obstacle.style.left="360px";
+  loop();
+}
 </script>
 
 </body>
