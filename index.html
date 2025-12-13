@@ -1,144 +1,176 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ArcadeOwl</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-    margin:0;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(180deg,#0b74de,#0f9bff);
-    color:white;
-    text-align:center;
+:root{
+  --blue:#0b74de;
+  --muted:#666;
+  --card:#ffffff;
+  --max-width:980px;
+}
+html,body{
+  margin:0;
+  font-family:system-ui,Segoe UI,Roboto,Arial;
+  background:#f5f7fb;
 }
 
-/* WAVE TITLE */
-.title{
-    font-size:48px;
-    font-weight:900;
-    margin:30px 0 10px;
-}
-.title span{
-    display:inline-block;
-    animation: wave 1.6s infinite;
-}
-.title span:nth-child(n){
-    animation-delay: calc(var(--i) * 0.1s);
-}
-@keyframes wave{
-    0%,100%{ transform: translateY(0); }
-    50%{ transform: translateY(-14px); }
+/* TOP BAR */
+.topbar{
+  background:var(--blue);
+  color:#fff;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:22px;
 }
 
-.subtitle{
-    opacity:0.9;
-    margin-bottom:30px;
+/* CONTAINER */
+.wrap{
+  max-width:var(--max-width);
+  margin:20px auto;
+  padding:12px;
 }
 
-/* GAMES GRID */
-.games{
-    display:grid;
-    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-    gap:20px;
-    max-width:900px;
-    margin:auto;
-    padding:20px;
+/* GAME LIST */
+.games-list{
+  list-style:none;
+  padding:0;
+  margin:0;
 }
-
-.game{
-    background:white;
-    color:#111;
-    border-radius:16px;
-    padding:20px;
-    text-decoration:none;
-    font-weight:800;
-    font-size:18px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.25);
-    transition:transform .2s, box-shadow .2s;
+.games-list li{
+  background:var(--card);
+  margin:12px 0;
+  padding:14px 16px;
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.06);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
-.game:hover{
-    transform:translateY(-8px) scale(1.04);
-    box-shadow:0 18px 40px rgba(0,0,0,0.35);
+.game-title{
+  font-weight:700;
+  color:#0b5fc7;
+  text-decoration:none;
 }
-
-.emoji{
-    font-size:40px;
-    display:block;
-    margin-bottom:10px;
+.game-desc{
+  font-size:13px;
+  color:var(--muted);
+}
+.play-btn{
+  background:var(--blue);
+  color:white;
+  padding:8px 14px;
+  border-radius:8px;
+  text-decoration:none;
+  font-weight:700;
 }
 
 /* FEEDBACK */
 .feedback{
-    position:fixed;
-    right:16px;
-    bottom:16px;
-    background:#ffd54f;
-    color:#000;
-    width:54px;
-    height:54px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:26px;
-    text-decoration:none;
-    box-shadow:0 6px 20px rgba(0,0,0,.3);
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  background:#ff006e;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-size:26px;
+  text-decoration:none;
+  box-shadow:0 6px 20px rgba(0,0,0,.3);
 }
 </style>
 </head>
 
 <body>
 
-<div class="title">
-  <span style="--i:0">A</span>
-  <span style="--i:1">r</span>
-  <span style="--i:2">c</span>
-  <span style="--i:3">a</span>
-  <span style="--i:4">d</span>
-  <span style="--i:5">e</span>
-  <span style="--i:6">O</span>
-  <span style="--i:7">w</span>
-  <span style="--i:8">l</span>
-</div>
+<header class="topbar">ArcadeOwl</header>
 
-<div class="subtitle">Fun & kid-friendly browser games 🎮</div>
+<main class="wrap">
 
-<div class="games">
+<ul class="games-list">
 
-  <a class="game" href="memory.html">
-    <span class="emoji">🧠</span>
-    Memory Game
-  </a>
+<li>
+  <div>
+    <a class="game-title" href="color-clicker.html">Color Clicker</a>
+    <div class="game-desc">Fast reaction color game.</div>
+  </div>
+  <a class="play-btn" href="color-clicker.html">Play</a>
+</li>
 
-  <a class="game" href="tic-tac-toe.html">
-    <span class="emoji">❌⭕</span>
-    Tic-Tac-Toe (2 Players)
-  </a>
+<li>
+  <div>
+    <a class="game-title" href="emoji-memory.html">Emoji Memory</a>
+    <div class="game-desc">Find all matching emoji pairs.</div>
+  </div>
+  <a class="play-btn" href="emoji-memory.html">Play</a>
+</li>
 
-  <!-- ✅ HIER IST DER FIX -->
-  <a class="game" href="tic-tac-toe-AI.html">
-    <span class="emoji">🤖</span>
-    Tic-Tac-Toe AI
-  </a>
+<li>
+  <div>
+    <a class="game-title" href="jump-monkey.html">Monkey Jump</a>
+    <div class="game-desc">Jump over obstacles.</div>
+  </div>
+  <a class="play-btn" href="jump-monkey.html">Play</a>
+</li>
 
-  <a class="game" href="chess-ai.html">
-    <span class="emoji">♟️</span>
-    Chess AI
-  </a>
+<li>
+  <div>
+    <a class="game-title" href="banana-catcher.html">Banana Catcher</a>
+    <div class="game-desc">Catch bananas, avoid bombs.</div>
+  </div>
+  <a class="play-btn" href="banana-catcher.html">Play</a>
+</li>
 
-  <a class="game" href="geometry-dash.html">
-    <span class="emoji">🟦</span>
-    Geometry Dash
-  </a>
+<li>
+  <div>
+    <a class="game-title" href="tic-tac-toe.html">Tic Tac Toe</a>
+    <div class="game-desc">2 players classic game.</div>
+  </div>
+  <a class="play-btn" href="tic-tac-toe.html">Play</a>
+</li>
 
-</div>
+<!-- ✅ FIXED AI LINK -->
+<li>
+  <div>
+    <a class="game-title" href="tic-tac-toe-AI.html">Tic Tac Toe AI</a>
+    <div class="game-desc">Play against the computer.</div>
+  </div>
+  <a class="play-btn" href="tic-tac-toe-AI.html">Play</a>
+</li>
 
-<!-- FEEDBACK BUTTON -->
+<li>
+  <div>
+    <a class="game-title" href="chess-ai.html">Chess AI</a>
+    <div class="game-desc">Classic chess vs computer.</div>
+  </div>
+  <a class="play-btn" href="chess-ai.html">Play</a>
+</li>
+
+<li>
+  <div>
+    <a class="game-title" href="geometry-dash.html">Geometry Dash</a>
+    <div class="game-desc">Jump and survive.</div>
+  </div>
+  <a class="play-btn" href="geometry-dash.html">Play</a>
+</li>
+
+</ul>
+
+</main>
+
 <a class="feedback"
-   href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform"
-   target="_blank">💬</a>
+href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform"
+target="_blank">💬</a>
 
 </body>
 </html>
