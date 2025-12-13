@@ -1,358 +1,160 @@
-<!doctype html>
-<html lang="de">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Banana Catcher</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    :root{--accent:#0b74de;--bg:#fff;--panel:#fafafa}
-    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;color:#222}
-    header,footer{background:var(--accent); color:#fff; padding:12px 16px}
-    header h1{margin:0;font-size:20px;display:inline-block}
-    nav{margin-top:8px}
-    nav a{color:#fff;margin-right:10px;text-decoration:none;font-weight:600;font-size:14px}
-    .wrap{max-width:980px;margin:18px auto;padding:0 12px}
-    .panel{background:var(--panel);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(12,20,30,.05)}
-    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
-    .controls button{background:#fff;border:1px solid #ddd;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
-    .controls .status{margin-left:auto;font-weight:700}
-    canvas{display:block;width:100%;height:auto;border-radius:8px;background:linear-gradient(180deg,#eaf6ff,#d3f0ff)}
-    .hint{font-size:13px;color:#666;margin-top:8px}
-    @media (max-width:480px){ .controls .status{margin-left:6px} }
-  </style>
+<meta charset="UTF-8">
+<title>Banana Catcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background: linear-gradient(to bottom,#f0e68c,#87ceeb);
+  overflow:hidden;
+}
+
+#gameContainer {
+  position:relative;
+  width:100%;
+  max-width:600px;
+  height:500px;
+  margin:30px auto;
+  background:#a3d9a5;
+  border-radius:16px;
+  border:4px solid #555;
+  overflow:hidden;
+}
+
+#basket {
+  position:absolute;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:80px;
+  height:40px;
+  background:#ff9900;
+  border-radius:12px;
+}
+
+.falling {
+  position:absolute;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+}
+
+.banana {
+  background:yellow;
+}
+
+.bomb {
+  background:red;
+}
+
+#score {
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+#highscore {
+  text-align:center;
+  font-size:16px;
+  color:#555;
+}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Banana Catcher</h1>
-    <nav>
-      <a href="/Game/index.html">Home</a>
-      <a href="/Game/color-clicker.html">Color Clicker</a>
-      <a href="/Game/emoji-memory.html">Emoji Memory</a>
-      <a href="/Game/jump-monkey.html">Monkey Jump</a>
-      <a href="/Game/about.html">About</a>
-      <a href="/Game/privacy.html">Privacy</a>
-    </nav>
-  </header>
 
-  <div class="wrap">
-    <div class="panel">
-      <div class="controls">
-        <button id="startBtn">Start</button>
-        <button id="restartBtn">Restart</button>
-        <div>Level: <strong id="level">1</strong></div>
-        <div class="status">Score: <strong id="score">0</strong> · Best: <strong id="best">0</strong></div>
-      </div>
+<div id="gameContainer">
+  <div id="basket"></div>
+</div>
 
-      <canvas id="gameCanvas" width="960" height="480" aria-label="Banana Catcher Spiel"></canvas>
-      <div class="hint">Steuere den Korb mit Tippen/Klick oder Links/Rechts / Leertaste startet. Fange Bananen — aber pass auf Bomben!</div>
-    </div>
-  </div>
-
-  <footer><p style="margin:0;padding:0 12px;">© My Games Site</p></footer>
+<div id="score">Score: 0</div>
+<div id="highscore">Highscore: 0</div>
 
 <script>
-(function(){
-  // Setup
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
+const container = document.getElementById('gameContainer');
+const basket = document.getElementById('basket');
+const scoreEl = document.getElementById('score');
+const highscoreEl = document.getElementById('highscore');
 
-  function resizeCanvas(){
-    const ratio = window.devicePixelRatio || 1;
-    const width = Math.min(1200, Math.max(320, Math.floor(Math.min(window.innerWidth - 40, 960))));
-    const height = Math.floor(width * 0.5); // 960x480 ratio
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
-    canvas.width = Math.floor(width * ratio);
-    canvas.height = Math.floor(height * ratio);
-    ctx.setTransform(ratio,0,0,ratio,0,0);
-  }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+let basketX = container.offsetWidth/2 - 40;
+basket.style.left = basketX+"px";
 
-  // DOM
-  const startBtn = document.getElementById('startBtn');
-  const restartBtn = document.getElementById('restartBtn');
-  const scoreEl = document.getElementById('score');
-  const bestEl = document.getElementById('best');
-  const levelEl = document.getElementById('level');
+let fallingObjects = [];
+let score = 0;
+let highscore = localStorage.getItem('bananaHighscore') || 0;
+highscoreEl.textContent = "Highscore: "+highscore;
 
-  // Game state
-  let lastTime = 0;
-  let running = false;
-  let score = 0;
-  let best = parseInt(localStorage.getItem('banana_best') || '0', 10);
-  bestEl.textContent = best;
-  let level = 1;
+// Basket movement
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowLeft') moveBasket(-20);
+  if(e.key==='ArrowRight') moveBasket(20);
+});
 
-  // Player (basket)
-  const player = {
-    x: 0,
-    y: 0,
-    w: 120,
-    h: 36,
-    speed: 520, // px/s
-    vx: 0
-  };
+document.addEventListener('touchmove', e=>{
+  let touchX = e.touches[0].clientX - container.getBoundingClientRect().left;
+  basketX = Math.min(Math.max(touchX - 40,0), container.offsetWidth - 80);
+  basket.style.left = basketX + "px";
+});
 
-  // Falling items (bananas & bombs)
-  let items = []; // {x,y,w,h,type,vy}
-  let spawnTimer = 0;
-  let spawnInterval = 900; // ms initial
-  let nextIsBombChance = 0.06; // small chance to spawn a bomb
+function moveBasket(delta){
+  basketX = Math.min(Math.max(basketX + delta,0), container.offsetWidth - 80);
+  basket.style.left = basketX + "px";
+}
 
-  // Difficulty scaling
-  function computeSettings(){
-    const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
-    player.x = width * 0.5;
-    player.y = height - 48;
-    player.w = Math.max(80, Math.min(160, width * 0.12));
-    player.h = Math.max(28, Math.min(48, height * 0.075));
-  }
-  computeSettings();
+// Create falling object
+function createFalling(){
+  const obj = document.createElement('div');
+  const type = Math.random()<0.8 ? 'banana':'bomb';
+  obj.classList.add('falling', type);
+  obj.style.left = Math.random()*(container.offsetWidth-30)+'px';
+  obj.style.top = '-30px';
+  container.appendChild(obj);
+  fallingObjects.push({el:obj,type:type});
+}
 
-  function resetGame(){
-    score = 0; level = 1; items = []; spawnTimer = 0; spawnInterval = 900;
-    running = false; lastTime = 0;
-    scoreEl.textContent = score; levelEl.textContent = level;
-    startBtn.disabled = false;
-  }
+// Move objects
+function moveObjects(){
+  fallingObjects.forEach((obj,index)=>{
+    let top = parseInt(obj.el.style.top);
+    top += 4; // speed
+    obj.el.style.top = top+'px';
 
-  function startGame(){
-    resetGame();
-    running = true;
-    startBtn.disabled = true;
-    lastTime = performance.now();
-    requestAnimationFrame(loop);
-  }
-
-  function restartGame(){
-    resetGame();
-    render();
-  }
-
-  // spawn logic: bananas mostly, occasional bombs; random horizontal spacing
-  function spawnItem(){
-    const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
-    const x = rand(24, width - 24);
-    const size = rand(28, 44);
-    const isBomb = Math.random() < nextIsBombChance;
-    const vy = rand(120 + level*30, 220 + level*50); // fall speed increases with level
-    items.push({x, y: -size-10, w: size, h: size, vy, type: isBomb ? 'bomb' : 'banana', passed: false});
-    // dynamic next spawn interval: larger level -> shorter interval, but clamp
-    const baseMin = Math.max(400, 1000 - level * 60);
-    const baseMax = baseMin + 700;
-    spawnInterval = rand(baseMin, baseMax);
-    // occasionally increase bomb chance
-    nextIsBombChance = Math.min(0.18, 0.06 + level * 0.01);
-  }
-
-  function rand(min,max){ return Math.random()*(max-min)+min; }
-
-  // input
-  let pointerDown = false;
-  canvas.addEventListener('pointerdown', (e)=>{
-    // move basket to pointer.x
-    const rect = canvas.getBoundingClientRect();
-    const px = (e.clientX - rect.left);
-    player.x = px;
-    pointerDown = true;
-  });
-  canvas.addEventListener('pointermove', (e)=>{ if(!pointerDown) return; const rect = canvas.getBoundingClientRect(); player.x = (e.clientX - rect.left); });
-  canvas.addEventListener('pointerup', ()=>{ pointerDown = false; });
-
-  // keyboard left/right and space to start
-  window.addEventListener('keydown', (e)=>{
-    if(e.code === 'ArrowLeft'){ player.vx = -player.speed; }
-    if(e.code === 'ArrowRight'){ player.vx = player.speed; }
-    if(e.code === 'Space'){ e.preventDefault(); if(!running) startGame(); else { /* no action */ } }
-  });
-  window.addEventListener('keyup', (e)=>{
-    if(e.code === 'ArrowLeft' || e.code === 'ArrowRight'){ player.vx = 0; }
-  });
-
-  // collision AABB
-  function aabb(a,b){ return !(a.x + a.w < b.x || a.x > b.x + b.w || a.y + a.h < b.y || a.y > b.y + b.h); }
-
-  // render
-  function render(){
-    const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
-
-    // clear / background
-    const grad = ctx.createLinearGradient(0,0,0,height);
-    grad.addColorStop(0, '#fff7e6'); grad.addColorStop(1, '#e9f9ff');
-    ctx.fillStyle = grad; ctx.fillRect(0,0,width,height);
-
-    // header ground line
-    ctx.fillStyle = '#cfe6d6';
-    ctx.fillRect(0, height - 28, width, 28);
-
-    // draw basket (player)
-    ctx.fillStyle = '#8b5a2b';
-    const bx = player.x - player.w/2;
-    ctx.fillRect(bx, player.y - player.h/2, player.w, player.h);
-    // basket rim
-    ctx.fillStyle = '#ffd54a';
-    ctx.fillRect(bx, player.y - player.h/2 - 6, player.w, 6);
-
-    // draw items (bananas and bombs)
-    items.forEach(it=>{
-      if(it.type === 'banana'){
-        drawBanana(it.x, it.y, it.w, it.h);
+    // Collision with basket
+    const objX = parseInt(obj.el.style.left);
+    if(top + 30 >= container.offsetHeight - 60 &&
+       objX + 30 > basketX && objX < basketX + 80){
+      if(obj.type==='banana'){
+        score++;
+        scoreEl.textContent = "Score: "+score;
       } else {
-        drawBomb(it.x, it.y, it.w, it.h);
-      }
-    });
-
-    // HUD
-    ctx.fillStyle = '#222';
-    ctx.font = '14px system-ui, Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText('Score: ' + score, 12, 28);
-    ctx.fillText('Best: ' + best, 12, 46);
-    ctx.fillText('Level: ' + level, 12, 64);
-  }
-
-  // draw banana (simple shape)
-  function drawBanana(x,y,w,h){
-    const cx = x;
-    const cy = y;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(w/40, h/40);
-    ctx.beginPath();
-    ctx.moveTo(2, 20);
-    ctx.quadraticCurveTo(20, -8, 38, 14);
-    ctx.quadraticCurveTo(28, 20, 18, 28);
-    ctx.quadraticCurveTo(8, 32, 2, 20);
-    ctx.fillStyle = '#ffd54a';
-    ctx.fill();
-    ctx.strokeStyle = '#b5892b';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // draw bomb (danger)
-  function drawBomb(x,y,w,h){
-    const cx = x + w/2;
-    const cy = y + h/2;
-    const r = Math.max(6, w*0.45);
-    ctx.beginPath();
-    ctx.fillStyle = '#333';
-    ctx.arc(cx, cy, r, 0, Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle = '#222';
-    ctx.stroke();
-    // fuse
-    ctx.beginPath();
-    ctx.strokeStyle = '#b34';
-    ctx.moveTo(cx + r*0.6, cy - r*0.6);
-    ctx.lineTo(cx + r*0.9, cy - r*1.1);
-    ctx.stroke();
-  }
-
-  // game loop
-  function loop(now){
-    if(!running) return;
-    const dt = Math.min(0.05, (now - lastTime)/1000);
-    lastTime = now;
-
-    const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
-
-    // spawn
-    spawnTimer += dt*1000;
-    if(spawnTimer > spawnInterval){
-      spawnTimer = 0;
-      spawnItem();
-    }
-
-    // update items
-    for(let i=items.length-1;i>=0;i--){
-      const it = items[i];
-      it.y += it.vy * dt;
-      // check floor (missed)
-      if(it.y > height + 60){
-        items.splice(i,1);
-        // if banana missed -> maybe minor penalty
-        if(it.type === 'banana'){ score = Math.max(0, score - 1); scoreEl.textContent = score; }
-        continue;
-      }
-      // collision with basket
-      const bboxItem = {x: it.x - it.w/2, y: it.y - it.h/2, w: it.w, h: it.h};
-      const bboxBasket = {x: player.x - player.w/2, y: player.y - player.h/2, w: player.w, h: player.h};
-      if(aabb(bboxItem, bboxBasket)){
-        // handle catch
-        if(it.type === 'banana'){
-          score += 1;
-          scoreEl.textContent = score;
-          // level up each 10 points
-          if(score % 10 === 0){
-            level++;
-            levelEl.textContent = level;
-          }
-        } else { // bomb -> end round
-          running = false;
-          startBtn.disabled = false;
-          if(score > best){ best = score; localStorage.setItem('banana_best', String(best)); bestEl.textContent = best; }
-          setTimeout(()=> alert('Boom! Du hast eine Bombe gefangen. Score: ' + score), 50);
+        alert("Game Over! Score: "+score);
+        if(score>highscore){
+          localStorage.setItem('bananaHighscore',score);
         }
-        items.splice(i,1);
+        location.reload();
       }
+      obj.el.remove();
+      fallingObjects.splice(index,1);
+      return;
     }
 
-    // move player (keyboard vx)
-    player.x += player.vx * dt;
-    // clamp to bounds
-    player.x = Math.max(player.w/2 + 8, Math.min(width - player.w/2 - 8, player.x));
-
-    // difficulty increase over time: gradually speed up falling and spawn density a little
-    if((now % 10000) < 50){ // occasional small bump every ~10s handled in spawnItem by level
-      // noop
+    // Remove if falls out
+    if(top>container.offsetHeight){
+      obj.el.remove();
+      fallingObjects.splice(index,1);
     }
+  });
+}
 
-    // render frame
-    render();
+// Game loop
+setInterval(()=>{
+  if(Math.random()<0.03) createFalling(); // new object chance
+  moveObjects();
+},20);
 
-    // continue
-    if(running) requestAnimationFrame(loop);
-  }
-
-  // spawn item wrapper: adapt fall speed using level
-  function spawnItem(){
-    const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const size = rand(26,44);
-    const x = rand(size/2 + 16, width - size/2 - 16);
-    // vy increases with level
-    const vy = rand(140 + level*30, 260 + level*60);
-    const chanceBomb = Math.min(0.12, 0.05 + level*0.01);
-    const type = Math.random() < chanceBomb ? 'bomb' : 'banana';
-    items.push({x, y: -size - 10, w: size, h: size, vy, type, passed:false});
-    // next spawn interval larger at low levels, smaller at higher levels
-    const min = Math.max(450, 1100 - level*80);
-    const max = Math.max(700, min + 500);
-    spawnInterval = rand(min, max);
-  }
-
-  // helpers
-  function randInt(a,b){ return Math.floor(rand(a,b+1)); }
-
-  // attach controls
-  startBtn.addEventListener('click', startGame);
-  restartBtn.addEventListener('click', restartGame);
-
-  // init
-  resetGame();
-  render();
-
-  // expose for debug
-  window.__bananaCatcher = { startGame, restartGame, items };
-
-})();
 </script>
 </body>
-                                        </html>
+</html>
