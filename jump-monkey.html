@@ -1,315 +1,173 @@
-<!doctype html>
-<html lang="de">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Monkey Jump — Springspiel (Gravity 1380 + real coconuts)</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    :root{--accent:#0b74de;--ground:#2e8b57;--sand:#f4e8c1;--sky1:#a9e1ff;--sky2:#7fcfff;}
-    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial;}
-    header,footer{background:var(--accent); color:white; padding:12px 16px;}
-    header h1{margin:0;font-size:20px;display:inline-block;}
-    nav{margin-top:8px;} nav a{color:#fff;margin-right:10px;text-decoration:none;font-weight:600;font-size:14px;}
-    .wrap{max-width:980px;margin:18px auto;padding:0 12px;}
-    .panel{background:#fff;border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(12,20,30,.06);}
-    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;}
-    .controls button{background:#fff;border:1px solid #ddd;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
-    .controls .score{margin-left:auto;font-weight:700}
-    canvas{display:block;width:100%;height:auto;border-radius:8px;background:linear-gradient(180deg,var(--sky1),var(--sky2));}
-    .hint{font-size:13px;color:#666;margin-top:8px}
-  </style>
+<meta charset="UTF-8">
+<title>Monkey Jump</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background: linear-gradient(to top,#87cefa,#f0e68c);
+  overflow:hidden;
+}
+
+#gameContainer {
+  position:relative;
+  width:100%;
+  max-width:600px;
+  height:400px;
+  margin:50px auto;
+  background:#8fd4a1;
+  border-radius:16px;
+  overflow:hidden;
+  border:4px solid #555;
+}
+
+.monkey {
+  position:absolute;
+  bottom:50px;
+  left:50px;
+  width:50px;
+  height:50px;
+  background:#ffcc00;
+  border-radius:50%;
+  transition: bottom 0.2s;
+}
+
+.obstacle {
+  position:absolute;
+  bottom:0;
+  width:40px;
+  height:40px;
+  background:#d9534f;
+  border-radius:8px;
+}
+
+#score {
+  text-align:center;
+  font-size:22px;
+  margin-top:10px;
+  font-weight:bold;
+}
+
+#highscore {
+  text-align:center;
+  font-size:16px;
+  margin-top:4px;
+  color:#555;
+}
+
+</style>
 </head>
 <body>
-  <header>
-    <h1>Monkey Jump</h1>
-    <nav>
-      <a href="/Game/index.html">Home</a>
-      <a href="/Game/color-clicker.html">Color Clicker</a>
-      <a href="/Game/emoji-memory.html">Emoji Memory</a>
-      <a href="/Game/jump-monkey.html">Monkey Jump</a>
-      <a href="/Game/about.html">About</a>
-      <a href="/Game/privacy.html">Privacy</a>
-    </nav>
-  </header>
 
-  <div class="wrap">
-    <div class="panel">
-      <div class="controls">
-        <button id="startBtn">Start</button>
-        <button id="restartBtn">Restart</button>
-        <div>Best: <strong id="best">0</strong></div>
-        <div class="score">Score: <strong id="score">0</strong></div>
-      </div>
-
-      <canvas id="gameCanvas" width="960" height="360" aria-label="Monkey Jump Spiel"></canvas>
-      <div class="hint">Steuerung: Leertaste / Klick / Tippen = Springen. Überspringe die Kokosnüsse 🥥.</div>
-    </div>
-  </div>
-
-  <footer><p style="margin:0;padding:0 12px;">© My Games Site</p></footer>
+<div id="gameContainer">
+  <div class="monkey" id="monkey"></div>
+</div>
+<div id="score">Score: 0</div>
+<div id="highscore">Highscore: 0</div>
 
 <script>
-(function(){
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
+const container = document.getElementById('gameContainer');
+const monkey = document.getElementById('monkey');
+const scoreEl = document.getElementById('score');
+const highscoreEl = document.getElementById('highscore');
 
-  function resizeCanvas(){
-    const ratio = window.devicePixelRatio || 1;
-    const width = Math.min(1200, Math.max(320, Math.floor(Math.min(window.innerWidth - 40, 960))));
-    const height = Math.floor(width * 0.375);
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
-    canvas.width = Math.floor(width * ratio);
-    canvas.height = Math.floor(height * ratio);
-    ctx.setTransform(ratio,0,0,ratio,0,0);
-  }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+let monkeyY = 50;
+let isJumping = false;
+let gravity = 2;
+let obstacles = [];
+let score = 0;
+let highscore = localStorage.getItem('monkeyHighscore') || 0;
+highscoreEl.textContent = "Highscore: "+highscore;
 
-  const groundHeight = 64;
-  let lastTime = 0;
-  let score = 0;
-  let best = parseInt(localStorage.getItem('monkey_jump_best') || '0', 10);
-  document.getElementById('best').textContent = best;
-
-  const monkey = {
-    xRatio: 0.12,
-    x: 120,
-    y: 0,
-    size: 38,
-    vy: 0,
-    gravity: 1380,      // Gravity angepasst
-    jumpVelocity: -720,
-    baseline: 0
-  };
-
-  let obstacles = [];
-  let spawnTimer = 0;
-  let nextSpawn = 0;
-  let speed = 160;
-  let running = false;
-  let accelTimer = 0;
-  let mirroredMonkey = true;
-
-  const palms = [{x:60,size:48},{x:420,size:64},{x:760,size:56}];
-
-  const startBtn = document.getElementById('startBtn');
-  const restartBtn = document.getElementById('restartBtn');
-  const scoreEl = document.getElementById('score');
-  const bestEl = document.getElementById('best');
-
-  function rand(min,max){ return Math.random()*(max-min)+min; }
-
-  function computeSpawnRange() {
-    const min = 550;  // Abstand Kokosnüsse erhöht
-    const max = 900;
-    return [min,max];
-  }
-
-  function computeLayout(){
-    const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
-    monkey.x = Math.floor(width * monkey.xRatio);
-    monkey.baseline = height - groundHeight + 6;
-    monkey.y = monkey.baseline;
-    palms.forEach((p,i)=>{
-      if(!p.x || p.x > width) p.x = rand(width*(0.1+0.2*i), width*(0.4+0.2*i));
-      p.y = monkey.baseline - (p.size * 0.9);
-    });
-  }
-  computeLayout();
-  window.addEventListener('resize', ()=>{ resizeCanvas(); computeLayout(); render(); });
-
-  function resetGame(){
-    score = 0; obstacles = []; spawnTimer = 0; speed = 160; accelTimer = 0;
-    running = false; monkey.vy = 0;
-    const [min,max] = computeSpawnRange(); nextSpawn = rand(min,max);
-    computeLayout();
-    scoreEl.textContent = score;
-    startBtn.disabled = false;
-  }
-
-  function startGame(){
-    resetGame();
-    running = true;
-    startBtn.disabled = true;
-    lastTime = performance.now();
-    requestAnimationFrame(loop);
-  }
-
-  function restartGame(){
-    resetGame();
-    render();
-  }
-
-  function spawnObstacle(){
-    const cSize = Math.round(rand(30,48));
-    const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const x = width + rand(20,160);
-    const y = monkey.baseline - cSize + 6;
-    obstacles.push({x,y,w:cSize,h:cSize,passed:false});
-    const [min,max] = computeSpawnRange(); nextSpawn = rand(min,max);
-  }
-
-  function drawPalms(){
-    const cw = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    palms.forEach((p,i)=>{
-      ctx.font = `${p.size}px serif`;
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText('🌴', p.x, p.y + p.size*0.9);
-    });
-  }
-
-  function drawMonkeyEmoji(x,bottomY,size, mirrored){
-    ctx.save();
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    if(mirrored){
-      ctx.translate(x,0);
-      ctx.scale(-1,1);
-      ctx.fillText('🐒', 0, bottomY);
+function jump() {
+  if (isJumping) return;
+  isJumping = true;
+  let jumpHeight = 0;
+  const jumpInterval = setInterval(()=>{
+    if(jumpHeight >= 80){
+      clearInterval(jumpInterval);
+      fall();
     } else {
-      ctx.fillText('🐒', x, bottomY);
+      jumpHeight += 8;
+      monkeyY += 8;
+      monkey.style.bottom = monkeyY+"px";
     }
-    ctx.restore();
-  }
+  },20);
+}
 
-  function drawRealCoconut(x,y,size){
-    const cx = x + size/2;
-    const cy = y + size/2;
-    const r = size*0.45;
-
-    const grad = ctx.createRadialGradient(cx - r*0.25, cy - r*0.25, r*0.05, cx, cy, r);
-    grad.addColorStop(0, '#9b5a2b');
-    grad.addColorStop(0.6, '#6b3f1f');
-    grad.addColorStop(1, '#4a2b14');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, r, r*0.9, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-    ctx.lineWidth = Math.max(1, size*0.02);
-    for(let i=0;i<6;i++){
-      const ang = (i/6)*Math.PI*2 + rand(-0.08,0.08);
-      const sx = cx + Math.cos(ang)*r*0.6;
-      const sy = cy + Math.sin(ang)*r*0.6;
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(cx + Math.cos(ang)*r*0.95, cy + Math.sin(ang)*r*0.95);
-      ctx.stroke();
+function fall(){
+  const fallInterval = setInterval(()=>{
+    if(monkeyY <= 50){
+      monkeyY = 50;
+      monkey.style.bottom = monkeyY+"px";
+      isJumping = false;
+      clearInterval(fallInterval);
+    } else {
+      monkeyY -= gravity;
+      monkey.style.bottom = monkeyY+"px";
     }
+  },20);
+}
 
-    ctx.fillStyle = '#2f1f13';
-    const holeR = Math.max(2, size*0.06);
-    ctx.beginPath(); ctx.arc(cx - r*0.25, cy - r*0.15, holeR, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx - r*0.02, cy - r*0.22, holeR, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + r*0.22, cy - r*0.12, holeR, 0, Math.PI*2); ctx.fill();
+// Obstacles
+function createObstacle(){
+  const obs = document.createElement('div');
+  obs.classList.add('obstacle');
+  obs.style.left = container.offsetWidth + 'px';
+  
+  // Random height for fun
+  let height = Math.floor(Math.random()*30)+30;
+  obs.style.height = height+'px';
+  obs.style.width = height+'px';
+  
+  container.appendChild(obs);
+  obstacles.push(obs);
+}
 
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.beginPath(); ctx.ellipse(cx - r*0.18, cy - r*0.25, r*0.22, r*0.12, -0.5, 0, Math.PI*2); ctx.fill();
-
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
-    ctx.fillRect(x + 6, y + size - 6, size - 12, 4);
-  }
-
-  function render(){
-    const width = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    const height = parseFloat(canvas.style.height) || canvas.height/(window.devicePixelRatio||1);
-
-    const grad = ctx.createLinearGradient(0,0,0,height);
-    grad.addColorStop(0, '#a9e1ff'); grad.addColorStop(1,'#7fcfff');
-    ctx.fillStyle = grad; ctx.fillRect(0,0,width,height);
-
-    ctx.beginPath(); ctx.fillStyle = '#ffd166'; ctx.arc(width-80,60,28,0,Math.PI*2); ctx.fill();
-
-    drawPalms();
-
-    ctx.fillStyle = '#f4e8c1'; ctx.fillRect(0, height - groundHeight, width, groundHeight);
-    ctx.fillStyle = '#2e8b57'; ctx.fillRect(0, height - groundHeight, width, 8);
-
-    drawMonkeyEmoji(monkey.x, monkey.y, monkey.size, mirroredMonkey);
-
-    obstacles.forEach(obj => {
-      drawRealCoconut(obj.x, obj.y, obj.w);
-    });
-  }
-
-  function checkCollisions(){
-    const mx = monkey.x;
-    const my = monkey.y - monkey.size*0.45;
-    const mr = monkey.size * 0.42;
-    for(let i=0;i<obstacles.length;i++){
-      const o = obstacles[i];
-      const ox = o.x + o.w/2;
-      const oy = o.y + o.h/2;
-      const or = Math.max(10,(o.w/2)*0.9);
-      const dx = mx - ox; const dy = my - oy;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if(dist < mr + or) return true;
-    }
-    return false;
-  }
-
-  function loop(now){
-    if(!running) return;
-    const dt = Math.min(0.05,(now - lastTime)/1000);
-    lastTime = now;
-
-    const cw = parseFloat(canvas.style.width) || canvas.width/(window.devicePixelRatio||1);
-    palms.forEach((p,i)=>{ const palmSpeed = 18 + i*6; p.x -= palmSpeed * dt; if(p.x < -140) p.x = cw + rand(20,200); });
-
-    monkey.vy += monkey.gravity * dt;
-    monkey.y += monkey.vy * dt;
-    if(monkey.y > monkey.baseline){ monkey.y = monkey.baseline; monkey.vy = 0; }
-
-    spawnTimer += dt*1000;
-    if(spawnTimer > nextSpawn){ spawnTimer = 0; spawnObstacle(); }
-
-    for(let i=obstacles.length-1;i>=0;i--){
-      obstacles[i].x -= speed * dt;
-      if(obstacles[i].x + obstacles[i].w < -40) obstacles.splice(i,1);
-    }
-
-    if(checkCollisions()){
-      running = false;
-      startBtn.disabled = false;
-      if(score > best){ best = score; localStorage.setItem('monkey_jump_best',String(best)); bestEl.textContent = best; }
-      setTimeout(()=> alert('Oh nein — getroffen! Dein Score: ' + score), 60);
-      render();
-      return;
-    }
-
-    obstacles.forEach(o=>{
-      if(!o.passed && (o.x + o.w/2) < monkey.x - 10){
-        o.passed = true; score++; scoreEl.textContent = score;
-        speed += 6;
+function moveObstacles(){
+  obstacles.forEach((obs,index)=>{
+    let currentX = parseInt(obs.style.left);
+    currentX -= 6; // speed
+    obs.style.left = currentX+'px';
+    
+    // Collision detection
+    let obsTop = parseInt(obs.style.bottom)+parseInt(obs.style.height);
+    if(parseInt(obs.style.left) < 100 && parseInt(obs.style.left)+parseInt(obs.style.width) > 50){
+      if(monkeyY < parseInt(obs.style.height)){
+        alert('Game Over! Score: '+score);
+        if(score>highscore){
+          localStorage.setItem('monkeyHighscore',score);
+          highscore=score;
+        }
+        location.reload();
       }
-    });
-
-    accelTimer += dt;
-    if(accelTimer > 3){ accelTimer = 0; speed += 2; }
-
-    render();
-    if(running) requestAnimationFrame(loop);
-  }
-
-  function jump(){
-    if(!running){ startGame(); return; }
-    if(Math.abs(monkey.y - monkey.baseline) < 10){
-      monkey.vy = monkey.jumpVelocity;
     }
+
+    if(currentX + parseInt(obs.style.width) < 0){
+      obs.remove();
+      obstacles.splice(index,1);
+      score++;
+      scoreEl.textContent = "Score: "+score;
+      if(score>highscore) highscoreEl.textContent="Highscore: "+score;
+    }
+  });
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space') jump();
+});
+document.addEventListener('touchstart',jump);
+
+setInterval(()=>{
+  if(Math.random()<0.02){ // 2% chance each frame
+    createObstacle();
   }
+  moveObstacles();
+},20);
 
-  window.addEventListener('keydown',(e)=>{ if(e.code === 'Space'){ e.preventDefault(); jump(); }});
-  canvas.addEventListener('pointerdown', ()=>{ jump(); });
-
-  startBtn.addEventListener('click', startGame);
-  restartBtn.addEventListener('click', restartGame);
-
-  resetGame(); render();
-})();
 </script>
 </body>
 </html>
