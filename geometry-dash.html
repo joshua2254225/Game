@@ -1,669 +1,168 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Geometry Dash — ArcadeOwl</title>
+<meta charset="UTF-8">
+<title>Geometry Dash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  :root{
-    --bg:#87ceeb;
-    --ground:#2b2b2b;
-    --player:#1ed760;
-    --ob:#ff4d4d;
-    --boost:#ffd54f;
-    --accent:#0b74de;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0;
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-    background:linear-gradient(180deg,var(--bg),#7fcff0 60%);
-    color:#111;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    min-height:100vh;
-    padding:12px;
-  }
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:linear-gradient(to top,#87cefa,#f0e68c);
+  overflow:hidden;
+}
 
-  /* Top bar */
-  .topbar{
-    width:100%;
-    max-width:980px;
-    background:var(--accent);
-    color:#fff;
-    height:56px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    position:relative;
-    border-radius:10px;
-    box-shadow:0 8px 24px rgba(11,115,222,0.12);
-    margin-bottom:12px;
-  }
-  .home-link{
-    position:absolute;
-    left:14px;
-    top:50%;
-    transform:translateY(-50%);
-    color:#fff;
-    text-decoration:none;
-    font-weight:700;
-    font-size:20px;
-  }
-  .brand{font-weight:800; letter-spacing:.6px}
+#gameContainer{
+  position:relative;
+  width:100%;
+  max-width:600px;
+  height:400px;
+  margin:50px auto;
+  background:#222;
+  border-radius:16px;
+  overflow:hidden;
+  border:4px solid #555;
+}
 
-  /* Panel */
-  .panel{
-    width:100%;
-    max-width:980px;
-    background:#fff;
-    border-radius:12px;
-    padding:14px;
-    box-shadow:0 10px 32px rgba(2,6,23,0.06);
-  }
+.player{
+  position:absolute;
+  bottom:50px;
+  left:50px;
+  width:50px;
+  height:50px;
+  background:#ffcc00;
+  border-radius:8px;
+  transition: bottom 0.2s;
+}
 
-  .game-wrap{
-    display:flex;
-    gap:12px;
-    align-items:flex-start;
-    flex-wrap:wrap;
-    justify-content:center;
-  }
+.obstacle{
+  position:absolute;
+  bottom:0;
+  width:40px;
+  height:40px;
+  background:#d9534f;
+  border-radius:6px;
+}
 
-  /* Canvas container */
-  #gameCanvas{
-    border-radius:10px;
-    background: linear-gradient(180deg,#7fd6ff,#7ac7e8);
-    display:block;
-    max-width:100%;
-    width:860px;
-    height:360px;
-  }
-
-  /* Side info */
-  .side {
-    min-width:220px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    align-items:center;
-  }
-  .stat {
-    background:#f5f7fb;
-    width:100%;
-    padding:10px;
-    border-radius:10px;
-    text-align:center;
-    font-weight:800;
-    color:#111;
-    box-shadow:0 6px 18px rgba(12,20,30,0.04);
-  }
-  .controls{display:flex; gap:8px; margin-top:8px;}
-  .btn{
-    padding:8px 12px;
-    border-radius:8px;
-    border:0;
-    background:var(--accent);
-    color:#fff;
-    font-weight:800;
-    cursor:pointer;
-  }
-
-  .small{ font-size:13px; color:#666; text-align:center; margin-top:8px; }
-
-  @media (max-width:980px){
-    #gameCanvas{ width:100%; height:300px; }
-    .side{ min-width:160px; }
-    .panel{ padding:10px; }
-  }
+#score{
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+  margin-top:10px;
+}
+#highscore{
+  text-align:center;
+  font-size:16px;
+  color:#555;
+}
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <a class="home-link" href="index.html">←</a>
-  <div class="brand">ArcadeOwl — Geometry Dash</div>
-</header>
-
-<section class="panel">
-  <div class="game-wrap">
-    <canvas id="gameCanvas" width="860" height="360"></canvas>
-
-    <div class="side" aria-hidden="false">
-      <div class="stat">Score<br><span id="score" style="font-size:28px">0</span></div>
-      <div class="stat">Best<br><span id="best" style="font-size:22px">0</span></div>
-      <div class="stat">Time<br><span id="time" style="font-size:20px">0s</span></div>
-
-      <div class="controls">
-        <button id="startBtn" class="btn">Start</button>
-        <button id="restartBtn" class="btn" style="background:#ff6b6b">Restart</button>
-      </div>
-
-      <div class="small">Controls: Tap / Click / Space to jump. Hold to jump higher. Touch/hold on mobile works.</div>
-    </div>
-  </div>
-</section>
-
-<canvas id="confetti" style="position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999"></canvas>
+<div id="gameContainer">
+  <div class="player" id="player"></div>
+</div>
+<div id="score">Score: 0</div>
+<div id="highscore">Highscore: 0</div>
 
 <script>
-/* Geometry Dash — improved:
-   - variable jump height (hold)
-   - jump pads (boost)
-   - obstacles with different sizes/heights
-   - score = distance; best saved in localStorage (key "gdBest")
-   - confetti on new best
-*/
+const container = document.getElementById('gameContainer');
+const player = document.getElementById('player');
+const scoreEl = document.getElementById('score');
+const highscoreEl = document.getElementById('highscore');
 
-(() => {
-  // Canvas setup (responsive to CSS size)
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  const confettiCanvas = document.getElementById('confetti');
-  const confettiCtx = confettiCanvas.getContext('2d');
+let playerY = 50;
+let isJumping = false;
+let gravity = 2;
+let obstacles = [];
+let score = 0;
+let highscore = localStorage.getItem('gdHighscore') || 0;
+highscoreEl.textContent = "Highscore: "+highscore;
 
-  function resizeCanvasToDisplaySize() {
-    // adjust for devicePixelRatio to get crisp rendering
-    const rect = canvas.getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = Math.round(rect.width * ratio);
-    canvas.height = Math.round(rect.height * ratio);
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
-    ctx.setTransform(ratio,0,0,ratio,0,0);
-
-    // confetti canvas
-    confettiCanvas.width = window.innerWidth * ratio;
-    confettiCanvas.height = window.innerHeight * ratio;
-    confettiCanvas.style.width = window.innerWidth + 'px';
-    confettiCanvas.style.height = window.innerHeight + 'px';
-    confettiCtx.setTransform(ratio,0,0,ratio,0,0);
-  }
-  window.addEventListener('resize', resizeCanvasToDisplaySize);
-  resizeCanvasToDisplaySize();
-
-  // Game state
-  const groundY = Math.round(canvas.height / (window.devicePixelRatio || 1) - 60); // visual ground
-  let player = {
-    x: 120,
-    y: groundY - 36,
-    w: 32,
-    h: 32,
-    vy: 0,
-    onGround: true
-  };
-  let gravity = 0.8;
-  const jumpBase = 12; // base jump velocity
-  const maxHold = 280; // ms max hold for higher jump
-  let holding = false;
-  let holdStart = 0;
-
-  let obstacles = []; // each: {x, w, h, type}
-  let boosts = []; // jump pads: {x, w, power}
-  let scroll = 0;   // world offset
-  let speed = 4.2;  // base speed
-  let spawnTimer = 0;
-  let spawnInterval = 90; // frames
-  let score = 0;
-  let seconds = 0;
-  let playing = false;
-  let lastTime = 0;
-  let best = Number(localStorage.getItem('gdBest') || 0);
-
-  // UI refs
-  const scoreEl = document.getElementById('score');
-  const bestEl = document.getElementById('best');
-  const timeEl = document.getElementById('time');
-  const startBtn = document.getElementById('startBtn');
-  const restartBtn = document.getElementById('restartBtn');
-
-  bestEl.textContent = Math.floor(best);
-
-  // confetti particles
-  let confettiParticles = [];
-
-  function spawnObstacle() {
-    // randomize obstacle variation
-    const typeRoll = Math.random();
-    if (typeRoll < 0.12) {
-      // wide block (platform) low height (force player to jump over or onto)
-      const w = 40 + Math.random() * 60;
-      const h = 30 + Math.random() * 60;
-      obstacles.push({ x: canvas.width + 40, w: Math.round(w), h: Math.round(h) });
-    } else if (typeRoll < 0.3) {
-      // tall spike
-      const w = 20 + Math.random() * 10;
-      const h = 40 + Math.random() * 80;
-      obstacles.push({ x: canvas.width + 40, w: Math.round(w), h: Math.round(h) });
+function jump(){
+  if(isJumping) return;
+  isJumping = true;
+  let jumpHeight = 0;
+  const jumpInterval = setInterval(()=>{
+    if(jumpHeight>=80){
+      clearInterval(jumpInterval);
+      fall();
     } else {
-      // small spike
-      const w = 18;
-      const h = 28 + Math.random() * 40;
-      obstacles.push({ x: canvas.width + 40, w: Math.round(w), h: Math.round(h) });
+      jumpHeight+=8;
+      playerY+=8;
+      player.style.bottom=playerY+'px';
     }
+  },20);
+}
 
-    // occasionally spawn a boost pad ahead of obstacle
-    if (Math.random() < 0.12) {
-      // boost pad right before obstacle
-      const power = 16 + Math.random() * 8; // strong boost
-      boosts.push({ x: canvas.width + 20 + Math.random() * 40, w: 28, power: Math.round(power) });
-    }
-  }
-
-  function resetGame() {
-    // reset values
-    obstacles = [];
-    boosts = [];
-    scroll = 0;
-    spawnTimer = 0;
-    score = 0;
-    seconds = 0;
-    speed = 4.2;
-    player.y = groundY - player.h;
-    player.vy = 0;
-    player.onGround = true;
-    playing = false;
-    lastTime = 0;
-    updateUI();
-    clearConfetti();
-    redraw();
-  }
-
-  function startGame() {
-    resetGame();
-    playing = true;
-    lastTime = performance.now();
-    requestAnimationFrame(loop);
-  }
-
-  function restartGame() {
-    resetGame();
-    startGame();
-  }
-
-  // Input handling (click/touch/keys)
-  function onPressStart(e) {
-    if (!playing) return;
-    if (player.onGround) {
-      holding = true;
-      holdStart = performance.now();
-    }
-  }
-  function onPressEnd(e) {
-    if (!playing) return;
-    if (holding) {
-      const holdTime = Math.min(maxHold, performance.now() - holdStart);
-      const factor = holdTime / maxHold; // 0..1
-      const jumpPower = jumpBase + factor * jumpBase; // up to 2x
-      player.vy = -jumpPower;
-      player.onGround = false;
-      holding = false;
-    }
-  }
-
-  // Mobile: touchstart/touchend
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); onPressStart(); }, { passive: false });
-  canvas.addEventListener('touchend', e => { e.preventDefault(); onPressEnd(); }, { passive: false });
-
-  // Mouse / click
-  canvas.addEventListener('mousedown', e => { e.preventDefault(); onPressStart(); });
-  window.addEventListener('mouseup', e => { onPressEnd(); });
-
-  // Keyboard
-  window.addEventListener('keydown', e => {
-    if (e.code === 'Space' || e.code === 'ArrowUp') {
-      e.preventDefault();
-      onPressStart();
-    }
-  });
-  window.addEventListener('keyup', e => {
-    if (e.code === 'Space' || e.code === 'ArrowUp') {
-      onPressEnd();
-    }
-  });
-
-  // buttons
-  startBtn.addEventListener('click', () => {
-    if (!playing) startGame();
-  });
-  restartBtn.addEventListener('click', () => restartGame());
-
-  // collision helper
-  function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
-    return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
-  }
-
-  // confetti
-  function triggerConfetti() {
-    confettiParticles = [];
-    const colors = ['#ffd54f', '#ff6b6b', '#7ed957', '#5eb0ff', '#d27bff'];
-    for (let i = 0; i < 80; i++) {
-      confettiParticles.push({
-        x: Math.random() * canvas.width,
-        y: -20 - Math.random() * 200,
-        vx: (Math.random() - 0.5) * 6,
-        vy: 2 + Math.random() * 6,
-        r: 6 + Math.random() * 8,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rot: Math.random() * 360,
-        omega: (Math.random() - 0.5) * 8
-      });
-    }
-    requestAnimationFrame(confettiLoop);
-  }
-  function confettiLoop() {
-    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-    for (const p of confettiParticles) {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.rot += p.omega;
-      confettiCtx.save();
-      confettiCtx.translate(p.x, p.y);
-      confettiCtx.rotate(p.rot * Math.PI / 180);
-      confettiCtx.fillStyle = p.color;
-      confettiCtx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 0.6);
-      confettiCtx.restore();
-    }
-    confettiParticles = confettiParticles.filter(p => p.y < canvas.height + 50);
-    if (confettiParticles.length) requestAnimationFrame(confettiLoop);
-  }
-  function clearConfetti() {
-    confettiParticles = [];
-    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-  }
-
-  // main loop
-  function loop(ts) {
-    if (!playing) return;
-    const dt = Math.min(32, ts - lastTime); // ms
-    lastTime = ts;
-
-    // update timers
-    spawnTimer += dt / (1000 / 60);
-    if (spawnTimer > spawnInterval) {
-      spawnTimer = 0;
-      // spawn obstacle
-      spawnObstacle();
-      // slowly increase difficulty
-      spawnInterval = Math.max(48, spawnInterval - 0.6);
-      speed += 0.02;
-    }
-
-    // update player physics
-    if (!player.onGround) {
-      player.vy += gravity * (dt / 16.67);
-      player.y += player.vy * (dt / 16.67);
-      if (player.y >= groundY - player.h) {
-        player.y = groundY - player.h;
-        player.vy = 0;
-        player.onGround = true;
-      }
+function fall(){
+  const fallInterval = setInterval(()=>{
+    if(playerY<=50){
+      playerY=50;
+      player.style.bottom=playerY+'px';
+      isJumping=false;
+      clearInterval(fallInterval);
     } else {
-      // while holding on ground, you can charge small boost (visual)
-      if (holding) {
-        // small visual bounce effect, but no vertical move until release
-      }
+      playerY-=gravity;
+      player.style.bottom=playerY+'px';
     }
+  },20);
+}
 
-    // move obstacles
-    for (let i = obstacles.length - 1; i >= 0; i--) {
-      obstacles[i].x -= speed * (dt / 16.67) * 1.0;
-      if (obstacles[i].x + obstacles[i].w < -40) obstacles.splice(i, 1);
-    }
-    // move boosts
-    for (let i = boosts.length - 1; i >= 0; i--) {
-      boosts[i].x -= speed * (dt / 16.67);
-      if (boosts[i].x + boosts[i].w < -40) boosts.splice(i, 1);
-    }
+// Create obstacles
+function createObstacle(){
+  const obs = document.createElement('div');
+  obs.classList.add('obstacle');
+  obs.style.left = container.offsetWidth + 'px';
 
-    // collision detection: check player rectangle with obstacle rectangles (on ground)
-    for (const ob of obstacles) {
-      const obX = ob.x;
-      const obY = groundY - ob.h;
-      if (rectsOverlap(player.x, player.y, player.w, player.h, obX, obY, ob.w, ob.h)) {
-        // hit
-        playing = false;
-        onGameOver();
-        return;
-      }
-    }
+  // Fix: max height/width so always playable
+  const width = Math.floor(Math.random()*30)+30;  // 30-60px
+  const height = Math.floor(Math.random()*30)+30; // 30-60px
+  obs.style.width = width+'px';
+  obs.style.height = height+'px';
 
-    // check boosts collision (land on booster)
-    for (let i = boosts.length - 1; i >= 0; i--) {
-      const b = boosts[i];
-      const bx = b.x, by = groundY - 6 - 4; // boost sits on ground visually
-      if (rectsOverlap(player.x, player.y, player.w, player.h, bx, groundY - 8, b.w, 8)) {
-        // apply boost
-        player.vy = -b.power;
-        player.onGround = false;
-        boosts.splice(i, 1);
-      }
-    }
+  container.appendChild(obs);
+  obstacles.push(obs);
+}
 
-    // update score by distance travelled
-    score += (speed * dt / 16.67) * 0.1; // scale factor so values are reasonable
-    scoreEl.textContent = Math.floor(score);
+// Move obstacles
+function moveObstacles(){
+  obstacles.forEach((obs,index)=>{
+    let currentX = parseInt(obs.style.left);
+    currentX -=6; // speed
+    obs.style.left=currentX+'px';
 
-    // time in seconds
-    seconds += dt / 1000;
-    timeEl.textContent = Math.floor(seconds) + 's';
-
-    // draw
-    redraw();
-
-    // next frame
-    requestAnimationFrame(loop);
-  }
-
-  function onGameOver() {
-    // finalize score, compare best
-    const sc = Math.floor(score);
-    if (sc > best) {
-      best = sc;
-      localStorage.setItem('gdBest', best);
-      bestEl.textContent = best;
-      triggerConfetti();
-    }
-    // small overlay or alert
-    setTimeout(()=> {
-      // show message overlay (simple)
-      // For kids, avoid alert blocking — draw message on canvas
-      drawGameOver();
-    }, 120);
-  }
-
-  function drawGameOver() {
-    // draw dark overlay and message on canvas
-    const w = canvas.width / (window.devicePixelRatio || 1);
-    const h = canvas.height / (window.devicePixelRatio || 1);
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.45)";
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 26px system-ui, Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("Game Over!", w / 2, h / 2 - 6);
-    ctx.font = "16px system-ui, Arial";
-    ctx.fillText("Score: " + Math.floor(score) + "   Best: " + best, w / 2, h / 2 + 20);
-    ctx.restore();
-  }
-
-  function redraw() {
-    // clear
-    const w = canvas.width / (window.devicePixelRatio || 1);
-    const h = canvas.height / (window.devicePixelRatio || 1);
-    ctx.clearRect(0, 0, w, h);
-
-    // background parallax sky (simple)
-    // draw clouds
-    ctx.fillStyle = "#aee6ff";
-    for (let i = 0; i < 6; i++) {
-      const cx = (i * 200 - (scroll * 0.12) % 200);
-      const cy = 40 + (i % 2) * 16;
-      ctx.beginPath();
-      ctx.ellipse(cx % w + 60, cy, 34, 16, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // ground
-    ctx.fillStyle = "#5a5a5a";
-    ctx.fillRect(0, groundY, w, 80);
-
-    // draw boosts (pads)
-    for (const b of boosts) {
-      ctx.fillStyle = "--boost";
-      const bx = b.x;
-      const by = groundY - 8;
-      ctx.fillStyle = "#ffd54f";
-      ctx.fillRect(bx, by, b.w, 8);
-      // spark
-      ctx.fillStyle = "#d49b00";
-      ctx.fillRect(bx, by + 8, b.w, 3);
-    }
-
-    // draw obstacles
-    for (const ob of obstacles) {
-      const ox = ob.x;
-      const oy = groundY - ob.h;
-      ctx.fillStyle = "#ff4d4d";
-      ctx.fillRect(ox, oy, ob.w, ob.h);
-      // spike visual: triangles on top for tall ones
-      if (ob.h > 30) {
-        ctx.fillStyle = "#900";
-        for (let sx = 0; sx < ob.w; sx += 10) {
-          ctx.beginPath();
-          ctx.moveTo(ox + sx, oy);
-          ctx.lineTo(ox + sx + 5, oy - 10);
-          ctx.lineTo(ox + sx + 10, oy);
-          ctx.closePath();
-          ctx.fill();
+    // Collision
+    if(currentX < 100 && currentX+parseInt(obs.style.width) >50){
+      if(playerY < parseInt(obs.style.height)){
+        alert('Game Over! Score: '+score);
+        if(score>highscore){
+          localStorage.setItem('gdHighscore',score);
         }
+        location.reload();
       }
     }
 
-    // draw player
-    ctx.fillStyle = playerColor();
-    roundRect(ctx, player.x, player.y, player.w, player.h, 6);
-    // small jump effect
-    if (!player.onGround) {
-      ctx.fillStyle = "rgba(255,255,255,0.08)";
-      ctx.fillRect(player.x - 4, player.y + player.h, player.w + 8, 6);
+    // Remove out of screen
+    if(currentX + parseInt(obs.style.width)<0){
+      obs.remove();
+      obstacles.splice(index,1);
+      score++;
+      scoreEl.textContent = "Score: "+score;
+      if(score>highscore) highscoreEl.textContent="Highscore: "+score;
     }
-
-    // draw a foreground scroll marker
-    scroll += speed * 0.02;
-  }
-
-  function playerColor(){
-    return "#1ed760";
-  }
-
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // spawn initial obstacle
-  function initFirstObstacles() {
-    obstacles = [];
-    boosts = [];
-    const count = 3;
-    for (let i = 0; i < count; i++) {
-      obstacles.push({
-        x: canvas.width / (window.devicePixelRatio || 1) + i * 240 + 200,
-        w: 18 + Math.random() * 36,
-        h: 24 + Math.random() * 80
-      });
-      if (Math.random() < 0.2) {
-        boosts.push({
-          x: canvas.width / (window.devicePixelRatio || 1) + i * 240 + 160 + Math.random() * 80,
-          w: 28,
-          power: 16 + Math.random() * 8
-        });
-      }
-    }
-  }
-
-  function updateUI() {
-    scoreEl.textContent = Math.floor(score);
-    bestEl.textContent = Math.floor(best);
-    timeEl.textContent = Math.floor(seconds) + 's';
-  }
-
-  // initial
-  function setup() {
-    resizeCanvasToDisplaySize();
-    initFirstObstacles();
-    resetGame();
-    updateUI();
-    // adapt groundY variable after resize
-    // groundY defined after resize call above
-  }
-  setup();
-
-  // helper: start the game loop tick for UI updates (score/time)
-  setInterval(() => {
-    if (playing) {
-      updateUI();
-    }
-  }, 150);
-
-  // spawn obstacles periodically (independent of frame)
-  setInterval(() => {
-    if (playing) {
-      // spawn more often when speed higher
-      if (Math.random() < Math.min(0.9, 0.35 + speed / 50)) {
-        spawnObstacle();
-      }
-    }
-  }, 700);
-
-  // actual spawn function uses similar logic as earlier
-  function spawnObstacle() {
-    const w = 18 + Math.random() * 64;
-    const h = 24 + Math.random() * 86;
-    const x = (canvas.width / (window.devicePixelRatio || 1)) + 20 + Math.random() * 80;
-    obstacles.push({ x, w: Math.round(w), h: Math.round(h) });
-    if (Math.random() < 0.2) {
-      boosts.push({ x: x - 60, w: 28, power: 16 + Math.random() * 8 });
-    }
-  }
-
-  // expose some functions for restart
-  window.startGame = startGame;
-  window.restartGame = restartGame;
-
-  // initial draw static
-  function redrawStatic() {
-    resizeCanvasToDisplaySize();
-    // derive groundY after resize
-    const ratio = window.devicePixelRatio || 1;
-    // recompute groundY with correct canvas height
-    // groundY is recalculated here
-  }
-
-  // ensure groundY recalculated on resize
-  window.addEventListener('resize', () => {
-    resizeCanvasToDisplaySize();
-    // update groundY & player y
-    const ratio = window.devicePixelRatio || 1;
-    // set groundY relative to logical height
-    const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
-    // recalc
-    // (we use closure var groundY earlier; to reflect new height we reposition player)
-    // Simpler: reposition player to bottom
-    player.y = (canvas.height / (window.devicePixelRatio || 1)) - player.h - 60;
   });
+}
 
-  // initial placement consistent with current canvas size
-  player.y = (canvas.height / (window.devicePixelRatio || 1)) - player.h - 60;
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space') jump();
+});
+document.addEventListener('touchstart',jump);
 
-})();
+setInterval(()=>{
+  if(Math.random()<0.02) createObstacle();
+  moveObstacles();
+},20);
 </script>
 </body>
 </html>
