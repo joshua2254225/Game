@@ -1,764 +1,168 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Geometry Dash — ArcadeOwl</title>
-<meta name="description" content="Geometry Dash style game — ArcadeOwl" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ArcadeOwl Geometry Dash</title>
 <style>
-  :root{
-    --accent:#0b74de;
-    --bg-top:#b3ecff;
-    --bg-bottom:#7fcff0;
-    --ground:#2f2f2f;
-    --player:#ffcc00;
-    --spike:#ff4d4d;
-    --boost:#ffd54f;
-    --ui-bg: rgba(255,255,255,0.96);
-  }
-  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));color:#111}
-  .topbar{max-width:980px;margin:12px auto;padding:8px 12px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:10px;position:relative}
-  .home{position:absolute;left:12px;color:#fff;text-decoration:none;font-weight:800}
-  .brand{font-weight:800}
-  .panel{max-width:980px;margin:14px auto;padding:12px;background:var(--ui-bg);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
-  .game-row{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
-  /* canvas */
-  #gameCanvas{background:linear-gradient(180deg,#95e1ff,#7fd6ff);border-radius:10px;display:block;max-width:100%;width:860px;height:420px;box-shadow:0 12px 36px rgba(2,6,23,0.08)}
-  /* side UI */
-  .side{min-width:220px;display:flex;flex-direction:column;gap:8px;align-items:center}
-  .stat{width:100%;padding:10px;border-radius:10px;background:#fff;font-weight:800;color:#111;box-shadow:0 6px 18px rgba(2,6,23,0.04);text-align:center}
-  .controls{display:flex;gap:8px;margin-top:6px}
-  .btn{padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:800;cursor:pointer}
-  .btn.secondary{background:#f3f6ff;color:var(--accent);box-shadow:none}
-  .small{font-size:13px;color:#666;text-align:center}
-  /* overlays */
-  .overlay{position:absolute;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .ui-box{pointer-events:auto;background:rgba(255,255,255,0.98);padding:18px 22px;border-radius:12px;box-shadow:0 20px 40px rgba(2,6,23,0.12);text-align:center}
-  .ui-title{font-size:20px;font-weight:900;margin-bottom:8px}
-  .ui-sub{font-size:14px;color:#444;margin-bottom:12px}
-  .footer{max-width:980px;margin:12px auto;text-align:center;color:#444;font-size:13px}
-  @media (max-width:980px){
-    #gameCanvas{width:100%;height:360px}
-    .side{min-width:140px}
-  }
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:linear-gradient(#b3ecff,#7fcff0);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.topbar {
+  width:100%;
+  max-width:980px;
+  background:#0b74de;
+  color:#fff;
+  padding:12px;
+  text-align:center;
+  font-weight:bold;
+  position:relative;
+  border-radius:10px;
+  margin-top:12px;
+}
+.topbar a {
+  position:absolute;
+  left:12px;
+  color:white;
+  text-decoration:none;
+  font-weight:bold;
+}
+canvas {
+  background:#7fd6ff;
+  margin-top:16px;
+  border-radius:10px;
+  display:block;
+}
+.stats {
+  display:flex;
+  gap:12px;
+  margin-top:12px;
+  font-weight:bold;
+}
+button {
+  padding:6px 12px;
+  font-weight:bold;
+  margin-left:4px;
+  border-radius:6px;
+  border:none;
+  background:#0b74de;
+  color:white;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
+<div class="topbar">
+  <a href="index.html">← Home</a>
+  ArcadeOwl Geometry Dash
+</div>
 
-<header class="topbar">
-  <a class="home" href="index.html">← Home</a>
-  <div class="brand">ArcadeOwl — Geometry Dash</div>
-</header>
-
-<section class="panel">
-  <div class="game-row">
-    <canvas id="gameCanvas" width="860" height="420" aria-label="Geometry Dash game"></canvas>
-
-    <div class="side" aria-hidden="false" role="complementary">
-      <div class="stat">Score<br><span id="score" style="font-size:26px">0</span></div>
-      <div class="stat">Best<br><span id="best" style="font-size:22px">0</span></div>
-      <div class="stat">Time<br><span id="time" style="font-size:20px">0s</span></div>
-
-      <div class="controls">
-        <button id="startBtn" class="btn">Start</button>
-        <button id="restartBtn" class="btn secondary">Restart</button>
-      </div>
-
-      <div class="small">Controls: Tap / Click / Space to jump. Hold to jump higher.</div>
-    </div>
-  </div>
-</section>
-
-<div class="footer">© ArcadeOwl — Have fun! (No sounds by default)</div>
-
-<!-- confetti canvas -->
-<canvas id="confetti" style="position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999"></canvas>
+<canvas id="gameCanvas" width="860" height="400"></canvas>
+<div class="stats">
+  Score: <span id="score">0</span> |
+  Best: <span id="best">0</span>
+  <button id="restartBtn">Restart</button>
+</div>
 
 <script>
-/*
-Geometry Dash - ArcadeOwl
-Goals: feel close to Geometry Dash:
- - auto-runner, variable jump height (tap vs hold)
- - jump pads (boost), platforms, gaps, spikes
- - playable procedural patterns (patterns chosen from safe library)
- - parallax background
- - particles on death, confetti on new best
- - responsive canvas, mobile support
- - best saved in localStorage key 'gdBest'
-*/
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-/* -------------------- Setup & Constants -------------------- */
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const confettiCanvas = document.getElementById('confetti');
-const confettiCtx = confettiCanvas.getContext('2d');
+let player = {x:80, y:0, w:36, h:36, vy:0};
+let gravity = 0.6;
+let jumpPower = -12;
+let obstacles = [];
+let gameSpeed = 5;
+let score = 0;
+let best = localStorage.getItem("gdBest") || 0;
+document.getElementById("best").textContent = best;
+let isJumping = false;
+let isAlive = true;
 
-let DPR = Math.max(1, window.devicePixelRatio || 1);
+player.y = canvas.height - player.h - 50;
 
-function resize() {
-  // keep css size, but scale backing store
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.round(rect.width * DPR);
-  canvas.height = Math.round(rect.height * DPR);
-  canvas.style.width = rect.width + 'px';
-  canvas.style.height = rect.height + 'px';
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-
-  // confetti
-  confettiCanvas.width = Math.round(window.innerWidth * DPR);
-  confettiCanvas.height = Math.round(window.innerHeight * DPR);
-  confettiCanvas.style.width = window.innerWidth + 'px';
-  confettiCanvas.style.height = window.innerHeight + 'px';
-  confettiCtx.setTransform(DPR,0,0,DPR,0,0);
-
-  // recompute ground Y based on visual height
-  visualW = canvas.width / DPR;
-  visualH = canvas.height / DPR;
-  groundY = Math.round(visualH - 64); // ground top y
-}
-window.addEventListener('resize', () => { resize(); });
-
-resize();
-
-/* Game geometry (in visual pixels) */
-let visualW = canvas.width / DPR, visualH = canvas.height / DPR;
-let groundY = Math.round(visualH - 64);
-
-/* Physics tuning */
-const GRAVITY = 0.9;           // gravity acceleration
-const BASE_JUMP = 13.5;       // base impuls velocity for tap
-const MAX_HOLD_MS = 260;      // max hold time in ms to increase jump
-const HOLD_JUMP_MULT = 1.5;   // how much stronger when fully held
-const RUN_SPEED = 6.2;        // horizontal speed (pixels per frame baseline)
-let runSpeed = RUN_SPEED;
-
-/* Player */
-const player = {
-  x: 120,
-  y: groundY - 44,
-  w: 36,
-  h: 36,
-  vy: 0,
-  onGround: true,
-  alive: true
-};
-
-/* World */
-let obstacles = []; // obstacles and platforms
-let boosts = [];    // jump pads
-let particles = []; // death particles
-let confetti = [];  // confetti particles for new best
-
-/* Spawning */
-let spawnTimer = 0;
-let spawnInterval = 120; // in "frames" at 60fps baseline (will vary with dt)
-let patternIndex = 0;
-
-/* Score & time */
-let score = 0;      // distance-based
-let best = Number(localStorage.getItem('gdBest') || 0);
-let seconds = 0;
-
-/* Game loop */
-let lastTime = 0;
-let playing = false;
-let started = false;
-
-/* UI refs */
-const scoreEl = document.getElementById('score');
-const bestEl = document.getElementById('best');
-const timeEl = document.getElementById('time');
-const startBtn = document.getElementById('startBtn');
-const restartBtn = document.getElementById('restartBtn');
-bestEl.textContent = Math.floor(best);
-
-/* confetti canvas size set in resize() already */
-
-/* -------------------- Utility Functions -------------------- */
-function rand(min, max) { return Math.random() * (max - min) + min; }
-function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-
-/* Rectangle collision */
-function rectOverlap(a, b) {
-  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+function spawnObstacle(){
+  let height = 40 + Math.random()*40;
+  obstacles.push({x:canvas.width, y:canvas.height - height - 50, w:20, h:height});
 }
 
-/* -------------------- Level / Pattern System -------------------- */
-/*
-We create "patterns" which are sequences of obstacles/platforms with safe distances.
-Patterns guarantee playability: max gap width and obstacle heights are within player's jump.
-We stitch patterns together with small random offsets and occasional jump pads.
-*/
-const PATTERNS = [
-  // simple single spike
-  (xStart) => {
-    const gap = 140 + Math.random()*40;
-    const spikeW = 22;
-    const spikeH = 36 + Math.random()*16;
-    return [{ type:'spike', x: xStart + gap, w: spikeW, h: spikeH }];
-  },
-  // two close spikes, small gap between
-  (xStart) => {
-    const gap1 = 120 + Math.random()*30;
-    const gapBetween = 60 + Math.random()*30;
-    const s1h = 30 + Math.random()*30;
-    const s2h = 30 + Math.random()*30;
-    return [
-      {type:'spike', x:xStart + gap1, w:20, h:Math.round(s1h)},
-      {type:'spike', x:xStart + gap1 + gapBetween, w:20, h:Math.round(s2h)}
-    ];
-  },
-  // platform you can land on (width wide)
-  (xStart) => {
-    const gap = 130 + Math.random()*40;
-    const pw = 60 + Math.random()*80; // platform width
-    const ph = 18 + Math.random()*8; // small platform height above ground
-    return [{ type:'platform', x:xStart + gap, w:Math.round(pw), h:Math.round(ph), yOffset: -80 }];
-  },
-  // ramp of small obstacles increasing
-  (xStart) => {
-    const segments = [];
-    let base = xStart + 110;
-    for (let i=0;i<3;i++){
-      const h = 28 + i*12 + Math.random()*8;
-      segments.push({ type:'spike', x: base + i*70, w: 20, h: Math.round(h) });
+function resetGame(){
+  player.y = canvas.height - player.h - 50;
+  player.vy = 0;
+  obstacles = [];
+  score = 0;
+  isAlive = true;
+}
+
+document.getElementById("restartBtn").onclick = resetGame;
+
+function jump(){
+  if(!isJumping && isAlive){
+    player.vy = jumpPower;
+    isJumping = true;
+  }
+}
+
+document.addEventListener("keydown", e => { if(e.code=="Space") jump(); });
+canvas.addEventListener("mousedown", jump);
+canvas.addEventListener("touchstart", jump);
+
+function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Player physics
+  player.vy += gravity;
+  player.y += player.vy;
+
+  if(player.y + player.h >= canvas.height - 50){
+    player.y = canvas.height - player.h -50;
+    player.vy = 0;
+    isJumping = false;
+  }
+
+  ctx.fillStyle = "#ffcc00";
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+
+  // Obstacles
+  if(Math.random() < 0.02) spawnObstacle();
+  ctx.fillStyle = "#ff4d4d";
+  for(let i=obstacles.length-1;i>=0;i--){
+    obstacles[i].x -= gameSpeed;
+    ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].w, obstacles[i].h);
+    // Collision
+    if(player.x < obstacles[i].x + obstacles[i].w &&
+       player.x + player.w > obstacles[i].x &&
+       player.y < obstacles[i].y + obstacles[i].h &&
+       player.y + player.h > obstacles[i].y){
+      isAlive = false;
     }
-    return segments;
-  },
-  // gap then boost pad then spike
-  (xStart) => {
-    const gap = 150 + Math.random()*30;
-    const boostX = xStart + gap + 40;
-    const spikeX = boostX + 110;
-    return [
-      {type:'boost', x: boostX, w:28, power: 18},
-      {type:'spike', x: spikeX, w:22, h: 34 + Math.random()*10}
-    ];
-  },
-  // wide spike block that requires precise jump
-  (xStart) => {
-    const gap = 130 + Math.random()*20;
-    const w = 36 + Math.random()*40;
-    const h = 44 + Math.random()*10;
-    return [{type:'spike', x: xStart + gap, w: Math.round(w), h: Math.round(h)}];
+    if(obstacles[i].x + obstacles[i].w <0) obstacles.splice(i,1);
   }
-];
 
-/* spawn patterns continuously */
-function ensureObstacles() {
-  // keep enough ahead
-  const maxAhead = visualW + 280;
-  let farthest = 0;
-  for (let ob of obstacles) farthest = Math.max(farthest, ob.x + ob.w);
-  for (let b of boosts) farthest = Math.max(farthest, b.x + b.w);
-  let startX = farthest || visualW*0.7;
-  // push patterns until far enough ahead
-  while (startX < maxAhead) {
-    const pat = PATTERNS[Math.floor(Math.random()*PATTERNS.length)];
-    const seq = pat(startX);
-    for (let s of seq) {
-      if (s.type === 'spike') {
-        // clamp spike height and width to safe range
-        const w = clamp(Math.round(s.w || 20), 16, 60);
-        const h = clamp(Math.round(s.h || 36), 24, 64);
-        obstacles.push({type:'spike', x: s.x, w, h});
-      } else if (s.type === 'platform') {
-        const w = clamp(Math.round(s.w || 60), 40, 140);
-        const h = clamp(Math.round(s.h || 18), 12, 28);
-        const yOffset = s.yOffset || -80;
-        obstacles.push({type:'platform', x: s.x, w, h, yOffset});
-      } else if (s.type === 'boost') {
-        boosts.push({x: s.x, w: s.w || 28, power: s.power || 16});
-      }
+  if(isAlive) score += 0.1;
+  ctx.fillStyle = "#000";
+  document.getElementById("score").textContent = Math.floor(score);
+
+  if(!isAlive){
+    if(score>best){
+      best = Math.floor(score);
+      localStorage.setItem("gdBest", best);
+      document.getElementById("best").textContent = best;
     }
-    startX += 180 + Math.random()*140; // spacing between pattern clusters
-  }
-}
-
-/* -------------------- Input: tap/hold logic -------------------- */
-let holding = false;
-let holdStart = 0;
-let lastTapTime = 0;
-
-/* start/stop input listeners */
-function onPressStart(e) {
-  // prevent scrolling on mobile
-  if (e && e.type === 'touchstart') e.preventDefault();
-  if (!playing) {
-    // if not started, start on first input
-    startGame();
-  }
-  if (!player.onGround) {
-    // allow holding mid-air but it doesn't stack
-  }
-  holding = true;
-  holdStart = performance.now();
-}
-function onPressEnd(e) {
-  if (!holding) return;
-  const holdMs = performance.now() - holdStart;
-  const frac = clamp(holdMs / MAX_HOLD_MS, 0, 1);
-  const jumpPower = BASE_JUMP * (1 + frac * (HOLD_JUMP_MULT - 1));
-  performJump(jumpPower);
-  holding = false;
-}
-
-/* keyboard and touch events attach later (after functions defined) */
-
-/* -------------------- Jump function -------------------- */
-const MAX_HOLD_MS = MAX_HOLD_MS_GLOBAL = MAX_HOLD_MS || 260; // fallback
-const HOLD_JUMP_MULT_GLOBAL = HOLD_JUMP_MULT || 1.5; // fallback
-
-function performJump(power) {
-  // if player on platform / ground or has small remaining grace time
-  player.vy = -power;
-  player.onGround = false;
-}
-
-/* -------------------- Update & Draw -------------------- */
-function update(dt) {
-  if (!playing) return;
-
-  // dt: ms since last frame. Convert to somewhat consistent scale (assuming 60fps baseline)
-  const scaled = dt / 16.67; // 1 ~ one frame at 60fps
-
-  // ensure obstacles ahead
-  ensureObstacles();
-
-  // physics
-  if (!player.onGround) {
-    player.vy += GRAVITY * scaled;
-    player.y += player.vy * scaled;
-    // handle landing on platforms or ground
-    // first assume ground
-    let landed = false;
-    // check each platform if landing on top
-    for (let ob of obstacles) {
-      if (ob.type === 'platform') {
-        const py = player.y + player.h;
-        const platTop = groundY + ob.yOffset - ob.h; // careful: ob.yOffset is negative
-        const platLeft = ob.x;
-        const platRight = ob.x + ob.w;
-        // check if falling and intersects platform top region
-        if (player.vy >= 0 && (player.x + player.w > platLeft + 4) && (player.x < platRight - 4)) {
-          // check if current y crosses platform
-          if (py >= platTop && (player.y - player.vy * scaled) < platTop) {
-            // land on platform
-            player.y = platTop - player.h;
-            player.vy = 0;
-            player.onGround = true;
-            landed = true;
-            break;
-          }
-        }
-      }
-    }
-    if (!landed && player.y + player.h >= groundY) {
-      player.y = groundY - player.h;
-      player.vy = 0;
-      player.onGround = true;
-      landed = true;
-    }
-    // if fallen below bottom (shouldn't happen), clamp
-    player.y = Math.min(player.y, groundY - player.h);
+    ctx.fillStyle="#000";
+    ctx.font="40px sans-serif";
+    ctx.fillText("Game Over!", canvas.width/2 - 100, canvas.height/2);
   }
 
-  // move world: obstacles, boosts slide left as if player runs to right
-  const dx = runSpeed * scaled;
-  for (let ob of obstacles) {
-    ob.x -= dx;
-  }
-  for (let b of boosts) {
-    b.x -= dx;
-  }
-
-  // remove off-screen objects
-  obstacles = obstacles.filter(o => (o.x + o.w) > -120);
-  boosts = boosts.filter(b => (b.x + b.w) > -120);
-
-  // collisions with spikes -> death
-  for (let ob of obstacles) {
-    if (ob.type === 'spike') {
-      const spikeRect = { x: ob.x, y: groundY - ob.h, w: ob.w, h: ob.h };
-      const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
-      if (rectOverlap(playerRect, spikeRect)) {
-        playerDie();
-        return;
-      }
-    }
-  }
-
-  // collide with boost pads (if overlaps with top area)
-  for (let i = boosts.length - 1; i >= 0; i--) {
-    const b = boosts[i];
-    const padRect = { x: b.x, y: groundY - 8, w: b.w, h: 8 };
-    const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
-    if (rectOverlap(playerRect, padRect)) {
-      // apply boost
-      player.vy = - (b.power || 16);
-      player.onGround = false;
-      boosts.splice(i,1);
-      // small particle boost
-      spawnParticles(player.x + player.w/2, player.y + player.h, 8, '#ffd54f');
-    }
-  }
-
-  // update score & time
-  score += dx * 0.06; // scale distance to score
-  seconds += dt / 1000;
-  // slowly increase difficulty
-  if (Math.floor(score) % 150 === 0) {
-    runSpeed = clamp(runSpeed + 0.001 * dt, RUN_SPEED, RUN_SPEED * 1.6);
-  }
-
-  // update particles
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx * scaled;
-    p.y += p.vy * scaled;
-    p.vy += 0.5 * scaled;
-    p.life -= dt;
-    if (p.life <= 0) particles.splice(i,1);
-  }
-  // confetti update
-  for (let i = confetti.length - 1; i >= 0; i--) {
-    const c = confetti[i];
-    c.x += c.vx * scaled;
-    c.y += c.vy * scaled;
-    c.vy += 0.08 * scaled;
-    c.life -= dt;
-    c.rot += c.omega * scaled;
-    if (c.life <= 0) confetti.splice(i,1);
-  }
-}
-
-function draw() {
-  // clear
-  const w = canvas.width / DPR, h = canvas.height / DPR;
-  ctx.clearRect(0,0,w,h);
-
-  // background sky gradient already via canvas css; draw some parallax clouds
-  // sky layer
-  ctx.fillStyle = '#aee6ff';
-  // clouds (simple ellipses)
-  drawClouds();
-
-  // ground
-  ctx.fillStyle = '#6a6a6a';
-  ctx.fillRect(0, groundY, w, h - groundY);
-
-  // draw platforms and obstacles
-  for (let ob of obstacles) {
-    if (ob.type === 'platform') {
-      const px = ob.x, py = groundY + ob.yOffset - ob.h, pw = ob.w, ph = ob.h;
-      // platform top
-      ctx.fillStyle = '#7e57c2';
-      roundRect(ctx, px, py, pw, ph, 6);
-      // small shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.08)';
-      ctx.fillRect(px, py + ph, pw, 3);
-    } else if (ob.type === 'spike') {
-      const sx = ob.x, sy = groundY - ob.h, sw = ob.w, sh = ob.h;
-      // draw block
-      ctx.fillStyle = '--spike';
-      ctx.fillStyle = '#ff4d4d';
-      ctx.fillRect(sx, sy, sw, sh);
-      // triangles (spike heads)
-      ctx.fillStyle = '#b30000';
-      const step = 10;
-      for (let sx0 = sx; sx0 < sx + sw; sx0 += step) {
-        ctx.beginPath();
-        ctx.moveTo(sx0, sy);
-        ctx.lineTo(sx0 + step/2, sy - Math.min(12, sh * 0.25));
-        ctx.lineTo(sx0 + step, sy);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-  }
-
-  // draw boost pads
-  for (let b of boosts) {
-    ctx.fillStyle = '#ffd54f';
-    ctx.fillRect(b.x, groundY - 8, b.w, 8);
-    ctx.fillStyle = '#d49b00';
-    ctx.fillRect(b.x, groundY, b.w, 3);
-  }
-
-  // draw player with slight bobbing effect when on ground
-  ctx.save();
-  ctx.fillStyle = player.hue ? player.hue : '#ffcc00';
-  roundRect(ctx, player.x, player.y, player.w, player.h, 6);
-  ctx.restore();
-
-  // draw particles
-  for (let p of particles) {
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x - 2, p.y - 2, p.size, p.size);
-  }
-
-  // HUD drawn in DOM; nothing else
-}
-
-/* parallax clouds */
-let cloudOffset = 0;
-function drawClouds(){
-  cloudOffset = (cloudOffset + runSpeed * 0.02) % (visualW + 200);
-  ctx.fillStyle = '#e0f7ff';
-  for (let i=0;i<6;i++){
-    const cx = ((i * 220) - (cloudOffset * (0.4 + (i%2)*0.1)));
-    const cy = 50 + (i%2)*24;
-    // draw ellipse
-    ctx.beginPath();
-    ctx.ellipse((cx % visualW) + 80, cy, 44, 18, 0, 0, Math.PI*2);
-    ctx.fill();
-  }
-}
-
-/* round rect helper */
-function roundRect(ctx,x,y,w,h,r){
-  const kappa = 0.5522848;
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-  ctx.fill();
-}
-
-/* -------------------- Particles & Confetti -------------------- */
-function spawnParticles(x,y,count,color){
-  for (let i=0;i<count;i++){
-    particles.push({
-      x: x + rand(-6,6),
-      y: y + rand(-6,6),
-      vx: rand(-2,2),
-      vy: rand(-6,-2),
-      life: 600 + Math.random()*400,
-      size: 3 + Math.random()*3,
-      color: color || '#fff'
-    });
-  }
-}
-function spawnConfetti(centreX, centreY){
-  for (let i=0;i<80;i++){
-    confetti.push({
-      x: centreX + rand(-40,40),
-      y: centreY + rand(-40,40),
-      vx: rand(-3,3),
-      vy: rand(-6,-1),
-      life: 1800 + Math.random()*1600,
-      rot: Math.random()*360,
-      omega: rand(-8,8),
-      color: ['#ffd54f','#ff6b6b','#7ed957','#5eb0ff','#d27bff'][Math.floor(rand(0,5))]
-    });
-  }
-}
-function drawConfetti(){
-  // clear confetti canvas
-  confettiCtx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
-  for (let c of confetti){
-    confettiCtx.save();
-    confettiCtx.translate(c.x, c.y);
-    confettiCtx.rotate(c.rot * Math.PI/180);
-    confettiCtx.fillStyle = c.color;
-    confettiCtx.fillRect(-4, -6, 8, 6);
-    confettiCtx.restore();
-    c.x += c.vx;
-    c.y += c.vy;
-    c.vy += 0.08;
-    c.rot += c.omega * 0.02;
-    c.life -= 16.67;
-  }
-  confetti = confetti.filter(c => c.life > 0);
-}
-
-/* -------------------- Game Over & Win / Best handling -------------------- */
-function playerDie() {
-  if (!player.alive) return;
-  player.alive = false;
-  playing = false;
-  spawnParticles(player.x + player.w/2, player.y + player.h/2, 28, '#ff6b6b');
-  // finalize score
-  const sc = Math.floor(score);
-  if (sc > best) {
-    best = sc;
-    localStorage.setItem('gdBest', best);
-    bestEl.textContent = best;
-    // confetti around player
-    const cx = player.x + player.w/2;
-    const cy = player.y + player.h/2;
-    spawnConfetti(cx, cy);
-  }
-  // show overlay after short delay
-  setTimeout(() => {
-    showGameOverUI(sc);
-  }, 350);
-}
-
-function showGameOverUI(sc) {
-  createOverlay(`Game Over`, `Score: ${sc} — Best: ${best}`, `Restart`, () => { restartGame(); });
-}
-
-/* -------------------- Overlays (start / pause / gameover) -------------------- */
-function createOverlay(title, subtitle, buttonText, onButton) {
-  removeOverlay();
-  const overlay = document.createElement('div');
-  overlay.className = 'overlay';
-  overlay.style.position = 'absolute';
-  overlay.style.left = '0';
-  overlay.style.top = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = 20;
-
-  const ui = document.createElement('div');
-  ui.className = 'ui-box';
-  ui.innerHTML = `<div class="ui-title">${title}</div><div class="ui-sub">${subtitle}</div>`;
-  const btn = document.createElement('button');
-  btn.className = 'btn';
-  btn.textContent = buttonText;
-  btn.onclick = () => { removeOverlay(); onButton && onButton(); };
-  ui.appendChild(btn);
-  overlay.appendChild(ui);
-  // append on panel (not body) to position relative
-  document.querySelector('.panel').appendChild(overlay);
-}
-function removeOverlay() {
-  const existing = document.querySelector('.panel .overlay');
-  if (existing) existing.remove();
-}
-
-/* -------------------- Start / Restart / loop -------------------- */
-function startGame() {
-  if (playing) return;
-  // reset state if not first start
-  if (!started) {
-    resetAll();
-    started = true;
-  }
-  playing = true;
-  player.alive = true;
-  lastTime = performance.now();
-  removeOverlay();
   requestAnimationFrame(loop);
 }
 
-function restartGame() {
-  resetAll();
-  startGame();
-}
-
-startBtn.addEventListener('click', () => { startGame(); });
-restartBtn.addEventListener('click', () => { restartGame(); });
-
-function resetAll() {
-  obstacles = [];
-  boosts = [];
-  particles = [];
-  confetti = [];
-  score = 0;
-  seconds = 0;
-  runSpeed = RUN_SPEED;
-  player.x = 120;
-  player.h = 36;
-  player.w = 36;
-  player.y = groundY - player.h;
-  player.vy = 0;
-  player.onGround = true;
-  player.alive = true;
-  playing = false;
-  started = false;
-  spawnTimer = 0;
-  spawnInterval = 120;
-  ensureObstacles();
-  updateHUD();
-  // initial overlay
-  createOverlay('ArcadeOwl Geometry Dash', 'Tap / Click / Space to jump. Hold to jump higher.', 'Start', () => { startGame(); });
-}
-
-/* -------------------- HUD update -------------------- */
-function updateHUD() {
-  scoreEl.textContent = Math.floor(score);
-  bestEl.textContent = Math.floor(best);
-  timeEl.textContent = Math.floor(seconds) + 's';
-}
-
-/* -------------------- Main loop -------------------- */
-function loop(ts) {
-  if (!playing) return;
-  const dt = Math.min(40, ts - lastTime);
-  lastTime = ts;
-
-  // update
-  update(dt);
-  draw();
-  drawConfetti(); // confetti overlay
-  // draw confetti (on separate canvas)
-  if (confetti.length > 0) drawConfetti();
-
-  updateHUD();
-
-  if (player.alive) requestAnimationFrame(loop);
-}
-
-/* -------------------- Event Listeners (input) -------------------- */
-// touch and mouse
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onPressStart(e); }, {passive:false});
-canvas.addEventListener('touchend', (e) => { e.preventDefault(); onPressEnd(e); }, {passive:false});
-canvas.addEventListener('mousedown', (e) => { onPressStart(e); });
-window.addEventListener('mouseup', (e) => { onPressEnd(e); });
-
-// keyboard
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' || e.code === 'ArrowUp') {
-    e.preventDefault();
-    onPressStart();
-  }
-});
-window.addEventListener('keyup', (e) => {
-  if (e.code === 'Space' || e.code === 'ArrowUp') {
-    e.preventDefault();
-    onPressEnd();
-  }
-});
-
-/* -------------------- Init on load -------------------- */
-resetAll();
-
-/* -------------------- Debug helpers (optional) -------------------- */
-// expose for console tuning
-window.__gd = { canvas, ctx, obstacles, boosts, player, resetAll, startGame, restartGame, spawnParticles };
-
-/* -------------------- Confetti draw loop used separately -------------------- */
-function drawConfetti() {
-  // using confetti array as above: draw and step
-  confettiCtx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
-  for (let i = 0; i < confetti.length; i++) {
-    const c = confetti[i];
-    confettiCtx.save();
-    confettiCtx.translate(c.x * DPR, c.y * DPR);
-    confettiCtx.rotate((c.rot||0) * Math.PI/180);
-    confettiCtx.fillStyle = c.color;
-    confettiCtx.fillRect(-3*DPR, -5*DPR, 6*DPR, 4*DPR);
-    confettiCtx.restore();
-    // step
-    c.x += c.vx * 0.016;
-    c.y += c.vy * 0.016;
-    c.vy += 0.06;
-    c.rot += c.omega * 0.06;
-    c.life -= 16;
-  }
-  // keep confetti array trimmed
-  confetti = confetti.filter(c => c.life > 0);
-}
-
-/* -------------------- End of script -------------------- */
+loop();
 </script>
 </body>
-  </html>
+</html>
