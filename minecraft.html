@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Minecraft 3D Sterne Spiel</title>
+<style>
+  body { margin:0; overflow:hidden; }
+  #score { position:absolute; top:10px; left:10px; font-size:24px; color:white; text-shadow:1px 1px 2px black; }
+</style>
+</head>
+<body>
+<div id="score">Score: 0</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/examples/js/controls/PointerLockControls.js"></script>
+
+<script>
+let scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87CEEB);
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+let renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Licht
+let light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(0,10,10);
+scene.add(light);
+
+// Boden
+let floorGeometry = new THREE.BoxGeometry(50,1,50);
+let floorMaterial = new THREE.MeshPhongMaterial({color:0x654321});
+let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.position.y = -0.5;
+scene.add(floor);
+
+// Spieler
+let player = new THREE.Mesh(
+  new THREE.BoxGeometry(1,2,1),
+  new THREE.MeshPhongMaterial({color:0x00ff00})
+);
+player.position.y = 1;
+scene.add(player);
+
+// Sterne
+let stars = [];
+for(let i=0;i<5;i++){
+  let star = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3,16,16),
+    new THREE.MeshPhongMaterial({color:0xffff00})
+  );
+  star.position.set(Math.random()*20-10,0.3,Math.random()*20-10);
+  stars.push(star);
+  scene.add(star);
+}
+
+// Fallen
+let holes = [];
+for(let i=0;i<3;i++){
+  let hole = new THREE.Mesh(
+    new THREE.BoxGeometry(2,0.1,2),
+    new THREE.MeshPhongMaterial({color:0x000000})
+  );
+  hole.position.set(Math.random()*20-10,0.05,Math.random()*20-10);
+  holes.push(hole);
+  scene.add(hole);
+}
+
+// Kamera-Steuerung
+let controls = new THREE.PointerLockControls(camera, document.body);
+document.body.addEventListener('click', () => { controls.lock(); });
+camera.position.set(0,1.6,5);
+controls.getObject().position.copy(player.position);
+
+// Bewegung
+let moveForward=false, moveBackward=false, moveLeft=false, moveRight=false;
+document.addEventListener('keydown', e=>{
+  if(e.code==='KeyW') moveForward=true;
+  if(e.code==='KeyS') moveBackward=true;
+  if(e.code==='KeyA') moveLeft=true;
+  if(e.code==='KeyD') moveRight=true;
+});
+document.addEventListener('keyup', e=>{
+  if(e.code==='KeyW') moveForward=false;
+  if(e.code==='KeyS') moveBackward=false;
+  if(e.code==='KeyA') moveLeft=false;
+  if(e.code==='KeyD') moveRight=false;
+});
+
+let score=0;
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  // Bewegung
+  let speed = 0.1;
+  if(moveForward) controls.moveForward(speed);
+  if(moveBackward) controls.moveForward(-speed);
+  if(moveLeft) controls.moveRight(-speed);
+  if(moveRight) controls.moveRight(speed);
+
+  // Sterne einsammeln
+  stars.forEach((star,i)=>{
+    if(player.position.distanceTo(star.position)<1){
+      scene.remove(star);
+      stars.splice(i,1);
+      score++;
+      document.getElementById('score').innerText = "Score: "+score;
+    }
+  });
+
+  // Fallen check
+  holes.forEach(h=>{
+    if(Math.abs(player.position.x - h.position.x)<1 && Math.abs(player.position.z - h.position.z)<1){
+      player.position.set(0,1,5);
+      controls.getObject().position.copy(player.position);
+      score=0;
+      document.getElementById('score').innerText = "Score: "+score;
+    }
+  });
+
+  renderer.render(scene,camera);
+}
+
+animate();
+</script>
+</body>
+</html>
