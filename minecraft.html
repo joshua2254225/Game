@@ -14,9 +14,12 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/examples/js/controls/PointerLockControls.js"></script>
 
 <script>
+// --- Szene & Kamera ---
 let scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB);
+scene.background = new THREE.Color(0x87CEEB); // Himmelblau
+
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+
 let renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -26,58 +29,85 @@ let light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(0,10,10);
 scene.add(light);
 
-// Boden
-let floorGeometry = new THREE.BoxGeometry(50,1,50);
-let floorMaterial = new THREE.MeshPhongMaterial({color:0x654321});
-let floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.position.y = -0.5;
-scene.add(floor);
-
-// Spieler
-let player = new THREE.Mesh(
-  new THREE.BoxGeometry(1,2,1),
-  new THREE.MeshPhongMaterial({color:0x00ff00})
-);
-player.position.y = 1;
-scene.add(player);
-
-// Sterne
-let stars = [];
-for(let i=0;i<5;i++){
-  let star = new THREE.Mesh(
-    new THREE.SphereGeometry(0.3,16,16),
-    new THREE.MeshPhongMaterial({color:0xffff00})
-  );
-  star.position.set(Math.random()*20-10,0.3,Math.random()*20-10);
-  stars.push(star);
-  scene.add(star);
+// --- Boden & Plattformen ---
+let blocks = [];
+function createBlock(x,y,z,color){
+  let geom = new THREE.BoxGeometry(2,2,2);
+  let mat = new THREE.MeshPhongMaterial({color:color});
+  let block = new THREE.Mesh(geom, mat);
+  block.position.set(x,y,z);
+  scene.add(block);
+  blocks.push(block);
 }
 
-// Fallen
+// Boden (Gras)
+for(let i=-10;i<=10;i++){
+  for(let j=-10;j<=10;j++){
+    createBlock(i*2,-1, j*2, 0x00ff00);
+  }
+}
+
+// Plattformen
+createBlock(4,1,0,0x8B4513);
+createBlock(6,3,0,0x8B4513);
+createBlock(8,5,0,0x8B4513);
+createBlock(10,7,0,0x8B4513);
+
+// --- Spieler ---
+let player = new THREE.Mesh(
+  new THREE.BoxGeometry(1,2,1),
+  new THREE.MeshPhongMaterial({color:0x0000ff})
+);
+player.position.set(0,1,5);
+scene.add(player);
+
+// Kamera hinter Spieler
+camera.position.set(player.position.x, player.position.y + 3, player.position.z + 5);
+camera.lookAt(player.position);
+
+// --- Sterne ---
+let stars = [];
+function createStar(x,y,z){
+  let star = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5,16,16),
+    new THREE.MeshPhongMaterial({color:0xffff00})
+  );
+  star.position.set(x,y,z);
+  scene.add(star);
+  stars.push(star);
+}
+
+// Sterne auf Plattformen
+createStar(4,3,0);
+createStar(6,5,0);
+createStar(8,7,0);
+createStar(10,9,0);
+
+// --- Fallen (Löcher) ---
 let holes = [];
-for(let i=0;i<3;i++){
+function createHole(x,z){
   let hole = new THREE.Mesh(
     new THREE.BoxGeometry(2,0.1,2),
     new THREE.MeshPhongMaterial({color:0x000000})
   );
-  hole.position.set(Math.random()*20-10,0.05,Math.random()*20-10);
-  holes.push(hole);
+  hole.position.set(x,0.05,z);
   scene.add(hole);
+  holes.push(hole);
 }
+createHole(2,2);
+createHole(-2,4);
 
-// Kamera-Steuerung
-let controls = new THREE.PointerLockControls(camera, document.body);
-document.body.addEventListener('click', () => { controls.lock(); });
-camera.position.set(0,1.6,5);
-controls.getObject().position.copy(player.position);
-
-// Bewegung
+// --- Steuerung ---
 let moveForward=false, moveBackward=false, moveLeft=false, moveRight=false;
+let velocityY=0;
+let onGround=false;
+
 document.addEventListener('keydown', e=>{
   if(e.code==='KeyW') moveForward=true;
   if(e.code==='KeyS') moveBackward=true;
   if(e.code==='KeyA') moveLeft=true;
   if(e.code==='KeyD') moveRight=true;
+  if(e.code==='Space' && onGround){ velocityY=0.2; onGround=false; }
 });
 document.addEventListener('keyup', e=>{
   if(e.code==='KeyW') moveForward=false;
@@ -86,17 +116,38 @@ document.addEventListener('keyup', e=>{
   if(e.code==='KeyD') moveRight=false;
 });
 
+// PointerLockControls für Maus
+let controls = new THREE.PointerLockControls(camera, document.body);
+document.body.addEventListener('click', ()=>{ controls.lock(); });
+
+// Score
 let score=0;
 
+// --- Animation ---
 function animate(){
   requestAnimationFrame(animate);
 
   // Bewegung
   let speed = 0.1;
-  if(moveForward) controls.moveForward(speed);
-  if(moveBackward) controls.moveForward(-speed);
-  if(moveLeft) controls.moveRight(-speed);
-  if(moveRight) controls.moveRight(speed);
+  if(moveForward) player.position.z -= speed;
+  if(moveBackward) player.position.z += speed;
+  if(moveLeft) player.position.x -= speed;
+  if(moveRight) player.position.x += speed;
+
+  // Gravitation
+  velocityY -= 0.01;
+  player.position.y += velocityY;
+
+  // Boden-Kollision
+  if(player.position.y < 1){
+    player.position.y = 1;
+    velocityY = 0;
+    onGround = true;
+  }
+
+  // Kamera folgt Spieler
+  camera.position.set(player.position.x, player.position.y + 3, player.position.z + 5);
+  camera.lookAt(player.position);
 
   // Sterne einsammeln
   stars.forEach((star,i)=>{
@@ -104,7 +155,7 @@ function animate(){
       scene.remove(star);
       stars.splice(i,1);
       score++;
-      document.getElementById('score').innerText = "Score: "+score;
+      document.getElementById('score').innerText="Score: "+score;
     }
   });
 
@@ -112,9 +163,9 @@ function animate(){
   holes.forEach(h=>{
     if(Math.abs(player.position.x - h.position.x)<1 && Math.abs(player.position.z - h.position.z)<1){
       player.position.set(0,1,5);
-      controls.getObject().position.copy(player.position);
+      velocityY=0;
       score=0;
-      document.getElementById('score').innerText = "Score: "+score;
+      document.getElementById('score').innerText="Score: "+score;
     }
   });
 
