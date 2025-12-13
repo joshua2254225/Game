@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArcadeOwl Color Memory</title>
+<style>
+body {margin:0; font-family:sans-serif; display:flex; flex-direction:column; align-items:center; background:#f0f8ff;}
+.topbar {width:100%; max-width:980px; background:#0b74de; color:white; text-align:center; font-weight:bold; padding:12px; position:relative; border-radius:10px; margin-top:12px;}
+.topbar a {position:absolute; left:12px; color:white; text-decoration:none; font-weight:bold;}
+#gameContainer {margin-top:20px; display:flex; flex-direction:column; align-items:center;}
+#board {display:grid; grid-gap:10px; margin-top:20px;}
+button {padding:6px 12px; font-weight:bold; margin-top:10px; border-radius:6px; border:none; background:#0b74de; color:white; cursor:pointer;}
+.stats {margin-top:12px; font-weight:bold;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html">← Home</a>
+  ArcadeOwl Color Memory
+</div>
+
+<div id="gameContainer">
+  <div>
+    Level: 
+    <button onclick="setLevel('easy')">Easy</button>
+    <button onclick="setLevel('medium')">Medium</button>
+    <button onclick="setLevel('hard')">Hard</button>
+  </div>
+  <div class="stats">
+    Score: <span id="score">0</span> | Best: <span id="best">0</span>
+  </div>
+  <div id="board"></div>
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<script>
+const boardEl = document.getElementById("board");
+const scoreEl = document.getElementById("score");
+const bestEl = document.getElementById("best");
+let colors = ["red","blue","green","yellow","purple","orange","pink"];
+let sequence = [];
+let playerSequence = [];
+let level = "easy";
+let score = 0;
+let best = localStorage.getItem("cmBest") || 0;
+bestEl.textContent = best;
+
+function setLevel(l){
+  level = l;
+  startGame();
+}
+
+function startGame(){
+  sequence = [];
+  playerSequence = [];
+  score = 0;
+  scoreEl.textContent = score;
+  let count = level=="easy"?3:level=="medium"?5:7;
+  for(let i=0;i<count;i++){
+    sequence.push(colors[Math.floor(Math.random()*colors.length)]);
+  }
+  showSequence();
+}
+
+function showSequence(){
+  boardEl.innerHTML="";
+  let delay=0;
+  sequence.forEach((color,i)=>{
+    setTimeout(()=>{
+      const cell = document.createElement("div");
+      cell.style.width="80px";
+      cell.style.height="80px";
+      cell.style.background=color;
+      cell.style.borderRadius="10px";
+      cell.style.transition="all 0.3s";
+      boardEl.appendChild(cell);
+      setTimeout(()=>{cell.style.opacity="0.3";},500);
+    }, delay);
+    delay += 800;
+  });
+  setTimeout(()=>{enablePlayerInput();}, delay);
+}
+
+function enablePlayerInput(){
+  boardEl.innerHTML="";
+  sequence.forEach(()=>{
+    const cell = document.createElement("div");
+    cell.style.width="80px";
+    cell.style.height="80px";
+    cell.style.background="#ccc";
+    cell.style.borderRadius="10px";
+    cell.style.cursor="pointer";
+    cell.addEventListener("click", ()=>playerClick(cell));
+    boardEl.appendChild(cell);
+  });
+}
+
+function playerClick(cell){
+  const index = Array.from(boardEl.children).indexOf(cell);
+  const color = sequence[index];
+  playerSequence.push(color);
+  cell.style.background=color;
+  if(playerSequence[playerSequence.length-1]!==sequence[playerSequence.length-1]){
+    alert("Wrong! Game Over");
+    if(score>best){ localStorage.setItem("cmBest",score); bestEl.textContent=score; }
+    return startGame();
+  }
+  score++;
+  scoreEl.textContent=score;
+  if(playerSequence.length===sequence.length){
+    alert("Correct! Next Round");
+    startGame();
+  }
+}
+</script>
+</body>
+</html>
