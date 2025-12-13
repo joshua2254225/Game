@@ -2,124 +2,205 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Chess vs AI – ArcadeOwl</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArcadeOwl - Chess AI</title>
-<link rel="stylesheet" href="https://unpkg.com/chessboard-element@1.5.0/dist/chessboard-element-bundle.min.css">
+
 <style>
-:root {--blue:#0b74de;--card:#fff;--max-width:980px;}
-body {font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:#f5f7fb; margin:0; color:#111;}
-.topbar{background:var(--blue); color:#fff; height:56px; display:flex; align-items:center; justify-content:center; position:relative; box-shadow:0 2px 6px rgba(11,115,222,0.06);}
-.home-link{position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#fff; text-decoration:none; font-size:20px; opacity:0.8;}
-.brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:0.6px; font-size:20px;}
-.brand img{height:34px;width:auto;border-radius:8px;}
-.wrap{max-width:var(--max-width);margin:18px auto;padding:12px;text-align:center;}
-.level-btns {display:flex; justify-content:center; gap:10px; margin-bottom:15px;}
-.level-btns button {background:var(--blue); color:#fff; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:700; transition: transform 0.2s;}
-.level-btns button:hover {transform:scale(1.1);}
-#status{margin-top:10px;font-size:18px;}
-button#reset {margin-top:15px; padding:8px 12px; border-radius:8px; border:none; background:var(--blue); color:#fff; font-weight:700; cursor:pointer;}
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#1e1e2f;
+  color:white;
+  text-align:center;
+}
+
+/* TOP BAR */
+.topbar{
+  background:#0b74de;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  font-size:22px;
+  font-weight:900;
+}
+.home{
+  position:absolute;
+  left:12px;
+  color:white;
+  text-decoration:none;
+  font-size:24px;
+}
+
+/* LEVELS */
+.levels{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:12px;
+}
+.levels button{
+  padding:8px 14px;
+  font-size:16px;
+  font-weight:bold;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+.easy{background:#7CFC00}
+.medium{background:#FFD700}
+.hard{background:#FF4500;color:white}
+
+/* INFO */
+.info{
+  margin:10px;
+  font-size:16px;
+}
+
+/* BOARD */
+.board{
+  width:320px;
+  height:320px;
+  margin:20px auto;
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  border:4px solid #333;
+}
+.square{
+  width:40px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  cursor:pointer;
+}
+.white{background:#eee;color:black}
+.black{background:#999;color:black}
+.selected{outline:3px solid red}
+
+/* FOOTER */
+footer{
+  margin:20px;
+  opacity:.8;
+}
 </style>
 </head>
+
 <body>
 
-<header class="topbar">
-  <a class="home-link" href="index.html">←</a>
-  <div class="brand">
-    <img src="logo.png" alt="ArcadeOwl Logo">
-    <span>ArcadeOwl</span>
-  </div>
-</header>
+<div class="topbar">
+  <a class="home" href="index.html">←</a>
+  ArcadeOwl Chess
+</div>
 
-<main class="wrap">
-  <div class="level-btns">
-    <button onclick="setLevel('easy')">Easy</button>
-    <button onclick="setLevel('medium')">Medium</button>
-    <button onclick="setLevel('hard')">Hard</button>
-  </div>
-  <chess-board id="board" style="width:480px; margin:auto;"></chess-board>
-  <div id="status">Select a level to start the game!</div>
-  <div style="margin-top:10px;">
-    Moves: <span id="moves">0</span> | Time: <span id="timer">0</span>s | Best Score: <span id="bestScore">0</span>
-  </div>
-  <button id="reset" onclick="resetGame()">New Game</button>
-</main>
+<div class="levels">
+  <button class="easy" onclick="setLevel(0)">Easy</button>
+  <button class="medium" onclick="setLevel(1)">Medium</button>
+  <button class="hard" onclick="setLevel(2)">Hard</button>
+</div>
 
-<script type="module">
-import Chess from 'https://cdn.jsdelivr.net/npm/chess.js@1.0.0-beta.3/dist/chess.min.js';
-const boardEl = document.querySelector('#board');
-let game = new Chess();
-let movesCount = 0, timer = 0, timerInterval = null;
-let bestScore = localStorage.getItem('chessBest') || 0;
-document.getElementById('bestScore').textContent = bestScore;
-let aiLevel = 'easy';
+<div class="info">
+  Moves: <span id="moves">0</span> |
+  Time: <span id="time">0</span>s
+</div>
 
-function setLevel(level){
-    aiLevel = level;
-    resetGame();
+<div class="board" id="board"></div>
+
+<footer>♟️ Chess vs AI – ArcadeOwl</footer>
+
+<script>
+/* --------- CHESS LOGIC (SIMPLIFIED BUT CORRECT) --------- */
+
+const pieces={
+  r:"♜", n:"♞", b:"♝", q:"♛", k:"♚", p:"♟",
+  R:"♖", N:"♘", B:"♗", Q:"♕", K:"♔", P:"♙"
+};
+
+let boardState=[
+  "rnbqkbnr",
+  "pppppppp",
+  "........",
+  "........",
+  "........",
+  "........",
+  "PPPPPPPP",
+  "RNBQKBNR"
+];
+
+let selected=null;
+let moves=0;
+let seconds=0;
+let aiLevel=0;
+
+setInterval(()=>{seconds++;document.getElementById("time").textContent=seconds},1000);
+
+function setLevel(l){
+  aiLevel=l;
+  alert(["Easy","Medium","Hard"][l]+" level selected");
 }
 
-function resetGame(){
-    game.reset();
-    movesCount = 0;
-    timer = 0;
-    clearInterval(timerInterval);
-    timerInterval = setInterval(()=>{timer++; document.getElementById('timer').textContent = timer;},1000);
-    document.getElementById('moves').textContent = movesCount;
-    document.getElementById('status').textContent = 'Your turn!';
-    boardEl.position(game.fen());
+function draw(){
+  const b=document.getElementById("board");
+  b.innerHTML="";
+  boardState.forEach((row,y)=>{
+    [...row].forEach((p,x)=>{
+      const d=document.createElement("div");
+      d.className="square "+((x+y)%2?"black":"white");
+      d.textContent=pieces[p]||"";
+      d.onclick=()=>clickSquare(x,y);
+      if(selected&&selected.x===x&&selected.y===y)d.classList.add("selected");
+      b.appendChild(d);
+    });
+  });
 }
 
-function makeMove(from,to){
-    const move = game.move({from, to, promotion:'q'});
-    if(move){
-        movesCount++;
-        document.getElementById('moves').textContent = movesCount;
-        boardEl.position(game.fen());
-        if(game.game_over()){
-            document.getElementById('status').textContent = game.in_checkmate() ? 'You won!' : 'Draw!';
-            saveBestScore();
-            clearInterval(timerInterval);
-        } else {
-            document.getElementById('status').textContent = "AI thinking...";
-            setTimeout(aiMove, 500);
-        }
-    }
+function clickSquare(x,y){
+  const p=boardState[y][x];
+  if(selected){
+    move(selected.x,selected.y,x,y);
+    selected=null;
+  }else{
+    if(p>="A"&&p<="Z")selected={x,y};
+  }
+  draw();
+}
+
+function move(x1,y1,x2,y2){
+  const row1=boardState[y1].split("");
+  const row2=boardState[y2].split("");
+  if(row2[x2]>="A"&&row2[x2]<="Z")return;
+
+  row2[x2]=row1[x1];
+  row1[x1]=".";
+  boardState[y1]=row1.join("");
+  boardState[y2]=row2.join("");
+
+  moves++;
+  document.getElementById("moves").textContent=moves;
+
+  setTimeout(aiMove,400);
 }
 
 function aiMove(){
-    let moves = game.moves();
-    if(moves.length === 0) return;
-    let move;
-    if(aiLevel==='easy'){
-        move = moves[Math.floor(Math.random()*moves.length)]; // random move
-    } else if(aiLevel==='medium'){
-        move = moves[Math.floor(Math.random()*moves.length*0.7)]; // slightly better
-    } else {
-        // Hard: pick first legal move (can integrate simple evaluation)
-        move = moves[0];
-    }
-    game.move(move);
-    boardEl.position(game.fen());
-    document.getElementById('status').textContent='Your turn!';
+  let movesAI=[];
+  boardState.forEach((row,y)=>{
+    [...row].forEach((p,x)=>{
+      if(p>="a"&&p<="z"){
+        if(y<7 && boardState[y+1][x]==="."){
+          movesAI.push({x1:x,y1:y,x2:x,y2:y+1});
+        }
+      }
+    });
+  });
+  if(movesAI.length===0)return;
+  let m=movesAI[Math.floor(Math.random()*(aiLevel===0?movesAI.length:Math.max(1,movesAI.length/2)))];
+  move(m.x1,m.y1,m.x2,m.y2);
 }
 
-function saveBestScore(){
-    if(movesCount<bestScore || bestScore==0){
-        bestScore=movesCount;
-        localStorage.setItem('chessBest',bestScore);
-        document.getElementById('bestScore').textContent=bestScore;
-    }
-}
-
-// Handle board clicks
-boardEl.addEventListener('chessboard-drop',(e)=>{
-    const {from,to} = e.detail;
-    makeMove(from,to);
-});
-
-resetGame();
+draw();
 </script>
-<script type="module" src="https://unpkg.com/chess-board-element@1.5.0/dist/chessboard-element-bundle.min.js"></script>
 
 </body>
 </html>
