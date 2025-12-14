@@ -18,12 +18,13 @@ canvas{
 }
 #hud{
   position:fixed;
-  top:8px;
+  top:10px;
   left:50%;
   transform:translateX(-50%);
-  width:92%;
-  max-width:1000px;
+  width:90%;
+  max-width:900px;
   color:#fff;
+  z-index:10;
 }
 #top{
   display:flex;
@@ -42,6 +43,20 @@ canvas{
   width:0%;
   background:linear-gradient(90deg,#00f6ff,#ff00cc);
 }
+#startBtn{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:14px 28px;
+  font-size:18px;
+  font-weight:700;
+  border:none;
+  border-radius:10px;
+  background:#00f6ff;
+  color:#000;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -54,6 +69,8 @@ canvas{
   </div>
   <div id="bar"><div id="barFill"></div></div>
 </div>
+
+<button id="startBtn">▶ Start</button>
 
 <canvas id="game"></canvas>
 
@@ -68,126 +85,140 @@ function resize(){
 resize();
 addEventListener("resize",resize);
 
-let score = 0;
+const scoreEl = document.getElementById("score");
+const bestEl = document.getElementById("best");
+const barFill = document.getElementById("barFill");
+const startBtn = document.getElementById("startBtn");
+
 let best = localStorage.getItem("gdBest") || 0;
-document.getElementById("best").textContent = best;
+bestEl.textContent = best;
+
+let running = false;
+let holding = false;
+let score = 0;
+let frame = 0;
 
 const player = {
   x: 140,
   y: 0,
   size: 36,
-  vy: 0
+  vy: 0,
+  onGround: false
 };
 
 let groundY;
-let mode = "cube";
-let holding = false;
-let gameOver = false;
-let frame = 0;
-
-const GRAVITY = 0.9;
-const JUMP = -12;
-
 let obstacles = [];
-let nextSpawn = 160;
+let nextSpawn = 0;
+
+const GRAVITY = 0.8;
+const JUMP = -14;
+const SPEED = 6;
 
 function reset(){
   score = 0;
   frame = 0;
-  mode = "cube";
   obstacles = [];
-  player.vy = 0;
   groundY = canvas.height - 100;
   player.y = groundY - player.size;
-  gameOver = false;
+  player.vy = 0;
+  player.onGround = true;
+  nextSpawn = 120;
+  scoreEl.textContent = 0;
+  barFill.style.width = "0%";
 }
-reset();
+
+function startGame(){
+  reset();
+  running = true;
+  startBtn.style.display = "none";
+}
 
 function spawnObstacle(){
-  const type = Math.random()<0.5 ? "block" : "spike";
   obstacles.push({
-    x: canvas.width + 80,
-    w: type==="block"?50:40,
-    h: type==="block"?60:50,
-    type
+    x: canvas.width + 60,
+    w: 50,
+    h: 60
   });
-  nextSpawn = frame + 140 + Math.random()*80; // Abstand!
+  nextSpawn = frame + 140 + Math.random()*120;
 }
 
 function update(){
-  if(gameOver) return;
+  if(!running) return;
 
   frame++;
   score++;
-  document.getElementById("score").textContent = score;
-  document.getElementById("barFill").style.width = Math.min(score/3000*100,100)+"%";
+  scoreEl.textContent = score;
+  barFill.style.width = Math.min(score/3000*100,100)+"%";
 
-  // MODE SWITCH
-  if(score===1800) mode="ship";
-
-  // SPAWN
-  if(frame>nextSpawn) spawnObstacle();
-
-  // PHYSICS
-  if(mode==="cube"){
-    player.vy += GRAVITY;
-    if(holding && player.vy<0) player.vy -= 0.15;
-  }else{
-    player.vy += holding?-0.6:0.6;
+  // spawn
+  if(frame > nextSpawn){
+    spawnObstacle();
   }
+
+  // jump logic (FIXED)
+  if(holding && player.onGround){
+    player.vy = JUMP;
+    player.onGround = false;
+  }
+
+  // physics
+  player.vy += GRAVITY;
   player.y += player.vy;
 
-  if(player.y+player.size>groundY){
-    player.y=groundY-player.size;
-    player.vy=0;
+  if(player.y + player.size >= groundY){
+    player.y = groundY - player.size;
+    player.vy = 0;
+    player.onGround = true;
   }
 
-  // OBSTACLES
-  obstacles.forEach(o=>o.x-=6);
-  obstacles = obstacles.filter(o=>o.x+o.w>0);
+  // obstacles
+  obstacles.forEach(o=>o.x -= SPEED);
+  obstacles = obstacles.filter(o=>o.x + o.w > 0);
 
-  // COLLISION
+  // collision
   for(const o of obstacles){
-    if(player.x<o.x+o.w &&
-       player.x+player.size>o.x &&
-       player.y+player.size>groundY-o.h){
+    if(player.x < o.x+o.w &&
+       player.x+player.size > o.x &&
+       player.y+player.size > groundY-o.h){
       endGame();
     }
   }
 }
 
 function endGame(){
-  gameOver=true;
-  if(score>best){
-    best=score;
+  running = false;
+  startBtn.style.display = "block";
+  startBtn.textContent = "↻ Restart";
+
+  if(score > best){
+    best = score;
     localStorage.setItem("gdBest",best);
-    document.getElementById("best").textContent=best;
+    bestEl.textContent = best;
   }
-  setTimeout(reset,1400);
 }
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // BACKGROUND
+  // background
   ctx.fillStyle=`hsl(${score/10%360},60%,8%)`;
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // GROUND
+  // ground
   ctx.fillStyle="#222";
   ctx.fillRect(0,groundY,canvas.width,100);
 
-  // PLAYER
+  // player
   ctx.save();
   ctx.translate(player.x+player.size/2,player.y+player.size/2);
-  if(mode==="cube") ctx.rotate(frame*0.05);
-  ctx.fillStyle=mode==="cube"?"#00f6ff":"#ff00cc";
-  ctx.shadowColor=ctx.fillStyle;
+  ctx.rotate(frame*0.05);
+  ctx.fillStyle="#00f6ff";
+  ctx.shadowColor="#00f6ff";
   ctx.shadowBlur=20;
   ctx.fillRect(-player.size/2,-player.size/2,player.size,player.size);
   ctx.restore();
 
-  // OBSTACLES
+  // obstacles
   ctx.fillStyle="#ff0033";
   obstacles.forEach(o=>{
     ctx.fillRect(o.x,groundY-o.h,o.w,o.h);
@@ -201,11 +232,17 @@ function loop(){
 }
 loop();
 
-// INPUT
-addEventListener("keydown",e=>{if(e.code==="Space")holding=true});
-addEventListener("keyup",e=>{if(e.code==="Space")holding=false});
+// input
+addEventListener("keydown",e=>{
+  if(e.code==="Space") holding=true;
+});
+addEventListener("keyup",e=>{
+  if(e.code==="Space") holding=false;
+});
 canvas.addEventListener("touchstart",()=>holding=true);
 canvas.addEventListener("touchend",()=>holding=false);
+
+startBtn.addEventListener("click",startGame);
 </script>
 
 </body>
