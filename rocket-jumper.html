@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rocket Jumper - ArcadeOwl</title>
+
+<style>
+:root{
+  --blue:#0b74de;
+  --muted:#666;
+  --card:#fff;
+}
+body{
+  margin:0;
+  font-family:system-ui,Segoe UI,Roboto,Arial;
+  background:#0a0a1a;
+  color:white;
+  overflow:hidden;
+}
+.topbar{
+  background:var(--blue);
+  height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:22px;
+  position:relative;
+}
+.home-link{
+  position:absolute;
+  left:12px;
+  color:white;
+  text-decoration:none;
+  font-size:22px;
+}
+canvas{
+  display:block;
+  background:#0a0a1a;
+  margin:0 auto;
+  border:2px solid #222;
+  border-radius:12px;
+}
+#fullscreenBtn{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(255,255,255,0.2);
+  color:white;
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+}
+#scoreBoard{
+  position:absolute;
+  top:60px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:20px;
+}
+.levels{
+  position:absolute;
+  top:60px;
+  right:12px;
+}
+.levels button{
+  background:var(--blue);
+  color:white;
+  border:none;
+  margin-left:4px;
+  padding:4px 8px;
+  border-radius:6px;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="home-link" href="index.html">← Home</a>
+  Rocket Jumper
+  <button id="fullscreenBtn">⛶</button>
+</div>
+
+<div id="scoreBoard">Score: 0 | Highscore: 0</div>
+<div class="levels">
+  <button data-level="easy">Easy</button>
+  <button data-level="medium">Medium</button>
+  <button data-level="hard">Hard</button>
+</div>
+
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+
+<audio id="jumpSound" src="jump.mp3"></audio>
+<audio id="hitSound" src="hit.mp3"></audio>
+<audio id="coinSound" src="coin.mp3"></audio>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreBoard = document.getElementById('scoreBoard');
+const jumpSound = document.getElementById('jumpSound');
+const hitSound = document.getElementById('hitSound');
+const coinSound = document.getElementById('coinSound');
+
+let rocket = {x:200, y:500, width:40, height:40, dy:0};
+let gravity = 0.6;
+let obstacles = [];
+let coins = [];
+let score = 0;
+let highscore = localStorage.getItem('rocketHighScore')||0;
+let gameRunning = false;
+let obstacleSpeed = 3;
+let spawnRate = 120;
+let frames = 0;
+
+scoreBoard.textContent = `Score: 0 | Highscore: ${highscore}`;
+
+function startGame(){
+  rocket.y = 500; rocket.dy=0;
+  obstacles = []; coins=[];
+  score=0; frames=0; gameRunning=true;
+  animate();
+}
+
+function spawnObstacle(){
+  const width = 40 + Math.random()*30;
+  const height = 20 + Math.random()*30;
+  const x = Math.random()*(canvas.width - width);
+  obstacles.push({x,y,width,height});
+}
+
+function spawnCoin(){
+  const size = 15;
+  const x = Math.random()*(canvas.width - size);
+  const y = -size;
+  coins.push({x,y,size});
+}
+
+function animate(){
+  if(!gameRunning) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  
+  // rocket
+  rocket.dy += gravity;
+  rocket.y += rocket.dy;
+  if(rocket.y + rocket.height > canvas.height) rocket.y = canvas.height - rocket.height;
+  if(rocket.y <0) rocket.y=0;
+  ctx.fillStyle='cyan';
+  ctx.fillRect(rocket.x, rocket.y, rocket.width, rocket.height);
+
+  // obstacles
+  if(frames%spawnRate===0) spawnObstacle();
+  obstacles.forEach((ob,i)=>{
+    ob.y += obstacleSpeed;
+    ctx.fillStyle='red';
+    ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+    // collision
+    if(rocket.x<ob.x+ob.width && rocket.x+rocket.width>ob.x &&
+       rocket.y<ob.y+ob.height && rocket.y+rocket.height>ob.y){
+      hitSound.play();
+      endGame();
+    }
+    if(ob.y>canvas.height) obstacles.splice(i,1);
+  });
+
+  // coins
+  if(frames%180===0) spawnCoin();
+  coins.forEach((c,i)=>{
+    c.y += obstacleSpeed;
+    ctx.fillStyle='yellow';
+    ctx.beginPath();
+    ctx.arc(c.x+c.size/2, c.y+c.size/2, c.size/2,0,Math.PI*2);
+    ctx.fill();
+    // collision
+    if(rocket.x<c.x+c.size && rocket.x+rocket.width>c.x &&
+       rocket.y<c.y+c.size && rocket.y+rocket.height>c.y){
+      score++;
+      coinSound.play();
+      coins.splice(i,1);
+    }
+    if(c.y>canvas.height) coins.splice(i,1);
+  });
+
+  frames++;
+  scoreBoard.textContent = `Score: ${score} | Highscore: ${highscore}`;
+  requestAnimationFrame(animate);
+}
+
+function jump(){
+  rocket.dy=-10;
+  jumpSound.play();
+}
+
+function endGame(){
+  gameRunning=false;
+  if(score>highscore){
+    highscore=score;
+    localStorage.setItem('rocketHighScore',highscore);
+  }
+  alert('Game Over! Score: '+score);
+}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.code==='ArrowUp') jump();
+});
+
+// Touch
+let touchStartY=0;
+canvas.addEventListener('touchstart', e=>{
+  touchStartY=e.touches[0].clientY;
+  jump();
+});
+
+// Levels
+document.querySelectorAll('.levels button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const lvl = btn.dataset.level;
+    if(lvl==='easy'){obstacleSpeed=3; spawnRate=120;}
+    if(lvl==='medium'){obstacleSpeed=5; spawnRate=100;}
+    if(lvl==='hard'){obstacleSpeed=7; spawnRate=80;}
+    startGame();
+  });
+});
+
+// Fullscreen
+const fullscreenBtn=document.getElementById('fullscreenBtn');
+let isFullscreen=false;
+fullscreenBtn.addEventListener('click',()=>{
+  if(!isFullscreen){
+    canvas.requestFullscreen();
+    isFullscreen=true;
+  }else{
+    document.exitFullscreen();
+    isFullscreen=false;
+  }
+});
+</script>
+
+</body>
+  </html>
