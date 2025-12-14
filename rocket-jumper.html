@@ -4,242 +4,208 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rocket Jumper - ArcadeOwl</title>
-
 <style>
 :root{
-  --blue:#0b74de;
-  --muted:#666;
-  --card:#fff;
+  --bg-color:#0d0d0d;
+  --rocket-color:#0ff;
+  --platform-color:#ff0066;
+  --text-color:#fff;
+  --btn-bg:#0b74de;
+  --btn-color:#fff;
 }
-body{
-  margin:0;
-  font-family:system-ui,Segoe UI,Roboto,Arial;
-  background:#0a0a1a;
-  color:white;
-  overflow:hidden;
-}
+
+body{margin:0;font-family:sans-serif;background:var(--bg-color);color:var(--text-color);overflow:hidden;}
+#gameCanvas{background:#111;display:block;margin:0 auto;border:2px solid #222;border-radius:8px;}
 .topbar{
-  background:var(--blue);
-  height:50px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  font-size:22px;
-  position:relative;
+  height:50px;background:#0b74de;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;position:relative;
 }
-.home-link{
-  position:absolute;
-  left:12px;
-  color:white;
-  text-decoration:none;
-  font-size:22px;
-}
-canvas{
-  display:block;
-  background:#0a0a1a;
-  margin:0 auto;
-  border:2px solid #222;
-  border-radius:12px;
-}
-#fullscreenBtn{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  background:rgba(255,255,255,0.2);
-  color:white;
-  border:none;
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-}
-#scoreBoard{
-  position:absolute;
-  top:60px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:20px;
-}
-.levels{
-  position:absolute;
-  top:60px;
-  right:12px;
-}
-.levels button{
-  background:var(--blue);
-  color:white;
-  border:none;
-  margin-left:4px;
-  padding:4px 8px;
-  border-radius:6px;
-  cursor:pointer;
-}
+.topbar button{position:absolute;right:10px;padding:6px 12px;background:#fff;color:#0b74de;border:none;border-radius:5px;cursor:pointer;}
+.controls{display:flex;justify-content:center;margin:10px;gap:10px;}
+.controls button{padding:8px 16px;background:var(--btn-bg);color:var(--btn-color);border:none;border-radius:5px;font-weight:bold;cursor:pointer;}
+.touch-controls{display:none;position:absolute;bottom:20px;width:100%;display:flex;justify-content:space-around;}
+.touch-btn{width:60px;height:60px;background:#0b74de;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;user-select:none;}
+.score-display{text-align:center;font-size:18px;margin:5px;}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <a class="home-link" href="index.html">← Home</a>
-  Rocket Jumper
-  <button id="fullscreenBtn">⛶</button>
-</div>
-
-<div id="scoreBoard">Score: 0 | Highscore: 0</div>
-<div class="levels">
-  <button data-level="easy">Easy</button>
-  <button data-level="medium">Medium</button>
-  <button data-level="hard">Hard</button>
-</div>
-
+<div class="topbar">Rocket Jumper <button id="fullscreenBtn">Fullscreen</button></div>
+<div class="score-display">Score: <span id="score">0</span> | Highscore: <span id="highScore">0</span></div>
 <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-<audio id="jumpSound" src="jump.mp3"></audio>
-<audio id="hitSound" src="hit.mp3"></audio>
-<audio id="coinSound" src="coin.mp3"></audio>
+<div class="controls">
+  <button id="startBtn">Start</button>
+  <button id="pauseBtn" disabled>Pause</button>
+</div>
+
+<div class="touch-controls">
+  <div class="touch-btn" id="leftBtn">◀</div>
+  <div class="touch-btn" id="jumpBtn">▲</div>
+  <div class="touch-btn" id="rightBtn">▶</div>
+</div>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const scoreBoard = document.getElementById('scoreBoard');
-const jumpSound = document.getElementById('jumpSound');
-const hitSound = document.getElementById('hitSound');
-const coinSound = document.getElementById('coinSound');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const scoreEl = document.getElementById('score');
+const highScoreEl = document.getElementById('highScore');
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+const jumpBtn = document.getElementById('jumpBtn');
+const touchControls = document.querySelector('.touch-controls');
 
-let rocket = {x:200, y:500, width:40, height:40, dy:0};
-let gravity = 0.6;
-let obstacles = [];
-let coins = [];
 let score = 0;
-let highscore = localStorage.getItem('rocketHighScore')||0;
-let gameRunning = false;
-let obstacleSpeed = 3;
-let spawnRate = 120;
-let frames = 0;
+let highScore = localStorage.getItem('rocketHighScore')||0;
+highScoreEl.textContent = highScore;
 
-scoreBoard.textContent = `Score: 0 | Highscore: ${highscore}`;
+let rocket = {x:200,y:500,width:30,height:50,dx:0,dy:0};
+let gravity = 0.5;
+let jumpPower = -10;
+let left=false,right=false,jumping=false;
+let platforms = [];
+let gameRunning=false;
+let gamePaused=false;
+let gameLoop;
 
-function startGame(){
-  rocket.y = 500; rocket.dy=0;
-  obstacles = []; coins=[];
-  score=0; frames=0; gameRunning=true;
-  animate();
+// generate initial platforms
+function generatePlatforms(){
+  platforms=[];
+  for(let i=0;i<6;i++){
+    let width=Math.random()*80+60;
+    let x=Math.random()*(canvas.width-width);
+    let y=canvas.height- i*100;
+    platforms.push({x,y,width,height:15});
+  }
 }
 
-function spawnObstacle(){
-  const width = 40 + Math.random()*30;
-  const height = 20 + Math.random()*30;
-  const x = Math.random()*(canvas.width - width);
-  obstacles.push({x,y,width,height});
+// draw rocket
+function drawRocket(){
+  ctx.fillStyle='cyan';
+  ctx.beginPath();
+  ctx.moveTo(rocket.x,rocket.y);
+  ctx.lineTo(rocket.x+rocket.width/2,rocket.y-rocket.height);
+  ctx.lineTo(rocket.x+rocket.width,rocket.y);
+  ctx.closePath();
+  ctx.fill();
 }
 
-function spawnCoin(){
-  const size = 15;
-  const x = Math.random()*(canvas.width - size);
-  const y = -size;
-  coins.push({x,y,size});
+// draw platforms
+function drawPlatforms(){
+  ctx.fillStyle='magenta';
+  platforms.forEach(p=>{
+    ctx.fillRect(p.x,p.y,p.width,p.height);
+  });
 }
 
-function animate(){
-  if(!gameRunning) return;
+function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   
-  // rocket
-  rocket.dy += gravity;
-  rocket.y += rocket.dy;
-  if(rocket.y + rocket.height > canvas.height) rocket.y = canvas.height - rocket.height;
-  if(rocket.y <0) rocket.y=0;
-  ctx.fillStyle='cyan';
-  ctx.fillRect(rocket.x, rocket.y, rocket.width, rocket.height);
-
-  // obstacles
-  if(frames%spawnRate===0) spawnObstacle();
-  obstacles.forEach((ob,i)=>{
-    ob.y += obstacleSpeed;
-    ctx.fillStyle='red';
-    ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
-    // collision
-    if(rocket.x<ob.x+ob.width && rocket.x+rocket.width>ob.x &&
-       rocket.y<ob.y+ob.height && rocket.y+rocket.height>ob.y){
-      hitSound.play();
-      endGame();
-    }
-    if(ob.y>canvas.height) obstacles.splice(i,1);
-  });
-
-  // coins
-  if(frames%180===0) spawnCoin();
-  coins.forEach((c,i)=>{
-    c.y += obstacleSpeed;
-    ctx.fillStyle='yellow';
-    ctx.beginPath();
-    ctx.arc(c.x+c.size/2, c.y+c.size/2, c.size/2,0,Math.PI*2);
-    ctx.fill();
-    // collision
-    if(rocket.x<c.x+c.size && rocket.x+rocket.width>c.x &&
-       rocket.y<c.y+c.size && rocket.y+rocket.height>c.y){
+  // move rocket
+  if(left) rocket.dx=-5;
+  else if(right) rocket.dx=5;
+  else rocket.dx=0;
+  
+  rocket.dy+=gravity;
+  rocket.x+=rocket.dx;
+  rocket.y+=rocket.dy;
+  
+  // collision with platforms
+  platforms.forEach(p=>{
+    if(rocket.dy>0 && rocket.x+rocket.width>p.x && rocket.x< p.x+p.width && rocket.y>=p.y-rocket.height && rocket.y<=p.y){
+      rocket.dy=jumpPower;
       score++;
-      coinSound.play();
-      coins.splice(i,1);
+      scoreEl.textContent=score;
+      if(score>highScore){
+        highScore=score;
+        highScoreEl.textContent=highScore;
+        localStorage.setItem('rocketHighScore',highScore);
+      }
     }
-    if(c.y>canvas.height) coins.splice(i,1);
   });
-
-  frames++;
-  scoreBoard.textContent = `Score: ${score} | Highscore: ${highscore}`;
-  requestAnimationFrame(animate);
-}
-
-function jump(){
-  rocket.dy=-10;
-  jumpSound.play();
-}
-
-function endGame(){
-  gameRunning=false;
-  if(score>highscore){
-    highscore=score;
-    localStorage.setItem('rocketHighScore',highscore);
+  
+  // if rocket falls below canvas
+  if(rocket.y>canvas.height){
+    gameOver();
+    return;
   }
-  alert('Game Over! Score: '+score);
+  
+  drawPlatforms();
+  drawRocket();
 }
 
-// Keyboard
+function gameOver(){
+  gameRunning=false;
+  clearInterval(gameLoop);
+  ctx.fillStyle='rgba(0,0,0,0.7)';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='white';
+  ctx.font='bold 30px Arial';
+  ctx.textAlign='center';
+  ctx.fillText('Game Over!',canvas.width/2,canvas.height/2-20);
+  ctx.font='20px Arial';
+  ctx.fillText('Score: '+score,canvas.width/2,canvas.height/2+20);
+  startBtn.textContent='Restart';
+  startBtn.disabled=false;
+  pauseBtn.disabled=true;
+}
+
+function startGame(){
+  rocket={x:200,y:500,width:30,height:50,dx:0,dy:0};
+  score=0;
+  scoreEl.textContent=score;
+  gameRunning=true;
+  gamePaused=false;
+  generatePlatforms();
+  startBtn.disabled=true;
+  pauseBtn.disabled=false;
+  pauseBtn.textContent='Pause';
+  clearInterval(gameLoop);
+  gameLoop=setInterval(draw,30);
+}
+
+function togglePause(){
+  gamePaused=!gamePaused;
+  pauseBtn.textContent=gamePaused?'Resume':'Pause';
+  if(gamePaused) clearInterval(gameLoop);
+  else gameLoop=setInterval(draw,30);
+}
+
 document.addEventListener('keydown',e=>{
-  if(e.code==='Space'||e.code==='ArrowUp') jump();
+  if(!gameRunning) return;
+  if(e.key==='ArrowLeft') left=true;
+  if(e.key==='ArrowRight') right=true;
+  if(e.key==='ArrowUp') rocket.dy=jumpPower;
+});
+document.addEventListener('keyup',e=>{
+  if(e.key==='ArrowLeft') left=false;
+  if(e.key==='ArrowRight') right=false;
 });
 
-// Touch
-let touchStartY=0;
-canvas.addEventListener('touchstart', e=>{
-  touchStartY=e.touches[0].clientY;
-  jump();
-});
+leftBtn.addEventListener('touchstart',()=>left=true);
+leftBtn.addEventListener('touchend',()=>left=false);
+rightBtn.addEventListener('touchstart',()=>right=true);
+rightBtn.addEventListener('touchend',()=>right=false);
+jumpBtn.addEventListener('touchstart',()=>rocket.dy=jumpPower);
 
-// Levels
-document.querySelectorAll('.levels button').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const lvl = btn.dataset.level;
-    if(lvl==='easy'){obstacleSpeed=3; spawnRate=120;}
-    if(lvl==='medium'){obstacleSpeed=5; spawnRate=100;}
-    if(lvl==='hard'){obstacleSpeed=7; spawnRate=80;}
-    startGame();
-  });
-});
+startBtn.addEventListener('click',startGame);
+pauseBtn.addEventListener('click',togglePause);
 
-// Fullscreen
-const fullscreenBtn=document.getElementById('fullscreenBtn');
-let isFullscreen=false;
+// fullscreen
+let fullscreen=false;
 fullscreenBtn.addEventListener('click',()=>{
-  if(!isFullscreen){
+  if(!fullscreen){
     canvas.requestFullscreen();
-    isFullscreen=true;
+    fullscreen=true;
+    touchControls.style.display='flex';
   }else{
     document.exitFullscreen();
-    isFullscreen=false;
+    fullscreen=false;
+    touchControls.style.display='none';
   }
 });
 </script>
-
 </body>
-  </html>
+</html>
