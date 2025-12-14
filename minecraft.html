@@ -1,178 +1,531 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Minecraft 3D Sterne Spiel</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Minecraft Mini — ArcadeOwl</title>
 <style>
-  body { margin:0; overflow:hidden; }
-  #score { position:absolute; top:10px; left:10px; font-size:24px; color:white; text-shadow:1px 1px 2px black; }
+  :root{
+    --bg:#eef6fb;
+    --panel:#ffffff;
+    --accent:#0b74de;
+    --muted:#666;
+    --card-radius:12px;
+  }
+  html,body{height:100%;margin:0;font-family:system-ui,Arial;background:var(--bg);color:#111}
+  .topbar{
+    background:var(--accent); color:#fff; height:56px; display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .home{ position:absolute; left:12px; color:#fff; text-decoration:none; font-weight:700 }
+  .wrap{max-width:1200px;margin:18px auto;padding:12px; display:flex; gap:12px; align-items:flex-start}
+  .panel{background:var(--panel); border-radius:var(--card-radius); padding:12px; box-shadow:0 8px 24px rgba(2,6,23,0.06)}
+  .left{width:300px; flex-shrink:0}
+  .canvas-wrap{flex:1; display:flex; flex-direction:column; gap:8px; align-items:center}
+  #isoCanvas{background:linear-gradient(180deg,#bfe9ff,#a9dcff); border-radius:8px; display:block; box-shadow:0 8px 30px rgba(2,6,23,0.08)}
+  .palette{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+  .block-btn{padding:8px;border-radius:8px;border:2px solid transparent;cursor:pointer;font-weight:700; display:flex;align-items:center;gap:8px}
+  .block-swatch{width:28px;height:20px;border-radius:4px;border:1px solid rgba(0,0,0,0.12)}
+  .block-btn.selected{outline:3px solid rgba(11,116,222,0.16); transform:translateY(-2px)}
+  .controls{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .controls button{padding:10px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:800;cursor:pointer}
+  .muted{color:var(--muted);font-size:13px}
+  .row{display:flex;gap:8px}
+  .small{font-size:13px;color:var(--muted);margin-top:6px}
+  .mode-toggle{display:flex;gap:8px}
+  .mode-toggle button{flex:1;padding:8px;border-radius:8px;border:1px solid #eee;background:#fafafa;cursor:pointer}
+  .mode-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  textarea{width:100%;height:80px;border-radius:8px;border:1px solid #ddd;padding:8px;font-family:monospace}
+  label{font-size:13px;color:var(--muted);display:block;margin-top:8px}
+  .hint{font-size:13px;color:#444;margin-top:6px}
+  @media (max-width:900px){
+    .wrap{flex-direction:column;padding:8px}
+    .left{width:100%}
+  }
 </style>
 </head>
 <body>
-<div id="score">Score: 0</div>
-<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/examples/js/controls/PointerLockControls.js"></script>
+
+<header class="topbar">
+  <a class="home" href="index.html">← Home</a>
+  ArcadeOwl — Minecraft Mini (Isometric)
+</header>
+
+<div class="wrap">
+
+  <aside class="panel left">
+    <h3 style="margin:4px 0 8px 0">Palette</h3>
+    <div class="palette" id="palette"></div>
+
+    <div class="controls">
+      <div class="row">
+        <button id="placeModeBtn" class="block-btn" style="flex:1">Place</button>
+        <button id="removeModeBtn" class="block-btn" style="flex:1">Remove</button>
+      </div>
+
+      <div class="row">
+        <button id="undoBtn">Undo</button>
+        <button id="clearBtn" style="background:#f44336">Clear</button>
+      </div>
+
+      <label>Save / Load</label>
+      <div class="row">
+        <button id="saveBtn">Save</button>
+        <button id="loadBtn">Load</button>
+      </div>
+
+      <label>Export / Import JSON</label>
+      <div style="display:flex;gap:8px">
+        <button id="exportBtn">Export</button>
+        <button id="importBtn">Import</button>
+      </div>
+      <textarea id="importArea" placeholder='Paste JSON here to import' style="margin-top:8px"></textarea>
+
+      <div class="small">Controls: click/tap to place or remove (choose mode). Drag canvas to pan. Mouse wheel or +/- keys to zoom. Arrow keys also pan.</div>
+      <div class="hint">Tip: on mobile toggle to "Place" and tap to add block</div>
+    </div>
+  </aside>
+
+  <section class="panel canvas-wrap" style="padding:12px">
+    <div style="display:flex; width:100%; justify-content:space-between; align-items:center">
+      <div><strong id="info">Mode: Place</strong> <span class="muted" id="coord"></span></div>
+      <div class="muted">World: 30 × 30</div>
+    </div>
+
+    <canvas id="isoCanvas" width="900" height="640"></canvas>
+  </section>
+</div>
 
 <script>
-// --- Szene & Kamera ---
-let scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB); // Himmelblau
+/* Minecraft-like isometric builder (simple, client-only)
+   Features:
+   - isometric projection (top diamond tiles),
+   - place/remove blocks stacked per cell,
+   - pan, zoom, mobile touch controls,
+   - palette with block types,
+   - save/load to localStorage, export/import JSON,
+   - undo stack
+*/
 
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+/* ---------- Config ---------- */
+const GRID_W = 30, GRID_H = 30;
+const MAX_HEIGHT = 12;
+const TILE_W = 64;    // diamond width
+const TILE_H = 32;    // diamond height (half of TILE_W)
+const STACK_H = 18;   // vertical pixel per block
+const paletteDefs = [
+  {id:'dirt', name:'Dirt', color:'#8b5a2b'},
+  {id:'grass', name:'Grass', color:'#54a24b'},
+  {id:'stone', name:'Stone', color:'#8a8f97'},
+  {id:'wood', name:'Wood', color:'#b0703c'},
+  {id:'water', name:'Water', color:'#4fc3f7'},
+  {id:'glass', name:'Glass', color:'rgba(200,250,255,0.9)'}
+];
 
-let renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-// Licht
-let light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(0,10,10);
-scene.add(light);
-
-// --- Boden & Plattformen ---
-let blocks = [];
-function createBlock(x,y,z,color){
-  let geom = new THREE.BoxGeometry(2,2,2);
-  let mat = new THREE.MeshPhongMaterial({color:color});
-  let block = new THREE.Mesh(geom, mat);
-  block.position.set(x,y,z);
-  scene.add(block);
-  blocks.push(block);
-}
-
-// Boden (Gras)
-for(let i=-10;i<=10;i++){
-  for(let j=-10;j<=10;j++){
-    createBlock(i*2,-1, j*2, 0x00ff00);
+/* ---------- State ---------- */
+let world = []; // 2D array of heights and types: {height: n, stack: [type,...]}
+for(let x=0;x<GRID_W;x++){
+  world[x] = [];
+  for(let y=0;y<GRID_H;y++){
+    world[x][y] = {stack: []}; // stack[0] -> bottom block
   }
 }
 
-// Plattformen
-createBlock(4,1,0,0x8B4513);
-createBlock(6,3,0,0x8B4513);
-createBlock(8,5,0,0x8B4513);
-createBlock(10,7,0,0x8B4513);
+let selectedBlock = paletteDefs[0].id;
+let mode = 'place'; // 'place' or 'remove'
+let undoStack = [];
 
-// --- Spieler ---
-let player = new THREE.Mesh(
-  new THREE.BoxGeometry(1,2,1),
-  new THREE.MeshPhongMaterial({color:0x0000ff})
-);
-player.position.set(0,1,5);
-scene.add(player);
+/* ---------- Canvas / Camera ---------- */
+const canvas = document.getElementById('isoCanvas');
+const ctx = canvas.getContext('2d');
 
-// Kamera hinter Spieler
-camera.position.set(player.position.x, player.position.y + 3, player.position.z + 5);
-camera.lookAt(player.position);
+let cam = {
+  x: canvas.width/2, // center screen coordinates mapping to grid center
+  y: 120,
+  zoom: 1.0
+};
 
-// --- Sterne ---
-let stars = [];
-function createStar(x,y,z){
-  let star = new THREE.Mesh(
-    new THREE.SphereGeometry(0.5,16,16),
-    new THREE.MeshPhongMaterial({color:0xffff00})
-  );
-  star.position.set(x,y,z);
-  scene.add(star);
-  stars.push(star);
+function resizeCanvasTo(containerW, containerH){
+  // not full responsive for demo; canvas sized in HTML
 }
 
-// Sterne auf Plattformen
-createStar(4,3,0);
-createStar(6,5,0);
-createStar(8,7,0);
-createStar(10,9,0);
-
-// --- Fallen (Löcher) ---
-let holes = [];
-function createHole(x,z){
-  let hole = new THREE.Mesh(
-    new THREE.BoxGeometry(2,0.1,2),
-    new THREE.MeshPhongMaterial({color:0x000000})
-  );
-  hole.position.set(x,0.05,z);
-  scene.add(hole);
-  holes.push(hole);
+/* ---------- Helpers: iso <-> screen ---------- */
+function gridToScreen(ix, iy, iz=0){
+  // calculate iso x,y in screen coords relative to center
+  // screenX = (ix - iy) * TILE_W/2
+  // screenY = (ix + iy) * TILE_H/2 - iz * STACK_H
+  const sx = (ix - iy) * (TILE_W/2) * cam.zoom + cam.x;
+  const sy = (ix + iy) * (TILE_H/2) * cam.zoom + cam.y - iz * STACK_H * cam.zoom;
+  return {x: sx, y: sy};
 }
-createHole(2,2);
-createHole(-2,4);
 
-// --- Steuerung ---
-let moveForward=false, moveBackward=false, moveLeft=false, moveRight=false;
-let velocityY=0;
-let onGround=false;
+function screenToGrid(sx, sy){
+  // invert projection approximately
+  // convert screen to camera-relative
+  const rx = (sx - cam.x) / cam.zoom;
+  const ry = (sy - cam.y) / cam.zoom;
+  // solve:
+  // rx = (ix - iy)*(T/2)
+  // ry = (ix + iy)*(H/2) - iz * STACK_H
+  // ignore iz for selection base; find ix,iy floats
+  const ix = (rx / (TILE_W/2) + ry / (TILE_H/2)) / 2;
+  const iy = (ry / (TILE_H/2) - rx / (TILE_W/2)) / 2;
+  return {ix: Math.floor(ix), iy: Math.floor(iy)};
+}
 
-document.addEventListener('keydown', e=>{
-  if(e.code==='KeyW') moveForward=true;
-  if(e.code==='KeyS') moveBackward=true;
-  if(e.code==='KeyA') moveLeft=true;
-  if(e.code==='KeyD') moveRight=true;
-  if(e.code==='Space' && onGround){ velocityY=0.2; onGround=false; }
-});
-document.addEventListener('keyup', e=>{
-  if(e.code==='KeyW') moveForward=false;
-  if(e.code==='KeyS') moveBackward=false;
-  if(e.code==='KeyA') moveLeft=false;
-  if(e.code==='KeyD') moveRight=false;
-});
-
-// PointerLockControls für Maus
-let controls = new THREE.PointerLockControls(camera, document.body);
-document.body.addEventListener('click', ()=>{ controls.lock(); });
-
-// Score
-let score=0;
-
-// --- Animation ---
-function animate(){
-  requestAnimationFrame(animate);
-
-  // Bewegung
-  let speed = 0.1;
-  if(moveForward) player.position.z -= speed;
-  if(moveBackward) player.position.z += speed;
-  if(moveLeft) player.position.x -= speed;
-  if(moveRight) player.position.x += speed;
-
-  // Gravitation
-  velocityY -= 0.01;
-  player.position.y += velocityY;
-
-  // Boden-Kollision
-  if(player.position.y < 1){
-    player.position.y = 1;
-    velocityY = 0;
-    onGround = true;
+/* ---------- Rendering ---------- */
+function drawScene(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // background grid (subtle)
+  drawGridBase();
+  // determine drawing order: sum = ix + iy, draw increasing so back to front
+  const cells = [];
+  for(let x=0;x<GRID_W;x++){
+    for(let y=0;y<GRID_H;y++){
+      cells.push({x,y,sum:x+y});
+    }
   }
-
-  // Kamera folgt Spieler
-  camera.position.set(player.position.x, player.position.y + 3, player.position.z + 5);
-  camera.lookAt(player.position);
-
-  // Sterne einsammeln
-  stars.forEach((star,i)=>{
-    if(player.position.distanceTo(star.position)<1){
-      scene.remove(star);
-      stars.splice(i,1);
-      score++;
-      document.getElementById('score').innerText="Score: "+score;
-    }
-  });
-
-  // Fallen check
-  holes.forEach(h=>{
-    if(Math.abs(player.position.x - h.position.x)<1 && Math.abs(player.position.z - h.position.z)<1){
-      player.position.set(0,1,5);
-      velocityY=0;
-      score=0;
-      document.getElementById('score').innerText="Score: "+score;
-    }
-  });
-
-  renderer.render(scene,camera);
+  cells.sort((a,b)=>a.sum - b.sum || a.x - b.x);
+  for(const c of cells){
+    drawCell(c.x, c.y);
+  }
+  // highlight hover tile
+  if(hoverTile) drawHover(hoverTile.x, hoverTile.y);
 }
 
-animate();
+/* subtle ground */
+function drawGridBase(){
+  // a big soft shadow ground
+  ctx.save();
+  ctx.fillStyle = '#dff3ff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.restore();
+}
+
+function drawCell(ix, iy){
+  const cell = world[ix][iy];
+  const base = gridToScreen(ix, iy, 0);
+  // draw stack from bottom to top
+  for(let z=0; z<cell.stack.length; z++){
+    drawBlock(ix, iy, z, cell.stack[z]);
+  }
+  // draw a faint diamond outline for empty cells (top)
+  if(cell.stack.length === 0){
+    drawIsoTile(ix, iy, '#ffffff', '#d0eaf6', 0.12);
+  }
+}
+
+function drawIsoTile(ix, iy, fill, shade, alpha=1.0){
+  const p = gridToScreen(ix, iy, 0);
+  const centerX = p.x;
+  const centerY = p.y;
+  const w = (TILE_W * cam.zoom);
+  const h = (TILE_H * cam.zoom);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY - h/2);
+  ctx.lineTo(centerX + w/2, centerY);
+  ctx.lineTo(centerX, centerY + h/2);
+  ctx.lineTo(centerX - w/2, centerY);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  // outline
+  ctx.strokeStyle = shade;
+  ctx.lineWidth = Math.max(1, 1 * cam.zoom);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawBlock(ix, iy, z, typeId){
+  const top = gridToScreen(ix, iy, z);
+  const topX = top.x;
+  const topY = top.y;
+  // top tile color
+  const def = paletteDefs.find(p=>p.id===typeId) || paletteDefs[0];
+  const topColor = def.color;
+  // sides shading
+  const leftShade = shadeColor(topColor, -18);
+  const rightShade = shadeColor(topColor, -30);
+  const w = TILE_W * cam.zoom;
+  const h = TILE_H * cam.zoom;
+  const sideH = STACK_H * cam.zoom;
+
+  ctx.save();
+  // draw right face
+  ctx.beginPath();
+  ctx.moveTo(topX, topY - h/2);
+  ctx.lineTo(topX + w/2, topY);
+  ctx.lineTo(topX + w/2, topY + sideH);
+  ctx.lineTo(topX, topY + sideH - h/2);
+  ctx.closePath();
+  ctx.fillStyle = rightShade;
+  ctx.fill();
+
+  // draw left face
+  ctx.beginPath();
+  ctx.moveTo(topX - w/2, topY);
+  ctx.lineTo(topX, topY - h/2);
+  ctx.lineTo(topX, topY + sideH - h/2);
+  ctx.lineTo(topX - w/2, topY + sideH);
+  ctx.closePath();
+  ctx.fillStyle = leftShade;
+  ctx.fill();
+
+  // draw top
+  ctx.beginPath();
+  ctx.moveTo(topX, topY - h/2);
+  ctx.lineTo(topX + w/2, topY);
+  ctx.lineTo(topX, topY + h/2);
+  ctx.lineTo(topX - w/2, topY);
+  ctx.closePath();
+  ctx.fillStyle = topColor;
+  ctx.fill();
+
+  // outline
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = Math.max(1, 1 * cam.zoom);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/* simple color shading */
+function shadeColor(col, percent){
+  // col is hex or rgba; handle basic hex
+  try{
+    if(col.startsWith('#')){
+      const num = parseInt(col.slice(1),16);
+      let r=(num>>16)+Math.round((percent/100)*255);
+      let g=((num>>8)&0x00FF)+Math.round((percent/100)*255);
+      let b=(num&0x0000FF)+Math.round((percent/100)*255);
+      r=Math.max(0,Math.min(255,r));
+      g=Math.max(0,Math.min(255,g));
+      b=Math.max(0,Math.min(255,b));
+      return `rgb(${r},${g},${b})`;
+    } else {
+      return col;
+    }
+  }catch(e){ return col; }
+}
+
+/* hover highlight */
+let hoverTile = null;
+function drawHover(ix, iy){
+  if(ix<0||iy<0||ix>=GRID_W||iy>=GRID_H) return;
+  const top = gridToScreen(ix, iy, world[ix][iy].stack.length);
+  const w = TILE_W * cam.zoom;
+  const h = TILE_H * cam.zoom;
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  ctx.moveTo(top.x, top.y - h/2);
+  ctx.lineTo(top.x + w/2, top.y);
+  ctx.lineTo(top.x, top.y + h/2);
+  ctx.lineTo(top.x - w/2, top.y);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(11,116,222,0.28)';
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- Input & Interaction ---------- */
+let isDragging = false;
+let lastPointer = null;
+
+canvas.addEventListener('pointerdown', (e)=>{
+  canvas.setPointerCapture(e.pointerId);
+  lastPointer = {x:e.clientX, y:e.clientY};
+  if(e.button===0){ // left click / primary
+    // place or remove based on mode
+    handlePlaceRemove(e.clientX, e.clientY, true);
+  } else if(e.button===2){
+    // right click -> remove
+    handlePlaceRemove(e.clientX, e.clientY, false);
+  }
+  isDragging = true;
+});
+canvas.addEventListener('pointermove', (e)=>{
+  const dx = e.clientX - (lastPointer ? lastPointer.x : e.clientX);
+  const dy = e.clientY - (lastPointer ? lastPointer.y : e.clientY);
+  lastPointer = {x:e.clientX, y:e.clientY};
+  if(isDragging && e.pressure>0.1 && (Math.abs(dx)+Math.abs(dy) > 2)){
+    // drag camera
+    cam.x += dx;
+    cam.y += dy;
+    drawScene();
+  } else {
+    // update hover tile
+    const rect = canvas.getBoundingClientRect();
+    const gx = screenToGrid(e.clientX - rect.left, e.clientY - rect.top);
+    hoverTile = {x: gx.ix, y: gx.iy};
+    document.getElementById('coord').textContent = (hoverTile.x>=0?` x:${hoverTile.x}`:'') + (hoverTile.y>=0?` y:${hoverTile.y}`:'');
+    drawScene();
+  }
+});
+canvas.addEventListener('pointerup', (e)=>{
+  canvas.releasePointerCapture(e.pointerId);
+  isDragging = false;
+  lastPointer = null;
+});
+canvas.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const oldZoom = cam.zoom;
+  cam.zoom = clamp(cam.zoom - Math.sign(e.deltaY)*0.05, 0.5, 1.8);
+  // zoom around cursor: adjust cam.x/cam.y so the point under cursor stays under cursor
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const dx = (mx - cam.x) * (cam.zoom/oldZoom - 1);
+  const dy = (my - cam.y) * (cam.zoom/oldZoom - 1);
+  cam.x -= dx; cam.y -= dy;
+  drawScene();
+}, {passive:false});
+
+// keyboard
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='+'||e.key==='='){ cam.zoom = clamp(cam.zoom + 0.08, 0.5, 1.8); drawScene(); }
+  if(e.key==='-'){ cam.zoom = clamp(cam.zoom - 0.08, 0.5, 1.8); drawScene(); }
+  if(e.key==='ArrowLeft'){ cam.x += 40; drawScene(); }
+  if(e.key==='ArrowRight'){ cam.x -= 40; drawScene(); }
+  if(e.key==='ArrowUp'){ cam.y += 30; drawScene(); }
+  if(e.key==='ArrowDown'){ cam.y -= 30; drawScene(); }
+  if(e.key==='u' || (e.ctrlKey && e.key==='z')) undo();
+});
+
+// touch: simple pan and tap handlers (tap = place)
+let touchStart = null;
+canvas.addEventListener('touchstart', (ev)=>{
+  if(ev.touches.length===1){
+    touchStart = {x:ev.touches[0].clientX, y:ev.touches[0].clientY, time:Date.now()};
+  }
+});
+canvas.addEventListener('touchend', (ev)=>{
+  if(!touchStart) return;
+  const dt = Date.now() - touchStart.time;
+  // if short tap -> place/remove
+  if(dt < 300){
+    const rect = canvas.getBoundingClientRect();
+    handlePlaceRemove(touchStart.x - rect.left, touchStart.y - rect.top, true);
+  }
+  touchStart = null;
+});
+
+/* handle UI buttons */
+const paletteEl = document.getElementById('palette');
+function buildPalette(){
+  paletteEl.innerHTML = '';
+  paletteDefs.forEach(p=>{
+    const btn = document.createElement('button');
+    btn.className = 'block-btn';
+    btn.innerHTML = `<span class="block-swatch" style="background:${p.color}"></span> ${p.name}`;
+    btn.onclick = ()=>{ selectedBlock = p.id; updateSelection(); };
+    btn.dataset.id = p.id;
+    paletteEl.appendChild(btn);
+  });
+  updateSelection();
+}
+function updateSelection(){
+  Array.from(paletteEl.children).forEach(b=>{
+    b.classList.toggle('selected', b.dataset.id === selectedBlock);
+  });
+}
+document.getElementById('placeModeBtn').addEventListener('click', ()=>{ mode='place'; document.getElementById('info').textContent='Mode: Place'; });
+document.getElementById('removeModeBtn').addEventListener('click', ()=>{ mode='remove'; document.getElementById('info').textContent='Mode: Remove'; });
+document.getElementById('clearBtn').addEventListener('click', clearWorld);
+document.getElementById('undoBtn').addEventListener('click', undo);
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  localStorage.setItem('isoWorld', JSON.stringify(world));
+  alert('Saved to localStorage.');
+});
+document.getElementById('loadBtn').addEventListener('click', ()=>{
+  const data = localStorage.getItem('isoWorld');
+  if(!data){ alert('No saved world.'); return; }
+  try{
+    const parsed = JSON.parse(data);
+    world = parsed;
+    drawScene();
+    alert('Loaded.');
+  }catch(e){ alert('Load failed'); }
+});
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const json = JSON.stringify(world);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'iso-world.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importBtn').addEventListener('click', ()=>{
+  const v = document.getElementById('importArea').value.trim();
+  if(!v) return alert('Paste JSON into the textarea first.');
+  try{
+    const parsed = JSON.parse(v);
+    world = parsed;
+    drawScene();
+    alert('Imported.');
+  }catch(e){ alert('Invalid JSON'); }
+});
+
+/* ---------- Place / Remove logic ---------- */
+function handlePlaceRemove(clientX, clientY, primary=true){
+  const rect = canvas.getBoundingClientRect();
+  const sx = clientX - rect.left, sy = clientY - rect.top;
+  const g = screenToGrid(sx, sy);
+  const ix = g.ix, iy = g.iy;
+  if(ix<0||iy<0||ix>=GRID_W||iy>=GRID_H) return;
+  if(mode==='place'){
+    placeBlock(ix, iy, selectedBlock);
+  } else {
+    removeBlock(ix, iy);
+  }
+  drawScene();
+}
+
+function placeBlock(ix, iy, type){
+  const cell = world[ix][iy];
+  if(cell.stack.length >= MAX_HEIGHT) return;
+  cell.stack.push(type);
+  undoStack.push({op:'place', x:ix, y:iy});
+}
+function removeBlock(ix, iy){
+  const cell = world[ix][iy];
+  if(cell.stack.length === 0) return;
+  const removed = cell.stack.pop();
+  undoStack.push({op:'remove', x:ix, y:iy, type:removed});
+}
+function undo(){
+  const op = undoStack.pop();
+  if(!op) return;
+  const cell = world[op.x][op.y];
+  if(op.op==='place'){
+    // last was place -> remove top
+    if(cell.stack.length) cell.stack.pop();
+  } else if(op.op==='remove'){
+    cell.stack.push(op.type);
+  }
+  drawScene();
+}
+
+/* clear */
+function clearWorld(){
+  if(!confirm('Clear entire world?')) return;
+  for(let x=0;x<GRID_W;x++) for(let y=0;y<GRID_H;y++) world[x][y].stack = [];
+  undoStack = [];
+  drawScene();
+}
+
+/* ---------- Initialization ---------- */
+buildPalette();
+drawScene();
+
+/* center camera on map center */
+cam.x = canvas.width/2;
+cam.y = 120;
+
+/* ---------- Utility ---------- */
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 </script>
+
 </body>
-</html>
+  </html>
