@@ -30,12 +30,33 @@ html,body{
   font-size:22px;
 }
 
+/* WAVE TITLE */
+.wave-title span {
+  display: inline-block;
+  font-weight: 900;
+  font-size: 28px;
+  animation: wave 1s infinite;
+}
+.wave-title span:nth-child(1) { animation-delay: 0s; }
+.wave-title span:nth-child(2) { animation-delay: 0.1s; }
+.wave-title span:nth-child(3) { animation-delay: 0.2s; }
+.wave-title span:nth-child(4) { animation-delay: 0.3s; }
+.wave-title span:nth-child(5) { animation-delay: 0.4s; }
+.wave-title span:nth-child(6) { animation-delay: 0.5s; }
+.wave-title span:nth-child(7) { animation-delay: 0.6s; }
+.wave-title span:nth-child(8) { animation-delay: 0.7s; }
+.wave-title span:nth-child(9) { animation-delay: 0.8s; }
+
+@keyframes wave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 /* CONTAINER */
 .wrap{
   max-width:var(--max-width);
   margin:20px auto;
   padding:12px;
-  padding-bottom:120px; /* ✅ Abstand zum Feedback-Button */
 }
 
 /* GAME LIST */
@@ -94,7 +115,12 @@ html,body{
 
 <body>
 
-<header class="topbar">ArcadeOwl</header>
+<header class="topbar">
+  <span class="wave-title">
+    <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
+    <span>O</span><span>w</span><span>l</span>
+  </span>
+</header>
 
 <main class="wrap">
 
@@ -166,27 +192,18 @@ html,body{
 
 <li>
   <div>
-    <a class="game-title" href="rocket-jumper.html">Rocket Jumper</a>
-    <div class="game-desc">Reach the skies, avoid the spikes!</div>
-  </div>
-  <a class="play-btn" href="rocket-jumper.html">Play</a>
-</li>
-  
-<li>
-  <div>
-    <a class="game-title" href="minecraft.html">Minecraft Mini</a>
-    <div class="game-desc">Build and explore your block world!</div>
-  </div>
-  <a class="play-btn" href="minecraft.html">Play</a>
-</li>
-
-<!-- ✅ NEW: Snake Game -->
-<li>
-  <div>
     <a class="game-title" href="snake-game.html">Snake Game</a>
-    <div class="game-desc">Classic snake — eat and grow.</div>
+    <div class="game-desc">Eat apples and grow.</div>
   </div>
   <a class="play-btn" href="snake-game.html">Play</a>
+</li>
+
+<li>
+  <div>
+    <a class="game-title" href="minecraft.html">Minecraft</a>
+    <div class="game-desc">Creative block building adventure.</div>
+  </div>
+  <a class="play-btn" href="minecraft.html">Play</a>
 </li>
 
 </ul>
@@ -198,4 +215,4 @@ href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr
 target="_blank">💬</a>
 
 </body>
-</html>
+  </html>
