@@ -215,7 +215,7 @@
     const pauseBtn = document.getElementById('pauseBtn');
 
     const gridSize = 20;
-    const tileCount = canvas.width / gridSize;
+    let tileCount = Math.floor(canvas.width / gridSize);
 
     let snake = [{x: 10, y: 10}];
     let dx = 0;
@@ -259,13 +259,9 @@
     }
 
     function drawSnake() {
-      ctx.fillStyle = '#00ff00';
       snake.forEach((segment, index) => {
-        if (index === 0) {
-          ctx.fillStyle = '#00cc00';
-        } else {
-          ctx.fillStyle = '#00ff00';
-        }
+        if (index === 0) ctx.fillStyle = '#00cc00';
+        else ctx.fillStyle = '#00ff00';
         ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
       });
     }
@@ -297,15 +293,18 @@
     }
 
     function generateFood() {
-      foodX = Math.floor(Math.random() * tileCount);
-      foodY = Math.floor(Math.random() * tileCount);
-
-      for (let segment of snake) {
-        if (segment.x === foodX && segment.y === foodY) {
-          generateFood();
-          return;
+      // ensure food inside current tileCount and not on snake
+      function place() {
+        foodX = Math.floor(Math.random() * tileCount);
+        foodY = Math.floor(Math.random() * tileCount);
+        for (let segment of snake) {
+          if (segment.x === foodX && segment.y === foodY) {
+            return false;
+          }
         }
+        return true;
       }
+      while (!place()) {}
     }
 
     function gameOver() {
@@ -363,30 +362,66 @@
       }
     }
 
+    // Fullscreen handling using Fullscreen API and resizing grid properly
     let isFullscreen = false;
     const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-    function toggleFullscreen() {
-      if (!isFullscreen) {
-        canvas.classList.add('fullscreen-active');
-        fullscreenBtn.textContent = '✕ Exit Fullscreen';
-        isFullscreen = true;
-        
-        const size = Math.min(window.innerWidth, window.innerHeight);
-        canvas.width = size;
-        canvas.height = size;
-      } else {
+    function setCanvasSize(pxWidth, pxHeight) {
+      // ensure width/height are multiples of gridSize so tileCount is integer
+      const adjW = Math.max(gridSize * 10, Math.floor(pxWidth / gridSize) * gridSize);
+      const adjH = Math.max(gridSize * 10, Math.floor(pxHeight / gridSize) * gridSize);
+      canvas.width = adjW;
+      canvas.height = adjH;
+      canvas.style.width = adjW + 'px';
+      canvas.style.height = adjH + 'px';
+      tileCount = Math.floor(canvas.width / gridSize);
+    }
+
+    function enterFullscreenMode() {
+      // request fullscreen on the canvas element
+      if (canvas.requestFullscreen) canvas.requestFullscreen();
+      else if (canvas.webkitRequestFullscreen) canvas.webkitRequestFullscreen();
+      // set canvas to fill viewport (multiples of gridSize)
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setCanvasSize(w, h);
+      canvas.classList.add('fullscreen-active');
+      fullscreenBtn.textContent = '✕ Exit Fullscreen';
+      isFullscreen = true;
+      // regenerate food within new bounds
+      generateFood();
+    }
+
+    function exitFullscreenMode() {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      // restore original size
+      setCanvasSize(400, 400);
+      canvas.classList.remove('fullscreen-active');
+      fullscreenBtn.textContent = '⛶ Fullscreen';
+      isFullscreen = false;
+      generateFood();
+    }
+
+    fullscreenBtn.addEventListener('click', () => {
+      if (!isFullscreen) enterFullscreenMode();
+      else exitFullscreenMode();
+    });
+
+    // Also listen to fullscreenchange in case user uses ESC or browser UI
+    document.addEventListener('fullscreenchange', () => {
+      const fsElement = document.fullscreenElement || document.webkitFullscreenElement;
+      if (!fsElement) {
+        // exited fullscreen (maybe via ESC)
+        setCanvasSize(400, 400);
         canvas.classList.remove('fullscreen-active');
         fullscreenBtn.textContent = '⛶ Fullscreen';
         isFullscreen = false;
-        
-        canvas.width = 400;
-        canvas.height = 400;
+        generateFood();
       }
-    }
+    });
 
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
-
+    // controls & touch (unchanged)
     document.addEventListener('keydown', (e) => {
       if (!gameRunning) return;
 
@@ -439,7 +474,10 @@
     startBtn.addEventListener('click', startGame);
     pauseBtn.addEventListener('click', togglePause);
 
+    // ensure canvas size multiples at load
+    setCanvasSize(400, 400);
     clearCanvas();
+
   </script>
 
 </body>
