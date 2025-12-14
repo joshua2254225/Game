@@ -1,168 +1,222 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ArcadeOwl Geometry Dash</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geometry Dash — ArcadeOwl</title>
+
 <style>
-body {
+html,body{
   margin:0;
-  font-family:sans-serif;
-  background:linear-gradient(#b3ecff,#7fcff0);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+  background:#0b0f1a;
+  font-family:system-ui,Arial;
+  overflow:hidden;
 }
-.topbar {
-  width:100%;
-  max-width:980px;
+
+.topbar{
+  height:52px;
   background:#0b74de;
-  color:#fff;
-  padding:12px;
-  text-align:center;
-  font-weight:bold;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
   position:relative;
-  border-radius:10px;
-  margin-top:12px;
 }
-.topbar a {
+.topbar a{
   position:absolute;
   left:12px;
   color:white;
   text-decoration:none;
-  font-weight:bold;
+  font-size:20px;
+  opacity:.7;
 }
-canvas {
-  background:#7fd6ff;
-  margin-top:16px;
-  border-radius:10px;
+
+canvas{
   display:block;
+  margin:0 auto;
+  background:linear-gradient(#0b0f1a,#12172b);
 }
-.stats {
-  display:flex;
-  gap:12px;
-  margin-top:12px;
-  font-weight:bold;
-}
-button {
-  padding:6px 12px;
-  font-weight:bold;
-  margin-left:4px;
-  border-radius:6px;
-  border:none;
-  background:#0b74de;
+
+.hud{
+  position:absolute;
+  top:60px;
+  left:50%;
+  transform:translateX(-50%);
   color:white;
-  cursor:pointer;
+  font-weight:700;
+  text-align:center;
 }
 </style>
 </head>
+
 <body>
-<div class="topbar">
-  <a href="index.html">← Home</a>
+
+<header class="topbar">
+  <a href="index.html">←</a>
   ArcadeOwl Geometry Dash
+</header>
+
+<div class="hud">
+  Score: <span id="score">0</span><br>
+  Best: <span id="best">0</span>
 </div>
 
-<canvas id="gameCanvas" width="860" height="400"></canvas>
-<div class="stats">
-  Score: <span id="score">0</span> |
-  Best: <span id="best">0</span>
-  <button id="restartBtn">Restart</button>
-</div>
+<canvas id="game" width="900" height="400"></canvas>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
+const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-let player = {x:80, y:0, w:36, h:36, vy:0};
-let gravity = 0.6;
-let jumpPower = -12;
+const GRAVITY = 0.9;
+const JUMP_FORCE = -14;
+const SPEED = 6;
+
+let cube = {
+  x:120,
+  y:0,
+  size:30,
+  vy:0,
+  grounded:false
+};
+
+const groundY = canvas.height - 60;
 let obstacles = [];
-let gameSpeed = 5;
 let score = 0;
 let best = localStorage.getItem("gdBest") || 0;
 document.getElementById("best").textContent = best;
-let isJumping = false;
-let isAlive = true;
 
-player.y = canvas.height - player.h - 50;
+let holdingJump = false;
+let running = true;
 
+/* CREATE OBSTACLES */
 function spawnObstacle(){
-  let height = 40 + Math.random()*40;
-  obstacles.push({x:canvas.width, y:canvas.height - height - 50, w:20, h:height});
+  const height = 30 + Math.random()*30;
+  obstacles.push({
+    x:canvas.width + 40,
+    w:30,
+    h:height
+  });
 }
 
-function resetGame(){
-  player.y = canvas.height - player.h - 50;
-  player.vy = 0;
-  obstacles = [];
-  score = 0;
-  isAlive = true;
-}
-
-document.getElementById("restartBtn").onclick = resetGame;
-
+/* INPUT */
 function jump(){
-  if(!isJumping && isAlive){
-    player.vy = jumpPower;
-    isJumping = true;
+  if(cube.grounded){
+    cube.vy = JUMP_FORCE;
+    cube.grounded = false;
   }
 }
+window.addEventListener("keydown",e=>{
+  if(e.code==="Space"){
+    holdingJump=true;
+    jump();
+  }
+});
+window.addEventListener("keyup",e=>{
+  if(e.code==="Space") holdingJump=false;
+});
+canvas.addEventListener("touchstart",()=>{
+  holdingJump=true;
+  jump();
+});
+canvas.addEventListener("touchend",()=>holdingJump=false);
 
-document.addEventListener("keydown", e => { if(e.code=="Space") jump(); });
-canvas.addEventListener("mousedown", jump);
-canvas.addEventListener("touchstart", jump);
+/* GAME LOOP */
+function update(){
+  if(!running) return;
 
-function loop(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // Player physics
-  player.vy += gravity;
-  player.y += player.vy;
+  // ground
+  ctx.fillStyle="#222";
+  ctx.fillRect(0,groundY,canvas.width,60);
 
-  if(player.y + player.h >= canvas.height - 50){
-    player.y = canvas.height - player.h -50;
-    player.vy = 0;
-    isJumping = false;
+  // cube physics
+  if(holdingJump && cube.vy < 0) cube.vy -= 0.3;
+  cube.vy += GRAVITY;
+  cube.y += cube.vy;
+
+  if(cube.y + cube.size >= groundY){
+    cube.y = groundY - cube.size;
+    cube.vy = 0;
+    cube.grounded = true;
   }
 
-  ctx.fillStyle = "#ffcc00";
-  ctx.fillRect(player.x, player.y, player.w, player.h);
+  // draw cube
+  ctx.fillStyle="#00f0ff";
+  ctx.shadowColor="#00f0ff";
+  ctx.shadowBlur=15;
+  ctx.fillRect(cube.x,cube.y,cube.size,cube.size);
+  ctx.shadowBlur=0;
 
-  // Obstacles
-  if(Math.random() < 0.02) spawnObstacle();
-  ctx.fillStyle = "#ff4d4d";
-  for(let i=obstacles.length-1;i>=0;i--){
-    obstacles[i].x -= gameSpeed;
-    ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].w, obstacles[i].h);
-    // Collision
-    if(player.x < obstacles[i].x + obstacles[i].w &&
-       player.x + player.w > obstacles[i].x &&
-       player.y < obstacles[i].y + obstacles[i].h &&
-       player.y + player.h > obstacles[i].y){
-      isAlive = false;
+  // obstacles
+  ctx.fillStyle="#ff004c";
+  obstacles.forEach(o=>{
+    o.x -= SPEED;
+    ctx.fillRect(o.x,groundY-o.h,o.w,o.h);
+
+    // collision
+    if(
+      cube.x < o.x+o.w &&
+      cube.x+cube.size > o.x &&
+      cube.y+cube.size > groundY-o.h
+    ){
+      gameOver();
     }
-    if(obstacles[i].x + obstacles[i].w <0) obstacles.splice(i,1);
+  });
+
+  obstacles = obstacles.filter(o=>o.x>-60);
+
+  // score
+  score++;
+  document.getElementById("score").textContent = score;
+
+  // spawn timing
+  if(score % 90 === 0){
+    spawnObstacle();
   }
 
-  if(isAlive) score += 0.1;
-  ctx.fillStyle = "#000";
-  document.getElementById("score").textContent = Math.floor(score);
-
-  if(!isAlive){
-    if(score>best){
-      best = Math.floor(score);
-      localStorage.setItem("gdBest", best);
-      document.getElementById("best").textContent = best;
-    }
-    ctx.fillStyle="#000";
-    ctx.font="40px sans-serif";
-    ctx.fillText("Game Over!", canvas.width/2 - 100, canvas.height/2);
-  }
-
-  requestAnimationFrame(loop);
+  requestAnimationFrame(update);
 }
 
-loop();
+function gameOver(){
+  running=false;
+  if(score > best){
+    best = score;
+    localStorage.setItem("gdBest",best);
+  }
+
+  ctx.fillStyle="rgba(0,0,0,0.6)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle="white";
+  ctx.font="bold 36px Arial";
+  ctx.textAlign="center";
+  ctx.fillText("Game Over",canvas.width/2,canvas.height/2-20);
+  ctx.font="20px Arial";
+  ctx.fillText("Tap or Press Space to Restart",canvas.width/2,canvas.height/2+20);
+
+  document.getElementById("best").textContent = best;
+
+  function restart(){
+    obstacles=[];
+    score=0;
+    cube.y=0;
+    cube.vy=0;
+    running=true;
+    update();
+    window.removeEventListener("keydown",restartKey);
+    canvas.removeEventListener("touchstart",restartTouch);
+  }
+  function restartKey(e){ if(e.code==="Space") restart(); }
+  function restartTouch(){ restart(); }
+
+  window.addEventListener("keydown",restartKey);
+  canvas.addEventListener("touchstart",restartTouch);
+}
+
+update();
 </script>
+
 </body>
 </html>
