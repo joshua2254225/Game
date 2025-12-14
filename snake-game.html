@@ -45,11 +45,11 @@ body{margin:0;font-family:system-ui;background:#f5f7fb}
 }
 canvas{
   background:#000;
-  border-radius:10px;
+  border-radius:12px;
   touch-action:none;
 }
 
-/* IN-GAME FULLSCREEN BUTTON */
+/* IN-GAME FULLSCREEN */
 .canvas-fs-btn{
   position:absolute;
   right:10px;
@@ -63,7 +63,7 @@ canvas{
   font-size:18px;
 }
 
-/* FULLSCREEN OVERLAY CONTROLS */
+/* FULLSCREEN CONTROLS */
 .fs-controls{
   position:fixed;
   bottom:20px;
@@ -81,6 +81,27 @@ canvas{
   border-radius:10px;
   font-weight:700;
 }
+
+/* TOUCH ARROWS */
+.touch-controls{
+  display:grid;
+  grid-template-columns:60px 60px 60px;
+  grid-template-rows:60px 60px;
+  gap:10px;
+  justify-content:center;
+  margin-top:16px;
+}
+.touch-controls button{
+  font-size:22px;
+  border:none;
+  border-radius:10px;
+  background:#eee;
+  font-weight:700;
+}
+.touch-controls .up{grid-column:2}
+.touch-controls .left{grid-row:2}
+.touch-controls .down{grid-column:2;grid-row:2}
+.touch-controls .right{grid-column:3;grid-row:2}
 
 /* UI */
 h1{text-align:center}
@@ -117,22 +138,37 @@ canvas:fullscreen{
   <button onclick="startGame()">Start</button>
   <button onclick="togglePause()">Pause</button>
 </div>
+
+<!-- TOUCH ARROWS -->
+<div class="touch-controls">
+  <div></div><button class="up">⬆️</button><div></div>
+  <button class="left">⬅️</button>
+  <button class="down">⬇️</button>
+  <button class="right">➡️</button>
+</div>
+
 </div>
 
 </main>
 
-<!-- FULLSCREEN CONTROLS -->
+<!-- FULLSCREEN BUTTONS -->
 <div class="fs-controls" id="fsControls">
   <button onclick="startGame()">▶ Start</button>
   <button onclick="togglePause()">⏸ Pause</button>
   <button onclick="exitFS()">❌ Exit</button>
 </div>
 
+<!-- SOUNDS -->
+<audio id="eatSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+<audio id="gameOverSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
 <script>
 const c=document.getElementById("game");
 const ctx=c.getContext("2d");
 const scoreEl=document.getElementById("score");
 const fsControls=document.getElementById("fsControls");
+const eatSound=document.getElementById("eatSound");
+const gameOverSound=document.getElementById("gameOverSound");
 
 const size=20;
 let snake,dx,dy,food,score,loop,paused=false;
@@ -146,19 +182,21 @@ function startGame(){
   food=randomFood();
   scoreEl.textContent=score;
   clearInterval(loop);
-  loop=setInterval(update,140);
+  loop=setInterval(update,130);
 }
 function update(){
   if(paused) return;
   const h={x:snake[0].x+dx,y:snake[0].y+dy};
   if(h.x<0||h.y<0||h.x>=20||h.y>=20||hit(h)){
     clearInterval(loop);
+    gameOverSound.play();
     alert("Game Over");
     return;
   }
   snake.unshift(h);
   if(h.x===food.x&&h.y===food.y){
     score++;scoreEl.textContent=score;
+    eatSound.play();
     food=randomFood();
   }else snake.pop();
   draw();
@@ -168,45 +206,39 @@ function draw(){
   ctx.fillRect(0,0,c.width,c.height);
   ctx.fillStyle="red";
   ctx.fillRect(food.x*size,food.y*size,size-2,size-2);
+
   snake.forEach((s,i)=>{
-    ctx.fillStyle=i?"#00ff00":"#00cc00";
+    ctx.shadowBlur=15;
+    ctx.shadowColor="#00ff88";
+    ctx.fillStyle=i?"#00ff88":"#00ffaa";
     ctx.fillRect(s.x*size,s.y*size,size-2,size-2);
   });
+  ctx.shadowBlur=0;
 }
 function hit(h){return snake.some(s=>s.x===h.x&&s.y===h.y)}
 function randomFood(){return{x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)}}
 function togglePause(){paused=!paused}
 
+/* CONTROLS */
+function setDir(x,y){
+  if(dx===-x&&dy===-y) return;
+  dx=x;dy=y;
+}
+document.querySelector(".up").onclick=()=>setDir(0,-1);
+document.querySelector(".down").onclick=()=>setDir(0,1);
+document.querySelector(".left").onclick=()=>setDir(-1,0);
+document.querySelector(".right").onclick=()=>setDir(1,0);
+
 /* KEYBOARD */
 document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-1}
-  if(e.key==="ArrowDown"&&dy===0){dx=0;dy=1}
-  if(e.key==="ArrowLeft"&&dx===0){dx=-1;dy=0}
-  if(e.key==="ArrowRight"&&dx===0){dx=1;dy=0}
-});
-
-/* TOUCH (FIXED) */
-let sx=0,sy=0;
-c.addEventListener("touchstart",e=>{
-  sx=e.touches[0].clientX;
-  sy=e.touches[0].clientY;
-});
-c.addEventListener("touchend",e=>{
-  const dxT=e.changedTouches[0].clientX-sx;
-  const dyT=e.changedTouches[0].clientY-sy;
-  if(Math.abs(dxT)>Math.abs(dyT)){
-    if(dxT>30&&dx===0){dx=1;dy=0}
-    if(dxT<-30&&dx===0){dx=-1;dy=0}
-  }else{
-    if(dyT>30&&dy===0){dx=0;dy=1}
-    if(dyT<-30&&dy===0){dx=0;dy=-1}
-  }
+  if(e.key==="ArrowUp")setDir(0,-1);
+  if(e.key==="ArrowDown")setDir(0,1);
+  if(e.key==="ArrowLeft")setDir(-1,0);
+  if(e.key==="ArrowRight")setDir(1,0);
 });
 
 /* FULLSCREEN */
-document.getElementById("fsBtn").onclick=()=>{
-  c.requestFullscreen();
-};
+document.getElementById("fsBtn").onclick=()=>c.requestFullscreen();
 document.addEventListener("fullscreenchange",()=>{
   fsControls.style.display=document.fullscreenElement?"flex":"none";
 });
