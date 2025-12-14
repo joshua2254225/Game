@@ -1,476 +1,195 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Geometry Dash — ArcadeOwl (Ship Unlock)</title>
+<title>Geometry Dash – ArcadeOwl</title>
+
 <style>
-  html,body{margin:0;height:100%;background:#071027;font-family:system-ui,Arial;overflow:hidden;color:#fff}
-  .topbar{height:52px;background:#0b74de;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;position:relative}
-  .topbar a{position:absolute;left:12px;color:#fff;text-decoration:none;font-size:18px;opacity:.8}
-  canvas{display:block;margin:0 auto;background:linear-gradient(#071027,#071033);border:0}
-  .hud{position:absolute;top:64px;left:50%;transform:translateX(-50%);text-align:center;font-weight:700}
-  .mode-badge{display:inline-block;margin-top:6px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.06);font-size:13px}
-  /* small mobile hint */
-  .hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:13px;color:rgba(255,255,255,0.7)}
+html,body{
+  margin:0;
+  background:#000;
+  overflow:hidden;
+  font-family:system-ui,Arial;
+}
+canvas{
+  display:block;
+  margin:auto;
+  background:linear-gradient(#0a0a14,#000);
+}
+#ui{
+  position:fixed;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  color:#fff;
+  font-weight:700;
+  text-align:center;
+}
+#ui span{margin:0 12px}
 </style>
 </head>
+
 <body>
 
-<header class="topbar">
-  <a href="index.html">←</a>
-  ArcadeOwl Geometry Dash
-</header>
-
-<div class="hud">
-  Score: <span id="score">0</span>  — Best: <span id="best">0</span>
-  <div class="mode-badge" id="modeBadge">Mode: Cube</div>
+<div id="ui">
+  <span>Score: <b id="score">0</b></span>
+  <span>Best: <b id="best">0</b></span>
 </div>
 
-<canvas id="gameCanvas" width="900" height="420" aria-label="Geometry Dash canvas"></canvas>
-<div class="hint">Controls: Tap / Space. Hold for higher jump or ship thrust.</div>
+<canvas id="game"></canvas>
 
 <script>
-/*
- Geometry Dash improved:
- - At score >= 1800 switch to Ship Mode (continuous thrust)
- - Colors / effects change on switch
- - Touch + keyboard controls
- - Fair obstacles, score + best stored
-*/
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-const scoreEl = document.getElementById('score');
-const bestEl = document.getElementById('best');
-const modeBadge = document.getElementById('modeBadge');
-
-let DPR = Math.max(1, window.devicePixelRatio || 1);
-function resize() {
-  const rect = canvas.getBoundingClientRect();
-  // keep the CSS size but ensure backing store matches DPR
-  canvas.width = Math.round(canvas.clientWidth * DPR);
-  canvas.height = Math.round(canvas.clientHeight * DPR);
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-}
-function fitCanvasToWindow(){
-  // keep aspect but fit width 900 -> responsive
-  const maxW = Math.min(window.innerWidth - 20, 900);
-  const ratio = 900 / 420;
-  canvas.style.width = maxW + 'px';
-  canvas.style.height = Math.round(maxW / ratio) + 'px';
-  resize();
-}
-window.addEventListener('resize', fitCanvasToWindow);
-fitCanvasToWindow();
-
-/* Game constants */
-const GROUND_H = 60; // px
-const GRAVITY = 0.9;
-const JUMP_IMPULSE = -14;
-const BASE_SPEED = 6;
-const SHIP_THRUST = -0.5; // continuous upward acceleration when holding in ship mode
-const SCORE_SHIP_THRESHOLD = 1800;
-
-/* Game state */
-let best = Number(localStorage.getItem('gdBest') || 0);
-bestEl.textContent = best;
-
-let mode = 'cube'; // 'cube' or 'ship'
 let score = 0;
-let running = true;
+let best = localStorage.getItem("gdBest") || 0;
+document.getElementById("best").textContent = best;
+
+const GRAVITY = 1.05;
+const JUMP = -11;
 let holding = false;
+let gameOver = false;
+let mode = "cube";
 
-let speed = BASE_SPEED;
-
-/* Player */
 const player = {
   x: 120,
-  y: 0,
-  size: 30,
-  vy: 0,
-  grounded: false,
-  color: '#00f0ff',
-  ship: {
-    size: 28,
-    vy: 0
-  }
+  y: canvas.height-140,
+  size: 34,
+  vy: 0
 };
 
-/* Obstacles */
+let groundY = canvas.height - 80;
 let obstacles = [];
-let spawnTimer = 0;
-let spawnInterval = 90; // frames
+let frame = 0;
+let spawnInterval = 120;
 
-/* Particles for effects */
-let particles = [];
+function spawnObstacle(){
+  obstacles.push({
+    x: canvas.width + 60,
+    w: 40,
+    h: 60
+  });
+}
 
-/* Background gradient state (changes on ship) */
-let bgColors = {top: '#071027', bottom: '#0b1230'};
-let effectColors = {player: '#00f0ff', obstacle: '#ff004c', glow: '#00f0ff'};
+function reset(){
+  score = 0;
+  mode = "cube";
+  obstacles = [];
+  player.y = groundY - player.size;
+  player.vy = 0;
+  gameOver = false;
+}
 
-/* Helpers */
-function rand(min,max){return Math.random()*(max-min)+min;}
-function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function update(){
+  if(gameOver) return;
 
-/* Spawn obstacles (guarantee playable) */
-function spawnObstacle() {
-  // Choose between spike obstacle and double-segment to create small gap patterns
-  const type = Math.random() < 0.72 ? 'spike' : 'blockpair';
-  if (type === 'spike') {
-    const h = Math.floor(rand(28, 48));
-    obstacles.push({x: canvasWidth()+40, w: 28, h: h, type:'spike'});
-  } else {
-    // two blocks with gap
-    const h = Math.floor(rand(28, 44));
-    const gap = Math.floor(rand(80, 140)); // safe gap for player
-    const w = Math.floor(rand(22, 32));
-    const xStart = canvasWidth()+40;
-    obstacles.push({x: xStart, w: w, h: h, type:'spike'});
-    obstacles.push({x: xStart + w + gap, w: w, h: h, type:'spike'});
+  frame++;
+  score++;
+  document.getElementById("score").textContent = score;
+
+  if(score > 1800) mode = "ship";
+
+  // spawn
+  if(frame % Math.max(80, spawnInterval - Math.floor(score/1200)) === 0){
+    spawnObstacle();
+  }
+
+  // physics
+  if(mode === "cube"){
+    player.vy += GRAVITY;
+    if(holding && player.vy < 0) player.vy -= 0.12;
+  }else{
+    if(holding) player.vy -= 0.6;
+    else player.vy += 0.6;
+  }
+
+  player.y += player.vy;
+
+  // ground
+  if(player.y + player.size > groundY){
+    player.y = groundY - player.size;
+    player.vy = 0;
+  }
+
+  // obstacles
+  obstacles.forEach(o=>o.x -= 6);
+  obstacles = obstacles.filter(o=>o.x+o.w>0);
+
+  // collision
+  for(let o of obstacles){
+    if(player.x < o.x+o.w &&
+       player.x+player.size > o.x &&
+       player.y+player.size > groundY-o.h){
+      endGame();
+    }
   }
 }
 
-/* canvas logical sizes (in CSS pixels coordinates) */
-function canvasWidth(){ return canvas.clientWidth; }
-function canvasHeight(){ return canvas.clientHeight; }
-
-/* Input */
-window.addEventListener('keydown', (e)=>{
-  if (e.code === 'Space' || e.code === 'ArrowUp') {
-    holding = true;
-    if(mode === 'cube') cubeJump();
+function endGame(){
+  gameOver = true;
+  if(score > best){
+    best = score;
+    localStorage.setItem("gdBest",best);
+    document.getElementById("best").textContent = best;
   }
-});
-window.addEventListener('keyup', (e)=>{ if(e.code === 'Space' || e.code === 'ArrowUp') holding = false; });
-
-canvas.addEventListener('touchstart', (e)=>{
-  e.preventDefault();
-  holding = true;
-  if(mode === 'cube') cubeJump();
-}, {passive:false});
-canvas.addEventListener('touchend', (e)=>{ e.preventDefault(); holding = false; }, {passive:false});
-
-/* Cube jump: only when grounded */
-function cubeJump(){
-  if (player.grounded) {
-    player.vy = JUMP_IMPULSE;
-    player.grounded = false;
-    // small particle
-    spawnParticles(player.x + player.size/2, player.y + player.size, 6, effectColors.glow);
-  }
+  setTimeout(reset,1200);
 }
 
-/* Game loop */
-let lastTime = performance.now();
-function loop(now){
-  const dt = now - lastTime;
-  lastTime = now;
-  if (!running) return;
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // background pulse
+  ctx.fillStyle = `hsl(${score/8%360},70%,10%)`;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // ground
+  ctx.fillStyle="#222";
+  ctx.fillRect(0,groundY,canvas.width,80);
+
+  // player
+  ctx.save();
+  ctx.translate(player.x+player.size/2,player.y+player.size/2);
+  ctx.rotate(mode==="cube" ? frame*0.05 : 0);
+  ctx.fillStyle = mode==="cube" ? "#00f6ff" : "#ff00cc";
+  ctx.shadowColor = ctx.fillStyle;
+  ctx.shadowBlur = 20;
+  ctx.fillRect(-player.size/2,-player.size/2,player.size,player.size);
+  ctx.restore();
+
+  // obstacles
+  ctx.fillStyle="#ff0033";
+  obstacles.forEach(o=>{
+    ctx.fillRect(o.x,groundY-o.h,o.w,o.h);
+  });
+}
+
+function loop(){
   update();
   draw();
   requestAnimationFrame(loop);
 }
+loop();
 
-/* Update logic */
-function update(){
-  // physics
-  const gY = canvasHeight() - GROUND_H;
-
-  if (mode === 'cube') {
-    // gravity
-    if (holding && player.vy < 0) {
-      // hold increases jump height slightly
-      player.vy -= 0.28;
-    }
-    player.vy += GRAVITY;
-    player.y += player.vy;
-    if (player.y + player.size >= gY) {
-      player.y = gY - player.size;
-      player.vy = 0;
-      player.grounded = true;
-    } else {
-      player.grounded = false;
-    }
-  } else { // ship
-    // continuous thrust when holding
-    if (holding) {
-      player.vy += SHIP_THRUST;
-    } else {
-      player.vy += GRAVITY * 0.12; // light downward pull
-    }
-    // clamp vertical speed
-    player.vy = clamp(player.vy, -12, 14);
-    player.y += player.vy;
-    // clamp inside screen
-    player.y = clamp(player.y, 20, canvasHeight() - GROUND_H - player.size);
-  }
-
-  // obstacles move
-  for (let o of obstacles) {
-    o.x -= speed;
-  }
-  // cull
-  obstacles = obstacles.filter(o => o.x + o.w > -100);
-
-  // spawn timer
-  spawnTimer++;
-  // accelerate spawn slightly over time for challenge
-  const dynamicInterval = Math.max(48, spawnInterval - Math.floor(score / 600));
-  if (spawnTimer >= dynamicInterval) {
-    spawnTimer = 0;
-    spawnObstacle();
-  }
-
-  // collisions
-  for (let o of obstacles) {
-    // obstacle top Y
-    const oy = canvasHeight() - GROUND_H - o.h;
-    // simple AABB
-    if (player.x < o.x + o.w &&
-        player.x + player.size > o.x &&
-        player.y + player.size > oy) {
-      // collision
-      doGameOver();
-      return;
-    }
-  }
-
-  // particles update
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += p.g;
-    p.life -= 1;
-    p.alpha -= 0.018;
-    if (p.life <= 0 || p.alpha <= 0) particles.splice(i, 1);
-  }
-
-  // score increments
-  score += Math.round(speed * 0.45);
-  scoreEl.textContent = score;
-
-  // difficulty bump: increase speed slowly
-  speed = BASE_SPEED + Math.floor(score / 1600) * 1.2; // speed increases after higher scores
-
-  // Switch to ship mode when threshold reached (only once)
-  if (mode === 'cube' && score >= SCORE_SHIP_THRESHOLD) {
-    switchToShipMode();
-  }
-}
-
-/* Particles */
-function spawnParticles(x, y, amount, color) {
-  for (let i = 0; i < amount; i++) {
-    particles.push({
-      x: x + rand(-8,8),
-      y: y + rand(-8,8),
-      vx: rand(-2,2),
-      vy: rand(-6,-1),
-      g: 0.12,
-      life: 40 + Math.random()*40,
-      alpha: 1,
-      color: color || effectColors.glow
-    });
-  }
-}
-
-/* Draw function */
-function draw(){
-  const w = canvasWidth();
-  const h = canvasHeight();
-
-  // background gradient that changes with mode
-  const grad = ctx.createLinearGradient(0,0,0,h);
-  if (mode === 'cube') {
-    grad.addColorStop(0, '#071027');
-    grad.addColorStop(1, '#0b1230');
-  } else {
-    // ship neon sky
-    grad.addColorStop(0, '#00121b');
-    grad.addColorStop(0.5, '#071a2a');
-    grad.addColorStop(1, '#081126');
-  }
-  ctx.fillStyle = grad;
-  ctx.fillRect(0,0,w,h);
-
-  // parallax stars / lines
-  drawParallaxBackground();
-
-  // ground
-  ctx.fillStyle = (mode==='cube')? '#111' : '#041220';
-  ctx.fillRect(0, h - GROUND_H, w, GROUND_H);
-
-  // obstacles
-  for (let o of obstacles) {
-    const oy = h - GROUND_H - o.h;
-    // color changes in ship mode
-    ctx.fillStyle = (mode==='cube')? effectColors.obstacle : '#7b2cff';
-    ctx.shadowColor = (mode==='cube')? effectColors.obstacle : '#7b2cff';
-    ctx.shadowBlur = (mode==='ship')? 18 : 6;
-    ctx.fillRect(o.x, oy, o.w, o.h);
-    ctx.shadowBlur = 0;
-  }
-
-  // player draw: cube or ship
-  if (mode === 'cube') {
-    // cube with neon glow
-    ctx.fillStyle = effectColors.player;
-    ctx.shadowColor = effectColors.glow;
-    ctx.shadowBlur = 18;
-    ctx.fillRect(player.x, player.y, player.size, player.size);
-    ctx.shadowBlur = 0;
-  } else {
-    // ship sprite: triangle + flame particles
-    const cx = player.x + player.size/2;
-    const cy = player.y + player.size/2;
-    ctx.save();
-    ctx.translate(cx, cy);
-    // ship body
-    ctx.fillStyle = '#00ffd5';
-    ctx.beginPath();
-    ctx.moveTo(-12, 10);
-    ctx.lineTo(0, -14);
-    ctx.lineTo(12, 10);
-    ctx.closePath();
-    ctx.fill();
-    // window
-    ctx.fillStyle = '#02384f';
-    ctx.beginPath();
-    ctx.arc(0, -4, 4, 0, Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-    // spawn small flame particles behind ship when holding
-    if (holding) {
-      spawnParticles(player.x - 4, player.y + player.size/2 + 6, 2, '#ff9f4c');
-    }
-  }
-
-  // particles
-  for (let p of particles) {
-    ctx.globalAlpha = p.alpha;
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, 3, 3);
-    ctx.globalAlpha = 1;
-  }
-
-  // HUD updated through DOM (score already updated)
-}
-
-/* Parallax background */
-let parallaxOffset = 0;
-function drawParallaxBackground(){
-  parallaxOffset += speed * 0.02;
-  const w = canvasWidth(), h = canvasHeight();
-  // draw thin moving lines to give motion
-  ctx.save();
-  ctx.globalAlpha = (mode==='cube')? 0.06 : 0.12;
-  const lineColor = (mode==='cube')? '#4fb7ff' : '#a66bff';
-  ctx.strokeStyle = lineColor;
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 10; i++){
-    const y = (i * 70 + (parallaxOffset % 70));
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(w, y - 30);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-/* Game over */
-function doGameOver(){
-  running = false;
-  // update best
-  if (score > best) {
-    best = score;
-    localStorage.setItem('gdBest', best);
-    bestEl.textContent = best;
-  }
-  // overlay
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 40px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('Game Over', canvasWidth()/2, canvasHeight()/2 - 20);
-  ctx.font = '20px Arial';
-  ctx.fillText('Press Space or Tap to Restart', canvasWidth()/2, canvasHeight()/2 + 18);
-
-  // restart handlers
-  function onRestartKey(e){ if (e.code === 'Space') restartGame(); }
-  function onRestartTouch(){ restartGame(); }
-  window.addEventListener('keydown', onRestartKey);
-  canvas.addEventListener('touchstart', onRestartTouch, {passive:false});
-
-  function restartGame(){
-    // cleanup
-    window.removeEventListener('keydown', onRestartKey);
-    canvas.removeEventListener('touchstart', onRestartTouch);
-    // reset
-    obstacles = [];
-    particles = [];
-    score = 0;
-    speed = BASE_SPEED;
-    player.vy = 0;
-    player.y = canvasHeight() - GROUND_H - player.size;
-    mode = 'cube';
-    // reset colors
-    bgColors = {top:'#071027', bottom:'#0b1230'};
-    effectColors = {player:'#00f0ff', obstacle:'#ff004c', glow:'#00f0ff'};
-    modeBadge.textContent = 'Mode: Cube';
-    running = true;
-    spawnTimer = 0;
-    requestAnimationFrame(loop);
-  }
-}
-
-/* Switch to Ship Mode */
-let switched = false;
-function switchToShipMode(){
-  switched = true;
-  mode = 'ship';
-  modeBadge.textContent = 'Mode: Ship (Unlocked!)';
-  // change colors & effects
-  effectColors = {player:'#00ffd5', obstacle:'#7b2cff', glow:'#5be6ff'};
-  // increase visual particle flourish
-  for (let i=0;i<60;i++) spawnParticles(rand(80, canvasWidth()-80), rand(60, canvasHeight()-200), 1, '#7b2cff');
-  // tune spawn speed and interval for ship (a bit denser)
-  spawnInterval = Math.max(56, spawnInterval - 12);
-  // slightly reduce gravity influence (ship floats)
-  // speed will be driven by 'speed' variable (already increasing)
-}
-
-/* Start game initialization */
-function init(){
-  // initial player placement
-  player.y = canvasHeight() - GROUND_H - player.size;
-  // set initial obstacles for variety
-  for (let i = 0; i < 3; i++) {
-    obstacles.push({x: canvasWidth() + i * 240 + 200, w: 28, h: 28 + Math.random() * 30, type:'spike'});
-  }
-  // ensure DOM reflects best
-  bestEl.textContent = best;
-  // start loop
-  lastTime = performance.now();
-  requestAnimationFrame(loop);
-}
-
-/* start/pause via tap/space when not playing */
-canvas.addEventListener('click', (e)=>{
-  // clicking while running -> small jump if cube
-  if (!running) return;
-  if (mode === 'cube') cubeJump();
+// input
+addEventListener("keydown",e=>{
+  if(e.code==="Space") holding=true;
 });
-window.addEventListener('blur', ()=>running=false);
-window.addEventListener('focus', ()=>{ if(!running){ running=true; lastTime = performance.now(); requestAnimationFrame(loop); } });
+addEventListener("keyup",e=>{
+  if(e.code==="Space") holding=false;
+});
+canvas.addEventListener("touchstart",()=>holding=true);
+canvas.addEventListener("touchend",()=>holding=false);
 
-/* Start on load */
-player.y = canvasHeight() - GROUND_H - player.size;
-init();
-
+addEventListener("resize",()=>{
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
+  groundY = canvas.height - 80;
+});
 </script>
+
 </body>
-  </html>
+</html>
