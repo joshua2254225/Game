@@ -1,24 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Snake Game - ArcadeOwl</title>
 
 <style>
-:root{
-  --blue:#0b74de;
-  --muted:#666;
-  --card:#ffffff;
-  --max-width:980px;
-}
-html,body{
-  margin:0;
-  font-family:system-ui,Segoe UI,Roboto,Arial;
-  background:#f5f7fb;
-}
+:root{--blue:#0b74de}
+body{margin:0;font-family:system-ui;background:#f5f7fb}
 
-/* TOP BAR */
+/* TOP */
 .topbar{
   background:var(--blue);
   color:#fff;
@@ -34,13 +25,13 @@ html,body{
   color:#fff;
   text-decoration:none;
   font-size:20px;
-  opacity:.6;
+  opacity:.7;
 }
 
-/* LAYOUT */
-.wrap{max-width:var(--max-width);margin:20px auto;padding:12px;}
+/* CARD */
+.wrap{max-width:980px;margin:20px auto;padding:12px}
 .game-card{
-  background:var(--card);
+  background:#fff;
   padding:20px;
   border-radius:12px;
   box-shadow:0 6px 18px rgba(0,0,0,.06);
@@ -51,61 +42,55 @@ html,body{
   position:relative;
   display:flex;
   justify-content:center;
-  margin:16px 0;
 }
 canvas{
   background:#000;
   border-radius:10px;
-  border:2px solid #222;
+  touch-action:none;
 }
 
-/* FULLSCREEN BUTTON INSIDE GAME */
-.canvas-fullscreen-btn{
+/* IN-GAME FULLSCREEN BUTTON */
+.canvas-fs-btn{
   position:absolute;
   right:10px;
   bottom:10px;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  border:none;
   width:36px;
   height:36px;
   border-radius:8px;
-  border:none;
-  background:rgba(0,0,0,.6);
-  color:#fff;
   font-size:18px;
-  cursor:pointer;
 }
-.canvas-fullscreen-btn:hover{
-  background:rgba(0,0,0,.85);
+
+/* FULLSCREEN OVERLAY CONTROLS */
+.fs-controls{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  display:none;
+  gap:10px;
+  z-index:9999;
 }
+.fs-controls button{
+  background:rgba(0,0,0,.65);
+  color:#fff;
+  border:none;
+  padding:12px 18px;
+  border-radius:10px;
+  font-weight:700;
+}
+
+/* UI */
+h1{text-align:center}
+.score{text-align:center;font-size:18px;font-weight:700}
+.controls{text-align:center;margin-top:14px}
+button{cursor:pointer}
 
 canvas:fullscreen{
   width:100vw;
   height:100vh;
-}
-
-/* UI */
-h1{text-align:center;margin:8px 0;}
-.score{text-align:center;font-size:18px;font-weight:700;}
-.controls{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin-top:14px;
-}
-.btn{
-  padding:10px 22px;
-  border:none;
-  border-radius:8px;
-  font-weight:700;
-  cursor:pointer;
-}
-.btn-primary{background:var(--blue);color:#fff;}
-.btn-secondary{background:#eee;}
-
-footer{
-  text-align:center;
-  color:#777;
-  font-size:13px;
-  margin:30px 0;
 }
 </style>
 </head>
@@ -120,98 +105,112 @@ footer{
 <main class="wrap">
 
 <div class="game-card">
-  <h1>🐍 Snake Game</h1>
-  <div class="score">Score: <span id="score">0</span></div>
+<h1>🐍 Snake Game</h1>
+<div class="score">Score: <span id="score">0</span></div>
 
-  <div class="game-canvas-wrapper">
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <button class="canvas-fullscreen-btn" id="fsBtn">⛶</button>
-  </div>
+<div class="game-canvas-wrapper">
+  <canvas id="game" width="400" height="400"></canvas>
+  <button class="canvas-fs-btn" id="fsBtn">⛶</button>
+</div>
 
-  <div class="controls">
-    <button class="btn btn-primary" id="startBtn">Start</button>
-    <button class="btn btn-secondary" id="pauseBtn" disabled>Pause</button>
-  </div>
+<div class="controls">
+  <button onclick="startGame()">Start</button>
+  <button onclick="togglePause()">Pause</button>
+</div>
 </div>
 
 </main>
 
-<footer>© ArcadeOwl</footer>
+<!-- FULLSCREEN CONTROLS -->
+<div class="fs-controls" id="fsControls">
+  <button onclick="startGame()">▶ Start</button>
+  <button onclick="togglePause()">⏸ Pause</button>
+  <button onclick="exitFS()">❌ Exit</button>
+</div>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const scoreEl = document.getElementById("score");
+const c=document.getElementById("game");
+const ctx=c.getContext("2d");
+const scoreEl=document.getElementById("score");
+const fsControls=document.getElementById("fsControls");
 
-const grid = 20;
-let snake, dx, dy, food, score, loop, paused=false;
+const size=20;
+let snake,dx,dy,food,score,loop,paused=false;
 
+/* GAME */
 function startGame(){
   snake=[{x:10,y:10}];
-  dx=1; dy=0;
+  dx=1;dy=0;
   score=0;
   paused=false;
   food=randomFood();
   scoreEl.textContent=score;
   clearInterval(loop);
-  loop=setInterval(update,150);
+  loop=setInterval(update,140);
 }
-
 function update(){
   if(paused) return;
-  const head={x:snake[0].x+dx,y:snake[0].y+dy};
-  if(head.x<0||head.y<0||head.x>=20||head.y>=20||hitSelf(head)){
+  const h={x:snake[0].x+dx,y:snake[0].y+dy};
+  if(h.x<0||h.y<0||h.x>=20||h.y>=20||hit(h)){
     clearInterval(loop);
-    alert("Game Over!");
+    alert("Game Over");
     return;
   }
-  snake.unshift(head);
-  if(head.x===food.x&&head.y===food.y){
-    score++;
-    scoreEl.textContent=score;
+  snake.unshift(h);
+  if(h.x===food.x&&h.y===food.y){
+    score++;scoreEl.textContent=score;
     food=randomFood();
-  }else{
-    snake.pop();
-  }
+  }else snake.pop();
   draw();
 }
-
 function draw(){
   ctx.fillStyle="#000";
-  ctx.fillRect(0,0,400,400);
+  ctx.fillRect(0,0,c.width,c.height);
   ctx.fillStyle="red";
-  ctx.fillRect(food.x*grid,food.y*grid,grid-2,grid-2);
+  ctx.fillRect(food.x*size,food.y*size,size-2,size-2);
   snake.forEach((s,i)=>{
     ctx.fillStyle=i?"#00ff00":"#00cc00";
-    ctx.fillRect(s.x*grid,s.y*grid,grid-2,grid-2);
+    ctx.fillRect(s.x*size,s.y*size,size-2,size-2);
   });
 }
+function hit(h){return snake.some(s=>s.x===h.x&&s.y===h.y)}
+function randomFood(){return{x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)}}
+function togglePause(){paused=!paused}
 
-function hitSelf(h){
-  return snake.some(s=>s.x===h.x&&s.y===h.y);
-}
-function randomFood(){
-  return {x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)};
-}
-
+/* KEYBOARD */
 document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-1;}
-  if(e.key==="ArrowDown"&&dy===0){dx=0;dy=1;}
-  if(e.key==="ArrowLeft"&&dx===0){dx=-1;dy=0;}
-  if(e.key==="ArrowRight"&&dx===0){dx=1;dy=0;}
+  if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-1}
+  if(e.key==="ArrowDown"&&dy===0){dx=0;dy=1}
+  if(e.key==="ArrowLeft"&&dx===0){dx=-1;dy=0}
+  if(e.key==="ArrowRight"&&dx===0){dx=1;dy=0}
 });
 
-document.getElementById("startBtn").onclick=startGame;
-document.getElementById("pauseBtn").onclick=()=>paused=!paused;
+/* TOUCH (FIXED) */
+let sx=0,sy=0;
+c.addEventListener("touchstart",e=>{
+  sx=e.touches[0].clientX;
+  sy=e.touches[0].clientY;
+});
+c.addEventListener("touchend",e=>{
+  const dxT=e.changedTouches[0].clientX-sx;
+  const dyT=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dxT)>Math.abs(dyT)){
+    if(dxT>30&&dx===0){dx=1;dy=0}
+    if(dxT<-30&&dx===0){dx=-1;dy=0}
+  }else{
+    if(dyT>30&&dy===0){dx=0;dy=1}
+    if(dyT<-30&&dy===0){dx=0;dy=-1}
+  }
+});
 
 /* FULLSCREEN */
 document.getElementById("fsBtn").onclick=()=>{
-  if(!document.fullscreenElement){
-    canvas.requestFullscreen();
-  }else{
-    document.exitFullscreen();
-  }
+  c.requestFullscreen();
 };
+document.addEventListener("fullscreenchange",()=>{
+  fsControls.style.display=document.fullscreenElement?"flex":"none";
+});
+function exitFS(){document.exitFullscreen()}
 </script>
 
 </body>
