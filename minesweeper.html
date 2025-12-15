@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minesweeper – ArcadeOwl</title>
+
+<style>
+:root{
+  --blue:#0b74de;
+}
+body{
+  margin:0;
+  font-family:system-ui,Arial;
+  background:#f5f7fb;
+}
+.topbar{
+  background:var(--blue);
+  color:#fff;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  font-weight:800;
+  font-size:20px;
+}
+.home{
+  position:absolute;
+  left:12px;
+  text-decoration:none;
+  color:white;
+  font-size:20px;
+  opacity:.7;
+}
+.wrap{
+  max-width:520px;
+  margin:20px auto;
+  padding:12px;
+}
+.panel{
+  background:white;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+}
+.controls{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+  gap:8px;
+}
+select,button{
+  padding:8px 12px;
+  border-radius:8px;
+  border:none;
+  font-weight:700;
+}
+button{
+  background:var(--blue);
+  color:white;
+}
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+  font-weight:600;
+}
+.board{
+  display:grid;
+  gap:4px;
+  touch-action:manipulation;
+}
+.cell{
+  width:36px;
+  height:36px;
+  background:#d0d7e2;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:18px;
+  cursor:pointer;
+  user-select:none;
+}
+.cell.open{
+  background:#eef1f6;
+  cursor:default;
+}
+.cell.mine{
+  background:#ff4d4d;
+}
+.cell.flag{
+  background:#ffd166;
+}
+.message{
+  text-align:center;
+  font-weight:800;
+  margin-top:12px;
+  font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <a class="home" href="index.html">←</a>
+  ArcadeOwl
+</header>
+
+<main class="wrap">
+<div class="panel">
+
+<div class="controls">
+  <select id="level">
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+  </select>
+  <button onclick="startGame()">New Game</button>
+</div>
+
+<div class="stats">
+  <div>⏱ Time: <span id="time">0</span>s</div>
+  <div>🚩 Flags: <span id="flags">0</span></div>
+</div>
+
+<div id="board" class="board"></div>
+<div id="message" class="message"></div>
+
+</div>
+</main>
+
+<script>
+const boardEl = document.getElementById("board");
+const msgEl = document.getElementById("message");
+const timeEl = document.getElementById("time");
+const flagsEl = document.getElementById("flags");
+
+let rows, cols, mines;
+let board = [];
+let flags = 0;
+let opened = 0;
+let timer = 0;
+let timerInt;
+let gameOver = false;
+
+const levels = {
+  easy:{r:8,c:8,m:10},
+  medium:{r:12,c:12,m:25},
+  hard:{r:16,c:16,m:40}
+};
+
+function startGame(){
+  clearInterval(timerInt);
+  timer=0;
+  timeEl.textContent=0;
+  flags=0;
+  flagsEl.textContent=0;
+  opened=0;
+  gameOver=false;
+  msgEl.textContent="";
+
+  const lvl = levels[level.value];
+  rows=lvl.r; cols=lvl.c; mines=lvl.m;
+
+  board=[];
+  boardEl.style.gridTemplateColumns=`repeat(${cols},36px)`;
+  boardEl.innerHTML="";
+
+  for(let i=0;i<rows*cols;i++){
+    board.push({mine:false,open:false,flag:false,count:0});
+  }
+
+  // place mines
+  let placed=0;
+  while(placed<mines){
+    const i=Math.floor(Math.random()*board.length);
+    if(!board[i].mine){
+      board[i].mine=true;
+      placed++;
+    }
+  }
+
+  // numbers
+  for(let i=0;i<board.length;i++){
+    if(board[i].mine) continue;
+    board[i].count = getNeighbors(i).filter(n=>board[n].mine).length;
+  }
+
+  // draw
+  board.forEach((_,i)=>{
+    const c=document.createElement("div");
+    c.className="cell";
+    c.oncontextmenu=e=>{e.preventDefault();toggleFlag(i);};
+    c.onclick=()=>openCell(i);
+    c.ontouchstart=e=>{
+      holdTimer=setTimeout(()=>toggleFlag(i),500);
+    };
+    c.ontouchend=()=>clearTimeout(holdTimer);
+    boardEl.appendChild(c);
+  });
+
+  timerInt=setInterval(()=>{
+    timer++;
+    timeEl.textContent=timer;
+  },1000);
+}
+
+function getNeighbors(i){
+  const res=[];
+  const x=i%cols,y=Math.floor(i/cols);
+  for(let dx=-1;dx<=1;dx++){
+    for(let dy=-1;dy<=1;dy++){
+      if(dx||dy){
+        const nx=x+dx,ny=y+dy;
+        if(nx>=0&&ny>=0&&nx<cols&&ny<rows){
+          res.push(ny*cols+nx);
+        }
+      }
+    }
+  }
+  return res;
+}
+
+function openCell(i){
+  if(gameOver||board[i].open||board[i].flag) return;
+  const cell=boardEl.children[i];
+  board[i].open=true;
+  cell.classList.add("open");
+  opened++;
+
+  if(board[i].mine){
+    cell.classList.add("mine");
+    cell.textContent="💣";
+    end(false);
+    return;
+  }
+
+  if(board[i].count>0){
+    cell.textContent=board[i].count;
+  }else{
+    getNeighbors(i).forEach(openCell);
+  }
+
+  if(opened===rows*cols-mines){
+    end(true);
+  }
+}
+
+function toggleFlag(i){
+  if(gameOver||board[i].open) return;
+  const cell=boardEl.children[i];
+  board[i].flag=!board[i].flag;
+  cell.textContent=board[i].flag?"🚩":"";
+  cell.classList.toggle("flag");
+  flags+=board[i].flag?1:-1;
+  flagsEl.textContent=flags;
+}
+
+function end(win){
+  gameOver=true;
+  clearInterval(timerInt);
+  msgEl.textContent = win ? "🎉 You Win!" : "💥 Game Over!";
+}
+
+startGame();
+</script>
+
+</body>
+  </html>
