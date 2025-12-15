@@ -1,15 +1,18 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Minesweeper – ArcadeOwl</title>
+
 <style>
-:root{ --blue:#0b74de; --bg:#f5f7fb }
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,Arial;background:var(--bg);color:#111}
+body{
+  margin:0;
+  font-family:system-ui,Arial;
+  background:#f5f7fb;
+}
 .topbar{
-  background:var(--blue);
+  background:#0b74de;
   color:#fff;
   height:56px;
   display:flex;
@@ -17,346 +20,214 @@ body{margin:0;font-family:system-ui,Arial;background:var(--bg);color:#111}
   justify-content:center;
   position:relative;
   font-weight:800;
-  font-size:20px;
 }
-.home{position:absolute;left:12px;text-decoration:none;color:white;font-size:20px;opacity:.8}
-.wrap{max-width:980px;margin:18px auto;padding:12px}
-.panel{background:#fff;border-radius:12px;padding:12px;box-shadow:0 8px 18px rgba(0,0,0,.06)}
-.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-select,button{padding:8px 12px;border-radius:8px;border:0;font-weight:700}
-button{background:var(--blue);color:#fff;cursor:pointer}
-.stats{display:flex;gap:12px;align-items:center;margin-bottom:8px;font-weight:700}
-.info{color:#666;font-size:13px;margin-top:8px}
-#boardWrap{
-  width:100%;
-  max-height:62vh;
-  border-radius:10px;
-  overflow:auto;
-  background:linear-gradient(180deg,#e9f2fb,#ffffff);
-  padding:8px;
-  touch-action:none; /* we'll handle pointer dragging */
+.home{
+  position:absolute;
+  left:12px;
+  color:white;
+  text-decoration:none;
+  font-size:20px;
+  opacity:.7;
+}
+.wrap{
+  max-width:900px;
+  margin:20px auto;
+  padding:10px;
+  text-align:center;
+}
+.controls{
+  margin-bottom:10px;
+}
+select,button{
+  padding:6px 10px;
+  font-size:14px;
+  margin:4px;
+}
+.info{
+  margin:8px;
+  font-weight:600;
 }
 .board{
   display:grid;
-  gap:6px;
-  user-select:none;
-  -webkit-user-select:none;
-  -ms-user-select:none;
+  margin:0 auto;
+  touch-action:manipulation;
 }
 .cell{
+  width:36px;
+  height:36px;
+  border:1px solid #aaa;
+  background:#ddd;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:#d0d7e2;
-  border-radius:6px;
   font-weight:800;
-  font-size:16px;
-  color:#111;
-  width:36px;
-  height:36px;
-  cursor:pointer;
+  user-select:none;
 }
-.cell.open{background:#eef1f6;cursor:default}
-.cell.flag{background:#ffd166}
-.cell.mine{background:#ff6b6b;color:#500}
-.message{margin-top:10px;text-align:center;font-weight:800;font-size:18px}
-@media (max-width:700px){
-  .panel{padding:10px}
-  #boardWrap{max-height:55vh}
+.cell.open{
+  background:#f0f0f0;
+}
+.cell.flag{
+  background:#ffd166;
 }
 </style>
 </head>
+
 <body>
 
 <header class="topbar">
   <a class="home" href="index.html">←</a>
-  ArcadeOwl — Minesweeper
+  Minesweeper
 </header>
 
 <main class="wrap">
-  <div class="panel">
-    <div class="controls">
-      <label for="level">Level:</label>
-      <select id="level">
-        <option value="easy">Easy (8×8, 10 mines)</option>
-        <option value="medium">Medium (12×12, 25 mines)</option>
-        <option value="hard">Hard (16×16, 40 mines)</option>
-      </select>
 
-      <button id="newGameBtn">New Game</button>
-      <button id="resetViewBtn">Center / Reset View</button>
+<div class="controls">
+  <select id="level">
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+  </select>
+  <button onclick="startGame()">New Game</button>
+</div>
 
-      <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
-        <div>⏱ <b id="time">0</b>s</div>
-        <div>🚩 <b id="flags">0</b> left</div>
-      </div>
-    </div>
+<div class="info">
+  💣 Mines: <span id="mines"></span> |
+  🚩 Flags left: <span id="flags"></span>
+</div>
 
-    <div id="boardWrap" tabindex="0" aria-label="Minesweeper board container">
-      <div id="board" class="board" role="grid"></div>
-    </div>
+<div id="board" class="board"></div>
 
-    <div class="info">Tip: Short tap = open. Long-press (≥350ms) or right-click = flag. Drag the board to pan on mobile.</div>
-    <div id="message" class="message"></div>
-  </div>
 </main>
 
 <script>
-/* Minesweeper — Fixed click/flag behavior + limited flags + panning */
-
-/* DOM */
-const levelSelect = document.getElementById('level');
-const newGameBtn = document.getElementById('newGameBtn');
-const resetViewBtn = document.getElementById('resetViewBtn');
-const boardWrap = document.getElementById('boardWrap');
-const boardEl = document.getElementById('board');
-const timeEl = document.getElementById('time');
-const flagsEl = document.getElementById('flags');
-const msgEl = document.getElementById('message');
-
-let rows, cols, mines;
-let board = []; // cells: {mine, open, flag, count}
-let opened = 0;
-let timer = 0;
-let timerInt = null;
-let gameOver = false;
-let cellSize = 36;
-let remainingFlags = 0;
-
-/* level definitions */
-const levels = {
-  easy: {r:8, c:8, m:10, size:36, flagsAllowed:10},
-  medium: {r:12, c:12, m:25, size:30, flagsAllowed:25},
-  hard: {r:16, c:16, m:40, size:24, flagsAllowed:62}
-};
-
-/* utilities */
-function idx(x,y){ return y*cols + x; }
+let rows, cols, mineCount, flagLimit;
+let board = [];
+let flagsLeft = 0;
 
 function startGame(){
-  clearInterval(timerInt);
-  timer = 0; timeEl.textContent = 0;
-  opened = 0; gameOver = false; msgEl.textContent = '';
+  const level = document.getElementById('level').value;
 
-  const lvl = levels[levelSelect.value];
-  rows = lvl.r; cols = lvl.c; mines = lvl.m; cellSize = lvl.size;
-  remainingFlags = lvl.flagsAllowed;
-  flagsEl.textContent = remainingFlags;
+  if(level==="easy"){ rows=8; cols=8; mineCount=10; flagLimit=10; }
+  if(level==="medium"){ rows=12; cols=12; mineCount=25; flagLimit=25; }
+  if(level==="hard"){ rows=16; cols=16; mineCount=62; flagLimit=62; }
 
-  board = new Array(rows*cols).fill(0).map(()=>({mine:false,open:false,flag:false,count:0}));
+  flagsLeft = flagLimit;
+  document.getElementById('mines').textContent = mineCount;
+  document.getElementById('flags').textContent = flagsLeft;
+
+  board = [];
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  boardEl.style.gridTemplateColumns = `repeat(${cols}, 36px)`;
+
+  for(let i=0;i<rows*cols;i++){
+    board.push({mine:false,open:false,flag:false,count:0});
+  }
 
   // place mines
-  let placed = 0;
-  while(placed < mines){
-    const i = Math.floor(Math.random()*board.length);
-    if(!board[i].mine){ board[i].mine = true; placed++; }
+  let placed=0;
+  while(placed<mineCount){
+    let r=Math.floor(Math.random()*board.length);
+    if(!board[r].mine){
+      board[r].mine=true;
+      placed++;
+    }
   }
 
   // numbers
-  for(let y=0;y<rows;y++){
-    for(let x=0;x<cols;x++){
-      const i = idx(x,y);
-      if(board[i].mine) continue;
-      let cnt = 0;
-      for(let dy=-1;dy<=1;dy++){
-        for(let dx=-1;dx<=1;dx++){
-          if(dx===0 && dy===0) continue;
-          const nx = x+dx, ny = y+dy;
-          if(nx>=0 && ny>=0 && nx<cols && ny<rows){
-            if(board[idx(nx,ny)].mine) cnt++;
-          }
-        }
-      }
-      board[i].count = cnt;
-    }
+  for(let i=0;i<board.length;i++){
+    if(board[i].mine) continue;
+    let n=0;
+    neighbors(i).forEach(j=>{ if(board[j].mine) n++; });
+    board[i].count=n;
   }
 
-  // build grid
-  boardEl.innerHTML = '';
-  boardEl.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
-  boardEl.style.gap = (cellSize>=32?6:4)+'px';
+  // cells
+  board.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='cell';
 
-  for(let i=0;i<rows*cols;i++){
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.style.width = cellSize + 'px';
-    cell.style.height = cellSize + 'px';
-    cell.dataset.index = i;
-
-    // prevent context menu globally on cells
-    cell.addEventListener('contextmenu', e=> e.preventDefault());
-
-    // pointer handlers (use timestamps to distinguish tap vs long-press)
-    cell.addEventListener('pointerdown', (e)=>{
-      cell._pressStart = Date.now();
-      cell._pressButton = e.button;
-      // if right mouse button -> immediate toggle flag
-      if(e.button === 2){
-        toggleFlag(i);
-        cell._didRight = true;
-      } else {
-        cell._didRight = false;
-      }
-      // capture pointer so pointerup always fires on this element
-      try{ cell.setPointerCapture(e.pointerId); }catch(err){}
+    // DESKTOP
+    d.addEventListener('click',()=>openCell(i));
+    d.addEventListener('contextmenu',e=>{
+      e.preventDefault();
+      toggleFlag(i);
     });
 
-    cell.addEventListener('pointerup', (e)=>{
-      // if right-click was handled, clear and return
-      if(cell._didRight){
-        cell._didRight = false;
-        try{ cell.releasePointerCapture(e.pointerId); }catch(err){}
-        return;
-      }
-      const dt = Date.now() - (cell._pressStart || 0);
-      // threshold: 350ms -> long press = flag, short press = open
-      if(dt >= 350){
-        toggleFlag(i);
-      } else {
-        openCell(i);
-      }
-      try{ cell.releasePointerCapture(e.pointerId); }catch(err){}
-      cell._pressStart = null;
+    // MOBILE FIX
+    d.addEventListener('touchstart',e=>{
+      e.stopPropagation();
+      d._t=Date.now();
+    });
+    d.addEventListener('touchend',e=>{
+      e.stopPropagation();
+      const t=Date.now()-d._t;
+      if(t>500) toggleFlag(i);
+      else openCell(i);
     });
 
-    // pointercancel: clean up
-    cell.addEventListener('pointercancel', ()=>{
-      cell._pressStart = null;
-      cell._didRight = false;
-      try{ cell.releasePointerCapture(); }catch(e){}
-    });
-
-    boardEl.appendChild(cell);
-  }
-
-  // reset view
-  boardWrap.scrollLeft = 0;
-  boardWrap.scrollTop = 0;
-
-  // timer
-  timerInt = setInterval(()=>{ timer++; timeEl.textContent = timer; }, 1000);
+    boardEl.appendChild(d);
+  });
 }
 
-/* open cell */
-function openCell(i){
-  if(gameOver) return;
-  const cellData = board[i];
-  const el = boardEl.children[i];
-  if(cellData.open || cellData.flag) return;
-  cellData.open = true;
-  el.classList.add('open');
-  opened++;
+function neighbors(i){
+  const res=[];
+  const x=i%cols, y=Math.floor(i/cols);
+  for(let dy=-1;dy<=1;dy++){
+    for(let dx=-1;dx<=1;dx++){
+      if(dx===0&&dy===0) continue;
+      let nx=x+dx, ny=y+dy;
+      if(nx>=0&&nx<cols&&ny>=0&&ny<rows){
+        res.push(ny*cols+nx);
+      }
+    }
+  }
+  return res;
+}
 
-  if(cellData.mine){
-    el.classList.add('mine');
-    el.textContent = '💣';
-    revealAllMines();
-    endGame(false);
+function openCell(i){
+  const c=board[i];
+  const el=document.getElementById('board').children[i];
+  if(c.open||c.flag) return;
+
+  c.open=true;
+  el.classList.add('open');
+
+  if(c.mine){
+    el.textContent='💣';
+    alert('Game Over');
     return;
   }
 
-  if(cellData.count > 0){
-    el.textContent = cellData.count;
-  } else {
-    // flood fill neighbors
-    const x = i % cols, y = Math.floor(i / cols);
-    for(let dy=-1; dy<=1; dy++){
-      for(let dx=-1; dx<=1; dx++){
-        if(dx===0 && dy===0) continue;
-        const nx = x+dx, ny = y+dy;
-        if(nx>=0 && ny>=0 && nx<cols && ny<rows){
-          const ni = idx(nx,ny);
-          if(!board[ni].open) openCell(ni);
-        }
-      }
-    }
-  }
-
-  if(opened === rows*cols - mines){
-    endGame(true);
+  if(c.count>0){
+    el.textContent=c.count;
+  }else{
+    neighbors(i).forEach(openCell);
   }
 }
 
-/* toggle flag with remainingFlags */
 function toggleFlag(i){
-  if(gameOver) return;
-  const cellData = board[i];
-  const el = boardEl.children[i];
-  if(cellData.open) return;
+  const c=board[i];
+  const el=document.getElementById('board').children[i];
+  if(c.open) return;
 
-  if(!cellData.flag){
-    // try set flag
-    if(remainingFlags <= 0) {
-      // no flags left
-      // small feedback: flash
-      el.animate([{transform:'scale(1)'},{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:180});
-      return;
-    }
-    cellData.flag = true;
-    el.classList.add('flag'); el.textContent = '🚩';
-    remainingFlags--;
-  } else {
-    // remove flag
-    cellData.flag = false;
-    el.classList.remove('flag'); el.textContent = '';
-    remainingFlags++;
+  if(!c.flag && flagsLeft===0) return;
+
+  c.flag=!c.flag;
+  el.classList.toggle('flag');
+
+  if(c.flag){
+    el.textContent='🚩';
+    flagsLeft--;
+  }else{
+    el.textContent='';
+    flagsLeft++;
   }
-  flagsEl.textContent = remainingFlags;
+  document.getElementById('flags').textContent=flagsLeft;
 }
 
-/* reveal mines */
-function revealAllMines(){
-  for(let i=0;i<board.length;i++){
-    if(board[i].mine){
-      const el = boardEl.children[i];
-      el.classList.add('open','mine');
-      el.textContent = '💣';
-    }
-  }
-}
-
-/* end game */
-function endGame(win){
-  gameOver = true;
-  clearInterval(timerInt);
-  msgEl.textContent = win ? '🎉 You Win!' : '💥 Game Over!';
-}
-
-/* PAN / DRAG on boardWrap */
-let isPanning = false;
-let panStart = {x:0,y:0,scrollLeft:0,scrollTop:0};
-boardWrap.addEventListener('pointerdown', (e)=>{
-  // start pan only if not clicking directly on a cell (cells handle pointer events themselves)
-  isPanning = true;
-  panStart.x = e.clientX;
-  panStart.y = e.clientY;
-  panStart.scrollLeft = boardWrap.scrollLeft;
-  panStart.scrollTop = boardWrap.scrollTop;
-  try{ boardWrap.setPointerCapture(e.pointerId); }catch(err){}
-});
-boardWrap.addEventListener('pointermove', (e)=>{
-  if(!isPanning) return;
-  const dx = e.clientX - panStart.x;
-  const dy = e.clientY - panStart.y;
-  boardWrap.scrollLeft = panStart.scrollLeft - dx;
-  boardWrap.scrollTop = panStart.scrollTop - dy;
-});
-boardWrap.addEventListener('pointerup', (e)=>{
-  isPanning = false;
-  try{ boardWrap.releasePointerCapture(e.pointerId); }catch(err){}
-});
-boardWrap.addEventListener('pointercancel', ()=>{ isPanning = false; });
-
-/* buttons */
-newGameBtn.addEventListener('click', ()=> startGame());
-resetViewBtn.addEventListener('click', ()=> { boardWrap.scrollLeft = 0; boardWrap.scrollTop = 0; });
-
-/* prevent context menu on container for convenience */
-boardWrap.addEventListener('contextmenu', e=> e.preventDefault());
-
-/* init */
 startGame();
 </script>
 
 </body>
-  </html>
+</html>
