@@ -86,9 +86,9 @@ button{background:var(--blue);color:#fff;cursor:pointer}
       <button id="newGameBtn">New Game</button>
       <button id="resetViewBtn">Center / Reset View</button>
 
-      <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+      <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
         <div>⏱ <b id="time">0</b>s</div>
-        <div>🚩 <b id="flags">0</b></div>
+        <div>🚩 <b id="flags">0</b> left</div>
       </div>
     </div>
 
@@ -96,20 +96,15 @@ button{background:var(--blue);color:#fff;cursor:pointer}
       <div id="board" class="board" role="grid"></div>
     </div>
 
-    <div class="info">Tip: Left click / tap = open. Right click or long-press = flag. Drag the board to pan on mobile.</div>
+    <div class="info">Tip: Short tap = open. Long-press (≥350ms) or right-click = flag. Drag the board to pan on mobile.</div>
     <div id="message" class="message"></div>
   </div>
 </main>
 
 <script>
-/* Minesweeper improved:
- - flag bug fixed (works on all levels)
- - different cell sizes per level (Easy 36px, Medium 30px, Hard 24px)
- - pan/drag board container (pointer events)
- - right-click & long-press flag
- - timer/flags/messages
-*/
+/* Minesweeper — Fixed click/flag behavior + limited flags + panning */
 
+/* DOM */
 const levelSelect = document.getElementById('level');
 const newGameBtn = document.getElementById('newGameBtn');
 const resetViewBtn = document.getElementById('resetViewBtn');
@@ -121,39 +116,32 @@ const msgEl = document.getElementById('message');
 
 let rows, cols, mines;
 let board = []; // cells: {mine, open, flag, count}
-let flags = 0;
 let opened = 0;
 let timer = 0;
 let timerInt = null;
 let gameOver = false;
-let holdTimer = null;
 let cellSize = 36;
+let remainingFlags = 0;
 
 /* level definitions */
 const levels = {
-  easy: {r:8, c:8, m:10, size:36},
-  medium: {r:12, c:12, m:25, size:30},
-  hard: {r:16, c:16, m:40, size:24}
+  easy: {r:8, c:8, m:10, size:36, flagsAllowed:10},
+  medium: {r:12, c:12, m:25, size:30, flagsAllowed:25},
+  hard: {r:16, c:16, m:40, size:24, flagsAllowed:62}
 };
 
-/* utility */
+/* utilities */
 function idx(x,y){ return y*cols + x; }
 
 function startGame(){
-  // clear timers / state
   clearInterval(timerInt);
-  timer = 0;
-  timeEl.textContent = 0;
-  flags = 0;
-  flagsEl.textContent = 0;
-  opened = 0;
-  gameOver = false;
-  msgEl.textContent = '';
+  timer = 0; timeEl.textContent = 0;
+  opened = 0; gameOver = false; msgEl.textContent = '';
 
-  const lvlKey = levelSelect.value;
-  const lvl = levels[lvlKey];
-  rows = lvl.r; cols = lvl.c; mines = lvl.m;
-  cellSize = lvl.size;
+  const lvl = levels[levelSelect.value];
+  rows = lvl.r; cols = lvl.c; mines = lvl.m; cellSize = lvl.size;
+  remainingFlags = lvl.flagsAllowed;
+  flagsEl.textContent = remainingFlags;
 
   board = new Array(rows*cols).fill(0).map(()=>({mine:false,open:false,flag:false,count:0}));
 
@@ -164,7 +152,7 @@ function startGame(){
     if(!board[i].mine){ board[i].mine = true; placed++; }
   }
 
-  // compute numbers
+  // numbers
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       const i = idx(x,y);
@@ -183,62 +171,70 @@ function startGame(){
     }
   }
 
-  // build DOM grid
+  // build grid
   boardEl.innerHTML = '';
   boardEl.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
   boardEl.style.gap = (cellSize>=32?6:4)+'px';
+
   for(let i=0;i<rows*cols;i++){
     const cell = document.createElement('div');
     cell.className = 'cell';
     cell.style.width = cellSize + 'px';
     cell.style.height = cellSize + 'px';
     cell.dataset.index = i;
-    // unify pointer handlers for flag & open
-    // prevent native context menu
-    cell.addEventListener('contextmenu', (e)=> e.preventDefault());
 
-    // pointerdown: start hold timer for long-press flag (touch)
+    // prevent context menu globally on cells
+    cell.addEventListener('contextmenu', e=> e.preventDefault());
+
+    // pointer handlers (use timestamps to distinguish tap vs long-press)
     cell.addEventListener('pointerdown', (e)=>{
-      cell.setPointerCapture(e.pointerId);
-      // if right-click (button === 2) -> flag immediately (desktop)
+      cell._pressStart = Date.now();
+      cell._pressButton = e.button;
+      // if right mouse button -> immediate toggle flag
       if(e.button === 2){
         toggleFlag(i);
-        return;
+        cell._didRight = true;
+      } else {
+        cell._didRight = false;
       }
-      // start long press timer for flag (500ms)
-      holdTimer = setTimeout(()=>{
-        toggleFlag(i);
-        holdTimer = null;
-      }, 500);
+      // capture pointer so pointerup always fires on this element
+      try{ cell.setPointerCapture(e.pointerId); }catch(err){}
     });
 
-    // pointerup: if holdTimer active => it was a short click => open
     cell.addEventListener('pointerup', (e)=>{
-      // if holdTimer still exists, treat as click
-      if(holdTimer){
-        clearTimeout(holdTimer);
-        holdTimer = null;
+      // if right-click was handled, clear and return
+      if(cell._didRight){
+        cell._didRight = false;
+        try{ cell.releasePointerCapture(e.pointerId); }catch(err){}
+        return;
+      }
+      const dt = Date.now() - (cell._pressStart || 0);
+      // threshold: 350ms -> long press = flag, short press = open
+      if(dt >= 350){
+        toggleFlag(i);
+      } else {
         openCell(i);
       }
       try{ cell.releasePointerCapture(e.pointerId); }catch(err){}
+      cell._pressStart = null;
     });
 
-    // pointercancel: cancel hold
+    // pointercancel: clean up
     cell.addEventListener('pointercancel', ()=>{
-      if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+      cell._pressStart = null;
+      cell._didRight = false;
+      try{ cell.releasePointerCapture(); }catch(e){}
     });
 
     boardEl.appendChild(cell);
   }
 
-  // reset view/scroll
+  // reset view
   boardWrap.scrollLeft = 0;
   boardWrap.scrollTop = 0;
 
-  // start timer
-  timerInt = setInterval(()=>{
-    timer++; timeEl.textContent = timer;
-  },1000);
+  // timer
+  timerInt = setInterval(()=>{ timer++; timeEl.textContent = timer; }, 1000);
 }
 
 /* open cell */
@@ -262,7 +258,7 @@ function openCell(i){
   if(cellData.count > 0){
     el.textContent = cellData.count;
   } else {
-    // flood open neighbors
+    // flood fill neighbors
     const x = i % cols, y = Math.floor(i / cols);
     for(let dy=-1; dy<=1; dy++){
       for(let dx=-1; dx<=1; dx++){
@@ -281,22 +277,34 @@ function openCell(i){
   }
 }
 
-/* toggle flag */
+/* toggle flag with remainingFlags */
 function toggleFlag(i){
   if(gameOver) return;
   const cellData = board[i];
   const el = boardEl.children[i];
   if(cellData.open) return;
-  cellData.flag = !cellData.flag;
-  if(cellData.flag){
-    el.classList.add('flag'); el.textContent = '🚩'; flags++;
+
+  if(!cellData.flag){
+    // try set flag
+    if(remainingFlags <= 0) {
+      // no flags left
+      // small feedback: flash
+      el.animate([{transform:'scale(1)'},{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:180});
+      return;
+    }
+    cellData.flag = true;
+    el.classList.add('flag'); el.textContent = '🚩';
+    remainingFlags--;
   } else {
-    el.classList.remove('flag'); el.textContent = ''; flags--;
+    // remove flag
+    cellData.flag = false;
+    el.classList.remove('flag'); el.textContent = '';
+    remainingFlags++;
   }
-  flagsEl.textContent = flags;
+  flagsEl.textContent = remainingFlags;
 }
 
-/* reveal mines on lose */
+/* reveal mines */
 function revealAllMines(){
   for(let i=0;i<board.length;i++){
     if(board[i].mine){
@@ -314,18 +322,17 @@ function endGame(win){
   msgEl.textContent = win ? '🎉 You Win!' : '💥 Game Over!';
 }
 
-/* PAN / DRAG FOR BOARDWRAP (mouse + touch) */
+/* PAN / DRAG on boardWrap */
 let isPanning = false;
 let panStart = {x:0,y:0,scrollLeft:0,scrollTop:0};
 boardWrap.addEventListener('pointerdown', (e)=>{
-  // only start panning if pointer is not on a cell element that captured pointer
-  // but we still allow pointerdown on boardWrap to pan
+  // start pan only if not clicking directly on a cell (cells handle pointer events themselves)
   isPanning = true;
   panStart.x = e.clientX;
   panStart.y = e.clientY;
   panStart.scrollLeft = boardWrap.scrollLeft;
   panStart.scrollTop = boardWrap.scrollTop;
-  boardWrap.setPointerCapture(e.pointerId);
+  try{ boardWrap.setPointerCapture(e.pointerId); }catch(err){}
 });
 boardWrap.addEventListener('pointermove', (e)=>{
   if(!isPanning) return;
@@ -336,22 +343,20 @@ boardWrap.addEventListener('pointermove', (e)=>{
 });
 boardWrap.addEventListener('pointerup', (e)=>{
   isPanning = false;
-  try{ boardWrap.releasePointerCapture(e.pointerId); }catch(e){}
+  try{ boardWrap.releasePointerCapture(e.pointerId); }catch(err){}
 });
 boardWrap.addEventListener('pointercancel', ()=>{ isPanning = false; });
 
-/* button handlers */
-newGameBtn.addEventListener('click', ()=>{ startGame(); });
-resetViewBtn.addEventListener('click', ()=>{
-  boardWrap.scrollLeft = 0; boardWrap.scrollTop = 0;
-});
+/* buttons */
+newGameBtn.addEventListener('click', ()=> startGame());
+resetViewBtn.addEventListener('click', ()=> { boardWrap.scrollLeft = 0; boardWrap.scrollTop = 0; });
 
-/* initialize on load */
+/* prevent context menu on container for convenience */
+boardWrap.addEventListener('contextmenu', e=> e.preventDefault());
+
+/* init */
 startGame();
-
-/* Accessibility: prevent context menu on board for right-click convenience */
-boardWrap.addEventListener('contextmenu', (e)=> e.preventDefault());
 </script>
 
 </body>
-</html>
+  </html>
