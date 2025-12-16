@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="en">
+<head>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
@@ -18,9 +22,7 @@ onAuthStateChanged(auth, user => {
   if (!user) location.href = "login.html";
 });
 </script>
-<!doctype html>
-<html lang="en">
-<head>
+
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ArcadeOwl</title>
