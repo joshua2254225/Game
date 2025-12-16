@@ -1,3 +1,23 @@
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
+  authDomain: "arcadeowl.firebaseapp.com",
+  projectId: "arcadeowl",
+  storageBucket: "arcadeowl.appspot.com",
+  messagingSenderId: "604579422254",
+  appId: "1:604579422254:web:19ecace88992c998efffbf"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, user => {
+  if (!user) location.href = "login.html";
+});
+</script>
 <!doctype html>
 <html lang="en">
 <head>
