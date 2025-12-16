@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ArcadeOwl</title>
 
-<!-- 🔐 Firebase Auth (CORRECT PLACE & FIX) -->
+<!-- FIREBASE (KEIN REDIRECT) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
@@ -19,19 +19,8 @@ const firebaseConfig = {
   appId: "1:604579422254:web:19ecace88992c998efffbf"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-let checked = false;
-
-onAuthStateChanged(auth, user => {
-  if (checked) return;
-  checked = true;
-
-  if (!user) {
-    window.location.replace("login.html");
-  }
-});
+initializeApp(firebaseConfig);
+getAuth(); // nur vorbereiten, KEIN redirect
 </script>
 
 <style>
@@ -57,14 +46,26 @@ html,body{
   justify-content:center;
   font-weight:900;
   font-size:22px;
+  position:relative;
 }
+
+/* LOGIN BUTTON */
+.login-btn{
+  position:absolute;
+  right:16px;
+  color:white;
+  text-decoration:none;
+  font-size:22px;
+  opacity:0.85;
+}
+.login-btn:hover{opacity:1}
 
 /* WAVE TITLE */
 .wave-title span {
-  display: inline-block;
-  font-weight: 900;
-  font-size: 28px;
-  animation: wave 1s infinite;
+  display:inline-block;
+  font-weight:900;
+  font-size:28px;
+  animation:wave 1s infinite;
 }
 .wave-title span:nth-child(1){animation-delay:0s}
 .wave-title span:nth-child(2){animation-delay:.1s}
@@ -76,7 +77,7 @@ html,body{
 .wave-title span:nth-child(8){animation-delay:.7s}
 .wave-title span:nth-child(9){animation-delay:.8s}
 
-@keyframes wave {
+@keyframes wave{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-10px)}
 }
@@ -149,6 +150,7 @@ html,body{
     <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
     <span>O</span><span>w</span><span>l</span>
   </span>
+  <a class="login-btn" href="login.html" title="Login">👤</a>
 </header>
 
 <main class="wrap">
@@ -252,4 +254,4 @@ href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr
 target="_blank">💬</a>
 
 </body>
-</html>
+  </html>
