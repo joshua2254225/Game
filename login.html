@@ -2,89 +2,103 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - ArcadeOwl</title>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-
+<title>Login – ArcadeOwl</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { font-family: Arial, sans-serif; background: #f5f7fb; margin:0; }
-  .login-container { max-width: 400px; margin: 100px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.1); text-align:center; }
-  input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border:1px solid #ccc; }
-  button { padding: 10px 20px; margin: 8px 4px; border:none; border-radius:6px; cursor:pointer; font-weight:600; }
-  #loginBtn { background: #0b74de; color:#fff; }
-  #signupBtn { background:#eee; color:#333; }
-  #message { margin-top:12px; font-size:14px; }
+body{
+  margin:0;
+  font-family:system-ui,Arial;
+  background:#0b74de;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.card{
+  background:#fff;
+  padding:24px;
+  border-radius:12px;
+  width:100%;
+  max-width:360px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+h1{text-align:center;margin-bottom:16px;}
+input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:#0b74de;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+.eye{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+}
+.pw-wrap{position:relative;}
+.error{color:red;text-align:center;margin-top:8px;}
 </style>
 </head>
 <body>
 
-<div class="login-container">
-  <h1>Login to ArcadeOwl</h1>
-  <input id="email" type="email" placeholder="Email" />
-  <input id="password" type="password" placeholder="Password" />
-  <div>
-    <button id="loginBtn">Login</button>
-    <button id="signupBtn">Sign Up</button>
+<div class="card">
+  <h1>ArcadeOwl Login</h1>
+
+  <input id="email" type="email" placeholder="Email">
+  
+  <div class="pw-wrap">
+    <input id="password" type="password" placeholder="Password">
+    <span class="eye" onclick="togglePw()">👁</span>
   </div>
-  <p id="message"></p>
+
+  <button onclick="login()">Login</button>
+  <div class="error" id="error"></div>
 </div>
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
+  authDomain: "arcadeowl.firebaseapp.com",
+  projectId: "arcadeowl",
+  storageBucket: "arcadeowl.appspot.com",
+  messagingSenderId: "604579422254",
+  appId: "1:604579422254:web:19ecace88992c998efffbf"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.login = function(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const err = document.getElementById("error");
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(()=> location.href="index.html")
+    .catch(e => err.textContent = e.message);
+}
+</script>
+
 <script>
-  // Firebase Config
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const loginBtn = document.getElementById('loginBtn');
-  const signupBtn = document.getElementById('signupBtn');
-  const message = document.getElementById('message');
-
-  // Signup
-  signupBtn.addEventListener('click', () => {
-    auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
-      .then(userCredential => {
-        message.style.color = 'green';
-        message.textContent = 'Account created! Redirecting...';
-        setTimeout(() => window.location.href = 'index.html', 1000);
-      })
-      .catch(error => {
-        message.style.color = 'red';
-        message.textContent = error.message;
-      });
-  });
-
-  // Login
-  loginBtn.addEventListener('click', () => {
-    auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
-      .then(userCredential => {
-        message.style.color = 'green';
-        message.textContent = 'Logged in! Redirecting...';
-        setTimeout(() => window.location.href = 'index.html', 500);
-      })
-      .catch(error => {
-        message.style.color = 'red';
-        message.textContent = error.message;
-      });
-  });
-
-  // Redirect if already logged in
-  auth.onAuthStateChanged(user => {
-    if(user){
-      window.location.href = 'index.html';
-    }
-  });
+function togglePw(){
+  const p = document.getElementById("password");
+  p.type = p.type === "password" ? "text" : "password";
+}
 </script>
 
 </body>
