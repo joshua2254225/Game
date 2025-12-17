@@ -1,166 +1,238 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Enemy Respawn – 10 Days Survival</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    #game {
-      width: 600px;
-      height: 400px;
-      background: #020617;
-      border: 3px solid #2563eb;
-      position: relative;
-      overflow: hidden;
-    }
-    #player {
-      width: 30px;
-      height: 30px;
-      background: #22c55e;
-      position: absolute;
-      bottom: 20px;
-      left: 285px;
-    }
-    #enemy {
-      width: 30px;
-      height: 30px;
-      background: #ef4444;
-      position: absolute;
-      top: 20px;
-      left: 50px;
-    }
-    .bullet {
-      width: 6px;
-      height: 10px;
-      background: yellow;
-      position: absolute;
-    }
-    #ui {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 14px;
-    }
-    #message {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 28px;
-      background: rgba(0,0,0,0.7);
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>SurviveX – 10 Days Survival</title>
+
+<style>
+body{
+  margin:0;
+  background:#0f172a;
+  font-family:Arial, sans-serif;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+#game{
+  width:700px;
+  height:450px;
+  background:#020617;
+  border:3px solid #2563eb;
+  position:relative;
+  overflow:hidden;
+}
+
+#player{
+  width:32px;
+  height:32px;
+  background:#22c55e;
+  position:absolute;
+  bottom:20px;
+  left:334px;
+  border-radius:6px;
+}
+
+#enemy{
+  width:32px;
+  height:32px;
+  background:#ef4444;
+  position:absolute;
+  top:40px;
+  left:100px;
+  border-radius:6px;
+}
+
+.bullet{
+  width:6px;
+  height:12px;
+  background:yellow;
+  position:absolute;
+  border-radius:3px;
+}
+
+#ui{
+  position:absolute;
+  top:10px;
+  left:10px;
+  font-size:14px;
+}
+
+#message{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  font-size:26px;
+  gap:12px;
+}
+
+button{
+  padding:10px 16px;
+  border:none;
+  background:#2563eb;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:14px;
+}
+</style>
 </head>
+
 <body>
-  <div id="game">
-    <div id="ui">
-      Day: <span id="day">1</span> / 10<br />
-      Enemy hits today: <span id="hits">0</span>
-    </div>
-    <div id="player"></div>
-    <div id="enemy"></div>
-    <div id="message"></div>
-  </div>  <script>
-    const game = document.getElementById('game');
-    const player = document.getElementById('player');
-    const enemy = document.getElementById('enemy');
-    const dayEl = document.getElementById('day');
-    const hitsEl = document.getElementById('hits');
-    const message = document.getElementById('message');
 
-    let playerX = 285;
-    let enemyX = 50;
-    let enemyDir = 2;
+<div id="game">
+  <div id="ui">
+    Day: <span id="day">1</span> / 10<br>
+    Hits today: <span id="hits">0</span> / 5
+  </div>
 
-    let hitsToday = 0;
-    let day = 1;
-    const HITS_TO_SURVIVE_DAY = 5;
+  <div id="player"></div>
+  <div id="enemy"></div>
 
-    // Player movement
-    document.addEventListener('keydown', e => {
-      if (e.key === 'ArrowLeft') playerX -= 15;
-      if (e.key === 'ArrowRight') playerX += 15;
-      if (e.key === ' ') shoot();
+  <div id="message">
+    <div id="msgText"></div>
+    <button onclick="startGame()">Start / Restart</button>
+  </div>
+</div>
 
-      playerX = Math.max(0, Math.min(570, playerX));
-      player.style.left = playerX + 'px';
-    });
+<script>
+const game = document.getElementById("game");
+const player = document.getElementById("player");
+const enemy = document.getElementById("enemy");
+const dayEl = document.getElementById("day");
+const hitsEl = document.getElementById("hits");
+const message = document.getElementById("message");
+const msgText = document.getElementById("msgText");
 
-    function shoot() {
-      const bullet = document.createElement('div');
-      bullet.className = 'bullet';
-      bullet.style.left = playerX + 12 + 'px';
-      bullet.style.bottom = '50px';
-      game.appendChild(bullet);
+let playerX, enemyX, enemySpeed;
+let hitsToday, day;
+let running = false;
 
-      const interval = setInterval(() => {
-        bullet.style.bottom = (bullet.offsetBottom + 10) + 'px';
+const GAME_WIDTH = 700;
+const PLAYER_SPEED = 20;
+const HITS_PER_DAY = 5;
 
-        // Collision with enemy
-        if (
-          bullet.offsetTop <= enemy.offsetTop + 30 &&
-          bullet.offsetLeft + 6 >= enemy.offsetLeft &&
-          bullet.offsetLeft <= enemy.offsetLeft + 30
-        ) {
-          bullet.remove();
-          clearInterval(interval);
-          enemyShot();
-        }
+// ---------------- START GAME ----------------
+function startGame(){
+  message.style.display = "none";
+  running = true;
 
-        if (bullet.offsetTop < 0) {
-          bullet.remove();
-          clearInterval(interval);
-        }
-      }, 30);
+  playerX = 334;
+  enemyX = 100;
+  enemySpeed = 2;
+
+  hitsToday = 0;
+  day = 1;
+
+  updateUI();
+}
+
+// ---------------- UI ----------------
+function updateUI(){
+  dayEl.textContent = day;
+  hitsEl.textContent = hitsToday;
+}
+
+// ---------------- PLAYER MOVE ----------------
+document.addEventListener("keydown", e=>{
+  if(!running) return;
+
+  if(e.key === "ArrowLeft") playerX -= PLAYER_SPEED;
+  if(e.key === "ArrowRight") playerX += PLAYER_SPEED;
+  if(e.key === " ") shoot();
+
+  playerX = Math.max(0, Math.min(GAME_WIDTH-32, playerX));
+  player.style.left = playerX + "px";
+});
+
+// Touch shoot
+game.addEventListener("click", ()=> running && shoot());
+
+// ---------------- SHOOT ----------------
+function shoot(){
+  const bullet = document.createElement("div");
+  bullet.className = "bullet";
+  bullet.style.left = (playerX + 13) + "px";
+  bullet.style.top = "360px";
+  game.appendChild(bullet);
+
+  const interval = setInterval(()=>{
+    let y = bullet.offsetTop - 12;
+    bullet.style.top = y + "px";
+
+    // Collision
+    if(
+      y <= enemy.offsetTop + 32 &&
+      bullet.offsetLeft + 6 >= enemy.offsetLeft &&
+      bullet.offsetLeft <= enemy.offsetLeft + 32
+    ){
+      bullet.remove();
+      clearInterval(interval);
+      enemyHit();
     }
 
-    function enemyShot() {
-      hitsToday++;
-      hitsEl.textContent = hitsToday;
-
-      // Respawn enemy at random position
-      enemyX = Math.random() * 550;
-      enemy.style.left = enemyX + 'px';
-
-      if (hitsToday >= HITS_TO_SURVIVE_DAY) {
-        nextDay();
-      }
+    if(y < 0){
+      bullet.remove();
+      clearInterval(interval);
     }
+  },16);
+}
 
-    function nextDay() {
-      day++;
-      if (day > 10) {
-        endGame(true);
-        return;
-      }
-      hitsToday = 0;
-      hitsEl.textContent = 0;
-      dayEl.textContent = day;
+// ---------------- ENEMY HIT ----------------
+function enemyHit(){
+  hitsToday++;
+  hitsEl.textContent = hitsToday;
 
-      // Increase difficulty
-      enemyDir += 0.5;
-    }
+  enemy.style.background = "#fde047";
+  setTimeout(()=> enemy.style.background="#ef4444",100);
 
-    function endGame(win) {
-      message.style.display = 'flex';
-      message.textContent = win ? 'YOU SURVIVED 10 DAYS!' : 'GAME OVER';
-    }
+  enemyX = Math.random() * (GAME_WIDTH-32);
+  enemy.style.left = enemyX + "px";
 
-    // Enemy movement loop
-    setInterval(() => {
-      enemyX += enemyDir;
-      if (enemyX <= 0 || enemyX >= 570) enemyDir *= -1;
-      enemy.style.left = enemyX + 'px';
-    }, 30);
-  </script></body>
+  if(hitsToday >= HITS_PER_DAY){
+    nextDay();
+  }
+}
+
+// ---------------- NEXT DAY ----------------
+function nextDay(){
+  day++;
+  if(day > 10){
+    endGame(true);
+    return;
+  }
+
+  hitsToday = 0;
+  enemySpeed += 0.8;
+  updateUI();
+}
+
+// ---------------- END ----------------
+function endGame(win){
+  running = false;
+  message.style.display = "flex";
+  msgText.textContent = win ? "🎉 YOU SURVIVED 10 DAYS!" : "GAME OVER";
+}
+
+// ---------------- ENEMY MOVE ----------------
+setInterval(()=>{
+  if(!running) return;
+
+  enemyX += enemySpeed;
+  if(enemyX <= 0 || enemyX >= GAME_WIDTH-32) enemySpeed *= -1;
+  enemy.style.left = enemyX + "px";
+},16);
+
+// Auto show start screen
+message.style.display = "flex";
+msgText.textContent = "Survive 10 Days!";
+</script>
+
+</body>
 </html>
