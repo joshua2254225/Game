@@ -2,37 +2,132 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Login – ArcadeOwl</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ArcadeOwl – Login</title>
+
+<style>
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#0b74de,#7b2cff);
+  font-family:system-ui,Segoe UI,Roboto,Arial;
+}
+
+.card{
+  background:white;
+  width:320px;
+  padding:22px;
+  border-radius:16px;
+  box-shadow:0 20px 40px rgba(0,0,0,.3);
+}
+
+h1{
+  text-align:center;
+  color:#0b74de;
+  margin-bottom:16px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#0b74de;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+
+button.secondary{
+  background:#eee;
+  color:#333;
+}
+
+.toggle{
+  margin-top:12px;
+  text-align:center;
+  font-size:13px;
+  cursor:pointer;
+  color:#0b74de;
+}
+
+.eye{
+  position:absolute;
+  right:12px;
+  top:38px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.field{
+  position:relative;
+}
+
+.msg{
+  text-align:center;
+  color:red;
+  font-size:13px;
+  margin-top:6px;
+}
+</style>
 </head>
+
 <body>
 
-<h2>Login</h2>
+<div class="card">
+  <h1>🦉 ArcadeOwl</h1>
 
-<input id="loginEmail" type="email" placeholder="Email"><br><br>
-<input id="loginPassword" type="password" placeholder="Password"><br><br>
-<button id="loginBtn">Login</button>
+  <!-- LOGIN -->
+  <div id="loginBox">
+    <input id="loginEmail" type="email" placeholder="Email">
+    <div class="field">
+      <input id="loginPass" type="password" placeholder="Password">
+      <span class="eye" onclick="togglePass('loginPass')">👁️</span>
+    </div>
+    <button onclick="login()">Login</button>
 
-<hr>
+    <div class="toggle" onclick="showRegister()">
+      No account? Register
+    </div>
+  </div>
 
-<h2>Register</h2>
+  <!-- REGISTER (HIDDEN) -->
+  <div id="registerBox" style="display:none">
+    <input id="regName" placeholder="Username">
+    <input id="regEmail" type="email" placeholder="Email">
+    <div class="field">
+      <input id="regPass" type="password" placeholder="Password">
+      <span class="eye" onclick="togglePass('regPass')">👁️</span>
+    </div>
+    <button onclick="register()">Create account</button>
 
-<input id="regUsername" placeholder="Username"><br><br>
-<input id="regEmail" type="email" placeholder="Email"><br><br>
-<input id="regPassword" type="password" placeholder="Password"><br><br>
-<button id="registerBtn">Register</button>
+    <div class="toggle" onclick="showLogin()">
+      Already have an account?
+    </div>
+  </div>
 
-<p id="msg"></p>
+  <div class="msg" id="msg"></div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword,
+         createUserWithEmailAndPassword,
+         updateProfile }
+from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
@@ -43,51 +138,53 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const msg = document.getElementById("msg");
 
-/* 🔐 LOGIN */
-document.getElementById("loginBtn").onclick = async () => {
+window.login = async () => {
   try{
     await signInWithEmailAndPassword(
       auth,
       loginEmail.value,
-      loginPassword.value
+      loginPass.value
     );
-    location.href = "index.html";
+    location.href="index.html";
   }catch(e){
     msg.textContent = e.message;
   }
 };
 
-/* 🆕 REGISTER */
-document.getElementById("registerBtn").onclick = async () => {
-  if(!regUsername.value.trim()){
-    msg.textContent = "Username required";
-    return;
-  }
-
+window.register = async () => {
   try{
     const cred = await createUserWithEmailAndPassword(
       auth,
       regEmail.value,
-      regPassword.value
+      regPass.value
     );
-
-    await updateProfile(cred.user, {
-      displayName: regUsername.value.trim()
+    await updateProfile(cred.user,{
+      displayName: regName.value
     });
-
-    location.href = "index.html";
+    location.href="index.html";
   }catch(e){
     msg.textContent = e.message;
   }
 };
 
-/* ✅ SCHON EINGELOGGT? */
-onAuthStateChanged(auth, user => {
-  if(user) location.href = "index.html";
-});
+window.showRegister = () => {
+  loginBox.style.display="none";
+  registerBox.style.display="block";
+  msg.textContent="";
+};
+
+window.showLogin = () => {
+  registerBox.style.display="none";
+  loginBox.style.display="block";
+  msg.textContent="";
+};
+
+window.togglePass = id => {
+  const i=document.getElementById(id);
+  i.type = i.type==="password"?"text":"password";
+};
 </script>
 
 </body>
-</html>
+  </html>
