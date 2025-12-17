@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Enemy Respawn – 10 Days Survival</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #game {
+      width: 600px;
+      height: 400px;
+      background: #020617;
+      border: 3px solid #2563eb;
+      position: relative;
+      overflow: hidden;
+    }
+    #player {
+      width: 30px;
+      height: 30px;
+      background: #22c55e;
+      position: absolute;
+      bottom: 20px;
+      left: 285px;
+    }
+    #enemy {
+      width: 30px;
+      height: 30px;
+      background: #ef4444;
+      position: absolute;
+      top: 20px;
+      left: 50px;
+    }
+    .bullet {
+      width: 6px;
+      height: 10px;
+      background: yellow;
+      position: absolute;
+    }
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 14px;
+    }
+    #message {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      background: rgba(0,0,0,0.7);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="ui">
+      Day: <span id="day">1</span> / 10<br />
+      Enemy hits today: <span id="hits">0</span>
+    </div>
+    <div id="player"></div>
+    <div id="enemy"></div>
+    <div id="message"></div>
+  </div>  <script>
+    const game = document.getElementById('game');
+    const player = document.getElementById('player');
+    const enemy = document.getElementById('enemy');
+    const dayEl = document.getElementById('day');
+    const hitsEl = document.getElementById('hits');
+    const message = document.getElementById('message');
+
+    let playerX = 285;
+    let enemyX = 50;
+    let enemyDir = 2;
+
+    let hitsToday = 0;
+    let day = 1;
+    const HITS_TO_SURVIVE_DAY = 5;
+
+    // Player movement
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') playerX -= 15;
+      if (e.key === 'ArrowRight') playerX += 15;
+      if (e.key === ' ') shoot();
+
+      playerX = Math.max(0, Math.min(570, playerX));
+      player.style.left = playerX + 'px';
+    });
+
+    function shoot() {
+      const bullet = document.createElement('div');
+      bullet.className = 'bullet';
+      bullet.style.left = playerX + 12 + 'px';
+      bullet.style.bottom = '50px';
+      game.appendChild(bullet);
+
+      const interval = setInterval(() => {
+        bullet.style.bottom = (bullet.offsetBottom + 10) + 'px';
+
+        // Collision with enemy
+        if (
+          bullet.offsetTop <= enemy.offsetTop + 30 &&
+          bullet.offsetLeft + 6 >= enemy.offsetLeft &&
+          bullet.offsetLeft <= enemy.offsetLeft + 30
+        ) {
+          bullet.remove();
+          clearInterval(interval);
+          enemyShot();
+        }
+
+        if (bullet.offsetTop < 0) {
+          bullet.remove();
+          clearInterval(interval);
+        }
+      }, 30);
+    }
+
+    function enemyShot() {
+      hitsToday++;
+      hitsEl.textContent = hitsToday;
+
+      // Respawn enemy at random position
+      enemyX = Math.random() * 550;
+      enemy.style.left = enemyX + 'px';
+
+      if (hitsToday >= HITS_TO_SURVIVE_DAY) {
+        nextDay();
+      }
+    }
+
+    function nextDay() {
+      day++;
+      if (day > 10) {
+        endGame(true);
+        return;
+      }
+      hitsToday = 0;
+      hitsEl.textContent = 0;
+      dayEl.textContent = day;
+
+      // Increase difficulty
+      enemyDir += 0.5;
+    }
+
+    function endGame(win) {
+      message.style.display = 'flex';
+      message.textContent = win ? 'YOU SURVIVED 10 DAYS!' : 'GAME OVER';
+    }
+
+    // Enemy movement loop
+    setInterval(() => {
+      enemyX += enemyDir;
+      if (enemyX <= 0 || enemyX >= 570) enemyDir *= -1;
+      enemy.style.left = enemyX + 'px';
+    }, 30);
+  </script></body>
+</html>
