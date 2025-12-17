@@ -2,80 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Login - ArcadeOwl</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{
-  margin:0;
-  font-family:system-ui, Arial;
-  background:#0b74de;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:100vh;
-}
-.card{
-  background:white;
-  padding:24px;
-  border-radius:14px;
-  width:100%;
-  max-width:340px;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-}
-h1{text-align:center;margin-bottom:16px}
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  font-size:15px;
-}
-button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  font-weight:700;
-  background:#0b74de;
-  color:white;
-  border:none;
-  border-radius:8px;
-}
-.toggle{
-  text-align:center;
-  margin-top:12px;
-  font-size:14px;
-  cursor:pointer;
-  color:#0b74de;
-}
-.error{
-  color:red;
-  text-align:center;
-  margin-top:10px;
-  font-size:14px;
-}
-</style>
+<title>Login – ArcadeOwl</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
-
 <body>
 
-<div class="card">
-  <h1 id="title">Login</h1>
+<h2>Login</h2>
 
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password (min 6 chars)">
+<input id="loginEmail" type="email" placeholder="Email"><br><br>
+<input id="loginPassword" type="password" placeholder="Password"><br><br>
+<button id="loginBtn">Login</button>
 
-  <button id="actionBtn">Login</button>
+<hr>
 
-  <div class="toggle" id="toggleMode">Create account</div>
-  <div class="error" id="error"></div>
-</div>
+<h2>Register</h2>
+
+<input id="regUsername" placeholder="Username"><br><br>
+<input id="regEmail" type="email" placeholder="Email"><br><br>
+<input id="regPassword" type="password" placeholder="Password"><br><br>
+<button id="registerBtn">Register</button>
+
+<p id="msg"></p>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  updateProfile,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -87,38 +43,50 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const msg = document.getElementById("msg");
 
-let isLogin = true;
-
-const email = document.getElementById("email");
-const password = document.getElementById("password");
-const btn = document.getElementById("actionBtn");
-const toggle = document.getElementById("toggleMode");
-const title = document.getElementById("title");
-const errorBox = document.getElementById("error");
-
-toggle.onclick = () => {
-  isLogin = !isLogin;
-  title.textContent = isLogin ? "Login" : "Register";
-  btn.textContent = isLogin ? "Login" : "Register";
-  toggle.textContent = isLogin ? "Create account" : "Back to login";
-  errorBox.textContent = "";
-};
-
-btn.onclick = async () => {
-  errorBox.textContent = "";
-
+/* 🔐 LOGIN */
+document.getElementById("loginBtn").onclick = async () => {
   try{
-    if(isLogin){
-      await signInWithEmailAndPassword(auth, email.value, password.value);
-    }else{
-      await createUserWithEmailAndPassword(auth, email.value, password.value);
-    }
+    await signInWithEmailAndPassword(
+      auth,
+      loginEmail.value,
+      loginPassword.value
+    );
     location.href = "index.html";
   }catch(e){
-    errorBox.textContent = e.message;
+    msg.textContent = e.message;
   }
 };
+
+/* 🆕 REGISTER */
+document.getElementById("registerBtn").onclick = async () => {
+  if(!regUsername.value.trim()){
+    msg.textContent = "Username required";
+    return;
+  }
+
+  try{
+    const cred = await createUserWithEmailAndPassword(
+      auth,
+      regEmail.value,
+      regPassword.value
+    );
+
+    await updateProfile(cred.user, {
+      displayName: regUsername.value.trim()
+    });
+
+    location.href = "index.html";
+  }catch(e){
+    msg.textContent = e.message;
+  }
+};
+
+/* ✅ SCHON EINGELOGGT? */
+onAuthStateChanged(auth, user => {
+  if(user) location.href = "index.html";
+});
 </script>
 
 </body>
