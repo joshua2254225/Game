@@ -5,24 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ArcadeOwl</title>
 
-<!-- FIREBASE (KEIN REDIRECT) -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
-  authDomain: "arcadeowl.firebaseapp.com",
-  projectId: "arcadeowl",
-  storageBucket: "arcadeowl.appspot.com",
-  messagingSenderId: "604579422254",
-  appId: "1:604579422254:web:19ecace88992c998efffbf"
-};
-
-initializeApp(firebaseConfig);
-getAuth(); // nur vorbereiten, KEIN redirect
-</script>
-
 <style>
 :root{
   --blue:#0b74de;
@@ -46,22 +28,10 @@ html,body{
   justify-content:center;
   font-weight:900;
   font-size:22px;
-  position:relative;
 }
-
-/* LOGIN BUTTON */
-.login-btn{
-  position:absolute;
-  right:16px;
-  color:white;
-  text-decoration:none;
-  font-size:22px;
-  opacity:0.85;
-}
-.login-btn:hover{opacity:1}
 
 /* WAVE TITLE */
-.wave-title span {
+.wave-title span{
   display:inline-block;
   font-weight:900;
   font-size:28px;
@@ -150,7 +120,6 @@ html,body{
     <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
     <span>O</span><span>w</span><span>l</span>
   </span>
-  <a class="login-btn" href="login.html" title="Login">👤</a>
 </header>
 
 <main class="wrap">
@@ -252,6 +221,59 @@ html,body{
 <a class="feedback"
 href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform"
 target="_blank">💬</a>
+
+<!-- LOGIN STATUS (NO REDIRECT!) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
+  authDomain: "arcadeowl.firebaseapp.com",
+  projectId: "arcadeowl",
+  appId: "1:604579422254:web:19ecace88992c998efffbf"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// UI BOX
+const userBox = document.createElement("div");
+userBox.style.position = "fixed";
+userBox.style.top = "10px";
+userBox.style.right = "10px";
+userBox.style.background = "rgba(255,255,255,.95)";
+userBox.style.padding = "6px 10px";
+userBox.style.borderRadius = "8px";
+userBox.style.fontSize = "13px";
+userBox.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
+userBox.style.zIndex = "9999";
+document.body.appendChild(userBox);
+
+onAuthStateChanged(auth, user => {
+  if(user){
+    userBox.innerHTML = `
+      👤 ${user.email}
+      <button id="logoutBtn"
+        style="margin-left:6px;
+        border:none;
+        background:#ff006e;
+        color:white;
+        border-radius:6px;
+        padding:4px 8px;
+        cursor:pointer;">
+        Logout
+      </button>
+    `;
+    document.getElementById("logoutBtn").onclick = () => {
+      signOut(auth).then(() => location.href="login.html");
+    };
+  }else{
+    userBox.innerHTML = `👤 Guest <a href="login.html">Login</a>`;
+  }
+});
+</script>
 
 </body>
   </html>
