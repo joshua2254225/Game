@@ -17,17 +17,8 @@ html,body{
   font-family:system-ui,Segoe UI,Roboto,Arial;
   background:#f5f7fb;
 }
-.topbar{
-  background:var(--blue);
-  color:#fff;
-  height:56px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-  font-size:22px;
-}<style>
-/* Wave Title linksbündig */
+
+/* TOP BAR */
 .topbar{
   background:var(--blue);
   color:#fff;
@@ -40,7 +31,7 @@ html,body{
   padding-left:12px;
 }
 
-/* Wave-Animation bleibt gleich */
+/* WAVE TITLE */
 .wave-title span{
   display:inline-block;
   font-weight:900;
@@ -61,13 +52,20 @@ html,body{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-10px)}
 }
-</style>
+
+/* CONTAINER */
 .wrap{
   max-width:var(--max-width);
   margin:20px auto;
   padding:12px;
 }
-.games-list{list-style:none;padding:0;margin:0}
+
+/* GAME LIST */
+.games-list{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
 .games-list li{
   background:var(--card);
   margin:12px 0;
@@ -78,8 +76,15 @@ html,body{
   justify-content:space-between;
   align-items:center;
 }
-.game-title{font-weight:700;color:#0b5fc7;text-decoration:none}
-.game-desc{font-size:13px;color:var(--muted)}
+.game-title{
+  font-weight:700;
+  color:#0b5fc7;
+  text-decoration:none;
+}
+.game-desc{
+  font-size:13px;
+  color:var(--muted);
+}
 .play-btn{
   background:var(--blue);
   color:white;
@@ -88,6 +93,8 @@ html,body{
   text-decoration:none;
   font-weight:700;
 }
+
+/* FEEDBACK */
 .feedback{
   position:fixed;
   right:16px;
@@ -118,8 +125,6 @@ html,body{
 
 <main class="wrap">
 <ul class="games-list">
-
-<!-- 🔽 HIER KOMMT DEIN GANZER SPIEL-CODE REIN 🔽 -->
 
 <li>
   <div>
@@ -209,16 +214,16 @@ html,body{
   <a class="play-btn" href="minecraft.html">Play</a>
 </li>
 
-<!-- 🔼 BIS HIER 🔼 -->
-
 </ul>
 </main>
 
 <a class="feedback" href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform" target="_blank">💬</a>
 
+<!-- USER POPUP -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
@@ -240,18 +245,9 @@ userBox.style.borderRadius = "8px";
 userBox.style.fontSize = "13px";
 userBox.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
 userBox.style.cursor = "pointer";
-userBox.style.display = "flex";
-userBox.style.alignItems = "center";
-userBox.style.gap = "6px";
 userBox.style.zIndex = "9999";
 document.body.appendChild(userBox);
 
-// Zahnrad Icon
-const gearIcon = document.createElement("span");
-gearIcon.textContent = "⚙️";
-gearIcon.style.fontSize = "16px";
-userBox.appendChild(gearIcon);
-  
 // --- SETTINGS POPUP ---
 const settingsPopup = document.createElement("div");
 settingsPopup.style.position = "fixed";
@@ -264,8 +260,6 @@ settingsPopup.style.boxShadow = "0 6px 18px rgba(0,0,0,.2)";
 settingsPopup.style.display = "none";
 settingsPopup.style.fontSize = "13px";
 settingsPopup.style.zIndex = "10000";
-
-  // Logout + Username edit
 settingsPopup.innerHTML = `
   <div style="margin-bottom:8px;">
     <label style="font-size:12px;">Edit Username:</label><br>
@@ -277,26 +271,25 @@ settingsPopup.innerHTML = `
 document.body.appendChild(settingsPopup);
 
 // --- TOGGLE POPUP ---
-gearIcon.addEventListener("click", (e)=>{
-  e.stopPropagation();
+userBox.addEventListener("click",(e)=>{
   settingsPopup.style.display = settingsPopup.style.display === "none" ? "block" : "none";
 });
 
 // --- CLOSE POPUP WHEN CLICK OUTSIDE ---
-document.addEventListener("click", (e)=>{
+document.addEventListener("click",(e)=>{
   if(!userBox.contains(e.target) && !settingsPopup.contains(e.target)){
     settingsPopup.style.display = "none";
   }
 });
 
 // --- AUTH STATE ---
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, user=>{
   if(user){
     const name = user.displayName || user.email.split("@")[0] || "User";
-    userBox.firstChild.textContent = name;
-  }else{
-    userBox.firstChild.textContent = "Guest";
-    gearIcon.addEventListener("click", ()=>location.href="login.html");
+    userBox.textContent = name;
+  } else {
+    userBox.textContent = "Guest";
+    userBox.onclick = ()=>location.href="login.html";
   }
 });
 
@@ -309,10 +302,13 @@ document.getElementById("logoutBtn").onclick = ()=>{
 document.getElementById("saveUsernameBtn").onclick = ()=>{
   const newName = document.getElementById("usernameInput").value.trim();
   if(newName){
-    updateProfile(auth.currentUser, { displayName: newName }).then(()=>{
-      userBox.firstChild.textContent = newName;
+    updateProfile(auth.currentUser,{ displayName: newName }).then(()=>{
+      userBox.textContent = newName;
       settingsPopup.style.display = "none";
-    }).catch(err => alert(err.message));
+    }).catch(err=>alert(err.message));
   }
 };
 </script>
+
+</body>
+                                                     </html>
