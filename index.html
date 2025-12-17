@@ -26,8 +26,21 @@ html,body{
   justify-content:center;
   font-weight:900;
   font-size:22px;
+}<style>
+/* Wave Title linksbündig */
+.topbar{
+  background:var(--blue);
+  color:#fff;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start; /* linksbündig */
+  font-weight:900;
+  font-size:22px;
+  padding-left:12px;
 }
-/* WAVE TITLE */
+
+/* Wave-Animation bleibt gleich */
 .wave-title span{
   display:inline-block;
   font-weight:900;
@@ -48,6 +61,7 @@ html,body{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-10px)}
 }
+</style>
 .wrap{
   max-width:var(--max-width);
   margin:20px auto;
@@ -204,8 +218,7 @@ html,body{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-
+import { getAuth, onAuthStateChanged, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
@@ -227,10 +240,19 @@ userBox.style.borderRadius = "8px";
 userBox.style.fontSize = "13px";
 userBox.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
 userBox.style.cursor = "pointer";
+userBox.style.display = "flex";
+userBox.style.alignItems = "center";
+userBox.style.gap = "6px";
 userBox.style.zIndex = "9999";
 document.body.appendChild(userBox);
 
-// --- SETTINGS POPUP (HIDDEN) ---
+// Zahnrad Icon
+const gearIcon = document.createElement("span");
+gearIcon.textContent = "⚙️";
+gearIcon.style.fontSize = "16px";
+userBox.appendChild(gearIcon);
+  
+// --- SETTINGS POPUP ---
 const settingsPopup = document.createElement("div");
 settingsPopup.style.position = "fixed";
 settingsPopup.style.top = "40px";
@@ -241,46 +263,56 @@ settingsPopup.style.borderRadius = "8px";
 settingsPopup.style.boxShadow = "0 6px 18px rgba(0,0,0,.2)";
 settingsPopup.style.display = "none";
 settingsPopup.style.fontSize = "13px";
-settingsPopup.innerHTML = `<button id="logoutBtn" style="
-    border:none;
-    background:#ff006e;
-    color:white;
-    border-radius:6px;
-    padding:6px 12px;
-    cursor:pointer;
-">Logout</button>`;
+settingsPopup.style.zIndex = "10000";
+
+  // Logout + Username edit
+settingsPopup.innerHTML = `
+  <div style="margin-bottom:8px;">
+    <label style="font-size:12px;">Edit Username:</label><br>
+    <input type="text" id="usernameInput" placeholder="New username" style="padding:4px 6px; border-radius:6px; border:1px solid #ccc; width:140px;">
+    <button id="saveUsernameBtn" style="margin-left:4px;padding:4px 6px;border:none;background:#0b74de;color:white;border-radius:6px;cursor:pointer;">Save</button>
+  </div>
+  <button id="logoutBtn" style="border:none;background:#ff006e;color:white;border-radius:6px;padding:6px 12px;cursor:pointer;">Logout</button>
+`;
 document.body.appendChild(settingsPopup);
 
 // --- TOGGLE POPUP ---
-userBox.addEventListener("click", () => {
+gearIcon.addEventListener("click", (e)=>{
+  e.stopPropagation();
   settingsPopup.style.display = settingsPopup.style.display === "none" ? "block" : "none";
 });
 
-// --- LOGOUT ---
-document.body.addEventListener("click", (e) => {
-  if(e.target && e.target.id === "logoutBtn"){
-    signOut(auth).then(() => location.href="login.html");
+// --- CLOSE POPUP WHEN CLICK OUTSIDE ---
+document.addEventListener("click", (e)=>{
+  if(!userBox.contains(e.target) && !settingsPopup.contains(e.target)){
+    settingsPopup.style.display = "none";
   }
 });
 
 // --- AUTH STATE ---
 onAuthStateChanged(auth, user => {
   if(user){
-    const name = user.displayName || user.email || "User";
-    userBox.textContent = name;
+    const name = user.displayName || user.email.split("@")[0] || "User";
+    userBox.firstChild.textContent = name;
   }else{
-    userBox.textContent = "Guest";
-    userBox.addEventListener("click", () => location.href="login.html");
+    userBox.firstChild.textContent = "Guest";
+    gearIcon.addEventListener("click", ()=>location.href="login.html");
   }
 });
 
-// --- CLOSE POPUP WHEN CLICK OUTSIDE ---
-document.addEventListener("click", (e) => {
-  if(!userBox.contains(e.target) && !settingsPopup.contains(e.target)){
-    settingsPopup.style.display = "none";
+// --- LOGOUT ---
+document.getElementById("logoutBtn").onclick = ()=>{
+  signOut(auth).then(()=> location.href="login.html");
+};
+
+// --- SAVE USERNAME ---
+document.getElementById("saveUsernameBtn").onclick = ()=>{
+  const newName = document.getElementById("usernameInput").value.trim();
+  if(newName){
+    updateProfile(auth.currentUser, { displayName: newName }).then(()=>{
+      userBox.firstChild.textContent = newName;
+      settingsPopup.style.display = "none";
+    }).catch(err => alert(err.message));
   }
-});
+};
 </script>
-
-</body>
-</html>
