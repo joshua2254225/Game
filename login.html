@@ -2,132 +2,38 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ArcadeOwl – Login</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArcadeOwl Login</title>
 <style>
-body{
-  margin:0;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(135deg,#0b74de,#7b2cff);
-  font-family:system-ui,Segoe UI,Roboto,Arial;
-}
-
-.card{
-  background:white;
-  width:320px;
-  padding:22px;
-  border-radius:16px;
-  box-shadow:0 20px 40px rgba(0,0,0,.3);
-}
-
-h1{
-  text-align:center;
-  color:#0b74de;
-  margin-bottom:16px;
-}
-
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:10px;
-  border:1px solid #ccc;
-  font-size:14px;
-}
-
-button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:10px;
-  background:#0b74de;
-  color:white;
-  font-weight:700;
-  cursor:pointer;
-}
-
-button.secondary{
-  background:#eee;
-  color:#333;
-}
-
-.toggle{
-  margin-top:12px;
-  text-align:center;
-  font-size:13px;
-  cursor:pointer;
-  color:#0b74de;
-}
-
-.eye{
-  position:absolute;
-  right:12px;
-  top:38px;
-  cursor:pointer;
-  font-size:14px;
-}
-
-.field{
-  position:relative;
-}
-
-.msg{
-  text-align:center;
-  color:red;
-  font-size:13px;
-  margin-top:6px;
-}
+body { font-family: Arial; background: #f5f7fb; margin:0; display:flex; justify-content:center; align-items:center; height:100vh; }
+.login-container { background:white; padding:30px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.1); width:320px; text-align:center; }
+h2 { color:#0b74de; margin-bottom:20px; }
+input { width:90%; padding:10px; margin:6px 0; border-radius:6px; border:1px solid #ccc; }
+button { width:95%; padding:10px; margin-top:10px; border:none; border-radius:6px; cursor:pointer; font-weight:700; }
+#loginBtn { background:#0b74de; color:white; }
+#registerBtn { background:#00b894; color:white; display:none; }
+#googleBtn { background:#fff; color:#333; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; }
+#googleBtn img { width:20px; }
+.toggle { margin-top:10px; color:#0b74de; cursor:pointer; font-size:14px; }
 </style>
 </head>
-
 <body>
 
-<div class="card">
-  <h1>🦉 ArcadeOwl</h1>
-
-  <!-- LOGIN -->
-  <div id="loginBox">
-    <input id="loginEmail" type="email" placeholder="Email">
-    <div class="field">
-      <input id="loginPass" type="password" placeholder="Password">
-      <span class="eye" onclick="togglePass('loginPass')">👁️</span>
-    </div>
-    <button onclick="login()">Login</button>
-
-    <div class="toggle" onclick="showRegister()">
-      No account? Register
-    </div>
+<div class="login-container">
+  <h2>Login</h2>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password">
+  <button id="loginBtn">Login</button>
+  <button id="registerBtn">Register</button>
+  <div id="googleBtn">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"> Sign in with Google
   </div>
-
-  <!-- REGISTER (HIDDEN) -->
-  <div id="registerBox" style="display:none">
-    <input id="regName" placeholder="Username">
-    <input id="regEmail" type="email" placeholder="Email">
-    <div class="field">
-      <input id="regPass" type="password" placeholder="Password">
-      <span class="eye" onclick="togglePass('regPass')">👁️</span>
-    </div>
-    <button onclick="register()">Create account</button>
-
-    <div class="toggle" onclick="showLogin()">
-      Already have an account?
-    </div>
-  </div>
-
-  <div class="msg" id="msg"></div>
+  <div class="toggle" id="toggleForm">Don't have an account? Register</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword,
-         createUserWithEmailAndPassword,
-         updateProfile }
-from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
@@ -138,53 +44,50 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-window.login = async () => {
-  try{
-    await signInWithEmailAndPassword(
-      auth,
-      loginEmail.value,
-      loginPass.value
-    );
-    location.href="index.html";
-  }catch(e){
-    msg.textContent = e.message;
+// Elemente
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
+const toggleForm = document.getElementById("toggleForm");
+const googleBtn = document.getElementById("googleBtn");
+
+// Login
+loginBtn.addEventListener("click", ()=>{
+  signInWithEmailAndPassword(auth, email.value, password.value)
+    .then(()=> location.href="index.html")
+    .catch(err => alert(err.message));
+});
+
+// Register
+registerBtn.addEventListener("click", ()=>{
+  createUserWithEmailAndPassword(auth, email.value, password.value)
+    .then(()=> location.href="index.html")
+    .catch(err => alert(err.message));
+});
+
+// Toggle Login/Register
+toggleForm.addEventListener("click", ()=>{
+  if(registerBtn.style.display === "none"){
+    registerBtn.style.display = "block";
+    loginBtn.style.display = "none";
+    toggleForm.textContent = "Already have an account? Login";
+  } else {
+    registerBtn.style.display = "none";
+    loginBtn.style.display = "block";
+    toggleForm.textContent = "Don't have an account? Register";
   }
-};
+});
 
-window.register = async () => {
-  try{
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      regEmail.value,
-      regPass.value
-    );
-    await updateProfile(cred.user,{
-      displayName: regName.value
-    });
-    location.href="index.html";
-  }catch(e){
-    msg.textContent = e.message;
-  }
-};
-
-window.showRegister = () => {
-  loginBox.style.display="none";
-  registerBox.style.display="block";
-  msg.textContent="";
-};
-
-window.showLogin = () => {
-  registerBox.style.display="none";
-  loginBox.style.display="block";
-  msg.textContent="";
-};
-
-window.togglePass = id => {
-  const i=document.getElementById(id);
-  i.type = i.type==="password"?"text":"password";
-};
+// Google Login
+googleBtn.addEventListener("click", ()=>{
+  signInWithPopup(auth, provider)
+    .then(()=> location.href="index.html")
+    .catch(err => alert(err.message));
+});
 </script>
 
 </body>
-  </html>
+</html>
