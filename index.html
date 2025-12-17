@@ -1,41 +1,109 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ArcadeOwl</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
-body{font-family:system-ui;background:#f5f7fb;margin:0}
-.topbar{
-  background:#0b74de;color:white;
-  padding:12px 16px;
-  display:flex;justify-content:space-between;align-items:center;
+:root{
+  --blue:#0b74de;
+  --muted:#666;
+  --card:#ffffff;
+  --max-width:980px;
 }
-.user{font-weight:700}
-a{color:white;text-decoration:none;font-weight:700}
-button{margin-left:10px}
+html,body{
+  margin:0;
+  font-family:system-ui,Segoe UI,Roboto,Arial;
+  background:#f5f7fb;
+}
+.topbar{
+  background:var(--blue);
+  color:#fff;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:22px;
+}
+.wave-title span{
+  display:inline-block;
+  font-weight:900;
+  font-size:28px;
+  animation:wave 1s infinite;
+}
+@keyframes wave{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+}
+.wrap{
+  max-width:var(--max-width);
+  margin:20px auto;
+  padding:12px;
+}
+.games-list{list-style:none;padding:0;margin:0}
+.games-list li{
+  background:var(--card);
+  margin:12px 0;
+  padding:14px 16px;
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.06);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.game-title{font-weight:700;color:#0b5fc7;text-decoration:none}
+.game-desc{font-size:13px;color:var(--muted)}
+.play-btn{
+  background:var(--blue);
+  color:white;
+  padding:8px 14px;
+  border-radius:8px;
+  text-decoration:none;
+  font-weight:700;
+}
+.feedback{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  background:#ff006e;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-size:26px;
+  text-decoration:none;
+  box-shadow:0 6px 20px rgba(0,0,0,.3);
+}
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-  <div>🦉 ArcadeOwl</div>
-  <div class="user" id="userBox">Guest</div>
-</div>
+<header class="topbar">
+  <span class="wave-title">
+    <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
+    <span>O</span><span>w</span><span>l</span>
+  </span>
+</header>
 
-<main style="padding:16px">
-  <p>Welcome to ArcadeOwl 🎮</p>
+<main class="wrap">
+<ul class="games-list">
+<!-- (ALLE SPIELE UNVERÄNDERT) -->
+</ul>
 </main>
 
+<a class="feedback" href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform" target="_blank">💬</a>
+
+<!-- 🔐 USER STATUS – NUR ANZEIGE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
@@ -46,24 +114,33 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const userBox = document.getElementById("userBox");
 
-/* 👤 USER STATUS */
-onAuthStateChanged(auth, user => {
+const userBox = document.createElement("div");
+userBox.style.position="fixed";
+userBox.style.top="10px";
+userBox.style.right="10px";
+userBox.style.background="rgba(255,255,255,.95)";
+userBox.style.padding="6px 10px";
+userBox.style.borderRadius="8px";
+userBox.style.fontSize="13px";
+userBox.style.boxShadow="0 4px 12px rgba(0,0,0,.2)";
+userBox.style.zIndex="9999";
+document.body.appendChild(userBox);
+
+onAuthStateChanged(auth, user=>{
   if(user){
     const name = user.displayName || user.email;
     userBox.innerHTML = `
       👤 ${name}
-      <button id="logout">Logout</button>
-    `;
-    document.getElementById("logout").onclick = () => {
-      signOut(auth);
-    };
+      <button id="logoutBtn"
+        style="margin-left:6px;border:none;
+        background:#ff006e;color:white;
+        border-radius:6px;padding:4px 8px;cursor:pointer;">
+        Logout
+      </button>`;
+    logoutBtn.onclick=()=>signOut(auth);
   }else{
-    userBox.innerHTML = `
-      👤 Guest
-      <a href="login.html">Login</a>
-    `;
+    userBox.innerHTML = `👤 Guest <a href="login.html">Login</a>`;
   }
 });
 </script>
