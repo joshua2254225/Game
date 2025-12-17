@@ -172,6 +172,18 @@ html,body{
 
 <button id="searchBtn">🔍</button>
 
+<input id="searchInput" placeholder="Search..."
+style="
+display:none;
+position:fixed;
+top:54px;
+left:16px;
+padding:6px 10px;
+border-radius:8px;
+border:1px solid #ccc;
+box-shadow:0 4px 12px rgba(0,0,0,.2);
+z-index:1000;">
+  
 <header class="topbar">
   <span class="wave-title">
     <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
@@ -305,13 +317,12 @@ const userBox = document.getElementById("userBox");
 const settingsPopup = document.getElementById("settingsPopup");
 
 // Toggle Popup
-userBox.addEventListener("click", e=>{
-  e.stopPropagation();
-  settingsPopup.style.display = settingsPopup.style.display==="none"?"block":"none";
-});
-document.addEventListener("click", e=>{
-  if(!settingsPopup.contains(e.target) && e.target!==userBox){
-    settingsPopup.style.display="none";
+userBox.addEventListener("click", () => {
+  if(!auth.currentUser){
+    location.href = "login.html"; // 🔑 NUR wenn NICHT eingeloggt
+  } else {
+    settingsPopup.style.display =
+      settingsPopup.style.display === "block" ? "none" : "block";
   }
 });
 
@@ -348,7 +359,29 @@ document.getElementById("googleLoginBtn").onclick = ()=>{
       settingsPopup.style.display="none";
     }).catch(err=>alert(err.message));
 };
+
+const searchBtn = document.getElementById("searchBtn");
+const searchInput = document.getElementById("searchInput");
+const games = document.querySelectorAll(".games-list li");
+
+searchBtn.onclick = () => {
+  searchInput.style.display =
+    searchInput.style.display === "block" ? "none" : "block";
+  searchInput.focus();
+};
+
+searchInput.oninput = () => {
+  const q = searchInput.value.toLowerCase();
+  games.forEach(li=>{
+    li.style.display =
+      li.innerText.toLowerCase().includes(q) ? "flex" : "none";
+  });
+};      
+  
 </script>
 
+
+  
 </body>
       </html>
+
