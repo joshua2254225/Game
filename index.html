@@ -10,29 +10,25 @@
   --blue:#0b74de;
   --muted:#666;
   --card:#ffffff;
-  --max-width:980px;
+  --max-width:1200px;
+  --header-height:56px;
 }
-
-html, body {
+html,body{
   margin:0;
   font-family:system-ui,Segoe UI,Roboto,Arial;
   background:#f5f7fb;
 }
 
-/* TOP BAR */
-.topbar{
-  background:var(--blue);
-  color:#fff;
-  height:56px;
+/* HEADER */
+.header{
   display:flex;
   align-items:center;
-  justify-content:flex-start; /* linksbündig */
-  font-weight:900;
-  font-size:22px;
-  padding-left:12px;
+  justify-content:space-between;
+  height:var(--header-height);
+  padding:0 16px;
+  background:var(--blue);
+  color:white;
 }
-
-/* WAVE TITLE */
 .wave-title span{
   display:inline-block;
   font-weight:900;
@@ -48,50 +44,74 @@ html, body {
 .wave-title span:nth-child(7){animation-delay:.6s}
 .wave-title span:nth-child(8){animation-delay:.7s}
 .wave-title span:nth-child(9){animation-delay:.8s}
+@keyframes wave{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
-@keyframes wave{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-10px)}
+/* HEADER MENU */
+.menu{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  font-weight:700;
+}
+.menu button{
+  background:none;
+  border:none;
+  color:white;
+  cursor:pointer;
+  font-size:14px;
 }
 
-/* CONTAINER */
-.wrap{
+/* SEARCH BAR */
+.search-bar{
   max-width:var(--max-width);
-  margin:20px auto;
-  padding:12px;
+  margin:12px auto;
+  padding:0 16px;
+}
+.search-bar input{
+  width:100%;
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px;
 }
 
-/* GAME LIST */
-.games-list{
-  list-style:none;
-  padding:0;
-  margin:0;
+/* GAMES GRID */
+.games-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:12px;
+  max-width:var(--max-width);
+  margin:16px auto;
+  padding:0 16px;
 }
-.games-list li{
+.game-card{
   background:var(--card);
-  margin:12px 0;
-  padding:14px 16px;
   border-radius:12px;
   box-shadow:0 6px 18px rgba(0,0,0,.06);
+  overflow:hidden;
   display:flex;
+  flex-direction:column;
   justify-content:space-between;
-  align-items:center;
 }
-.game-title{
-  font-weight:700;
-  color:#0b5fc7;
+.game-card a{
   text-decoration:none;
+  color:#0b5fc7;
+  font-weight:700;
+  padding:12px;
+  display:block;
 }
-.game-desc{
+.game-card .desc{
   font-size:13px;
   color:var(--muted);
+  padding:0 12px 12px;
 }
 .play-btn{
   background:var(--blue);
   color:white;
-  padding:8px 14px;
+  padding:8px 12px;
+  margin:0 12px 12px 12px;
   border-radius:8px;
-  text-decoration:none;
+  text-align:center;
   font-weight:700;
 }
 
@@ -111,122 +131,110 @@ html, body {
   font-size:26px;
   text-decoration:none;
   box-shadow:0 6px 20px rgba(0,0,0,.3);
+  z-index:1000;
+}
+
+/* USER POPUP */
+#userBox{
+  position:fixed;
+  top:10px;
+  right:16px;
+  background:rgba(255,255,255,.95);
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:13px;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+  cursor:pointer;
+  z-index:9999;
+}
+#settingsPopup{
+  position:fixed;
+  top:40px;
+  right:16px;
+  background:white;
+  padding:10px 12px;
+  border-radius:8px;
+  box-shadow:0 6px 18px rgba(0,0,0,.2);
+  display:none;
+  font-size:13px;
+  z-index:10000;
+}
+#settingsPopup input{
+  padding:4px 6px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  width:140px;
+  font-size:12px;
+}
+#settingsPopup button{
+  padding:4px 6px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- TOPBAR -->
-<header class="topbar">
-  <span class="wave-title">
+<header class="header">
+  <div class="wave-title">
     <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
     <span>O</span><span>w</span><span>l</span>
-  </span>
+  </div>
+  <div class="menu">
+    <button id="myGamesBtn">My Games</button>
+    <button id="friendsBtn">Friends</button>
+    <button id="contactBtn">Contact</button>
+    <span id="userBox">Guest</span>
+  </div>
 </header>
 
-<!-- MAIN CONTENT -->
-<main class="wrap">
-<ul class="games-list">
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Search games...">
+</div>
 
-<li>
-  <div>
-    <a class="game-title" href="color-clicker.html">Color Clicker</a>
-    <div class="game-desc">Fast reaction color game.</div>
+<main class="games-grid" id="gamesGrid">
+  <div class="game-card">
+    <a href="color-clicker.html">Color Clicker</a>
+    <div class="desc">Fast reaction color game.</div>
+    <div class="play-btn"><a href="color-clicker.html">Play</a></div>
   </div>
-  <a class="play-btn" href="color-clicker.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="emoji-memory.html">Emoji Memory</a>
-    <div class="game-desc">Find all matching emoji pairs.</div>
+  <div class="game-card">
+    <a href="emoji-memory.html">Emoji Memory</a>
+    <div class="desc">Find all matching emoji pairs.</div>
+    <div class="play-btn"><a href="emoji-memory.html">Play</a></div>
   </div>
-  <a class="play-btn" href="emoji-memory.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="jump-monkey.html">Monkey Jump</a>
-    <div class="game-desc">Jump over obstacles.</div>
+  <div class="game-card">
+    <a href="jump-monkey.html">Monkey Jump</a>
+    <div class="desc">Jump over obstacles.</div>
+    <div class="play-btn"><a href="jump-monkey.html">Play</a></div>
   </div>
-  <a class="play-btn" href="jump-monkey.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="banana-catcher.html">Banana Catcher</a>
-    <div class="game-desc">Catch bananas, avoid bombs.</div>
+  <div class="game-card">
+    <a href="banana-catcher.html">Banana Catcher</a>
+    <div class="desc">Catch bananas, avoid bombs.</div>
+    <div class="play-btn"><a href="banana-catcher.html">Play</a></div>
   </div>
-  <a class="play-btn" href="banana-catcher.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="tic-tac-toe.html">Tic Tac Toe</a>
-    <div class="game-desc">2 players classic game.</div>
-  </div>
-  <a class="play-btn" href="tic-tac-toe.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="tic-tac-toe-AI.html">Tic Tac Toe AI</a>
-    <div class="game-desc">Play against the computer.</div>
-  </div>
-  <a class="play-btn" href="tic-tac-toe-AI.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="minesweeper.html">Minesweeper</a>
-    <div class="game-desc">Think smart, click safe.</div>
-  </div>
-  <a class="play-btn" href="minesweeper.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="chess-ai.html">Chess AI</a>
-    <div class="game-desc">Classic chess vs computer.</div>
-  </div>
-  <a class="play-btn" href="chess-ai.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="geometry-dash.html">Geometry Dash</a>
-    <div class="game-desc">Jump and survive.</div>
-  </div>
-  <a class="play-btn" href="geometry-dash.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="snake-game.html">Snake Game</a>
-    <div class="game-desc">Eat apples and grow.</div>
-  </div>
-  <a class="play-btn" href="snake-game.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="minecraft.html">Minecraft</a>
-    <div class="game-desc">Creative block building adventure.</div>
-  </div>
-  <a class="play-btn" href="minecraft.html">Play</a>
-</li>
-
-</ul>
+  <!-- Weitere Spiele hier -->
 </main>
+
+<div id="settingsPopup">
+  <div>
+    <label>Edit Username:</label><br>
+    <input type="text" id="usernameInput" placeholder="New username">
+    <button id="saveUsernameBtn" style="background:#0b74de;color:white;">Save</button>
+  </div>
+  <button id="logoutBtn" style="background:#ff006e;color:white;">Logout</button>
+  <hr>
+  <button id="googleLoginBtn" style="background:#4285F4;color:white;">Sign in with G</button>
+</div>
 
 <a class="feedback" href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform" target="_blank">💬</a>
 
-<!-- -------------------- USER BOX / SETTINGS -------------------- -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, updateProfile, GoogleAuthProvider, signInWithPopup } 
-from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, updateProfile, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
@@ -234,111 +242,71 @@ const firebaseConfig = {
   projectId: "arcadeowl",
   appId: "1:604579422254:web:19ecace88992c998efffbf"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-// --- CREATE USER BOX ---
-const userBox = document.createElement("div");
-userBox.style.position = "fixed";
-userBox.style.top = "10px";
-userBox.style.right = "10px";
-userBox.style.background = "rgba(255,255,255,.95)";
-userBox.style.padding = "6px 12px";
-userBox.style.borderRadius = "8px";
-userBox.style.fontSize = "13px";
-userBox.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
-userBox.style.cursor = "pointer";
-userBox.style.display = "flex";
-userBox.style.alignItems = "center";
-userBox.style.gap = "6px";
-userBox.style.zIndex = "9999";
-document.body.appendChild(userBox);
-
-// --- CREATE SETTINGS POPUP ---
-const settingsPopup = document.createElement("div");
-settingsPopup.style.position = "fixed";
-settingsPopup.style.top = "40px";
-settingsPopup.style.right = "10px";
-settingsPopup.style.background = "white";
-settingsPopup.style.padding = "10px 12px";
-settingsPopup.style.borderRadius = "8px";
-settingsPopup.style.boxShadow = "0 6px 18px rgba(0,0,0,.2)";
-settingsPopup.style.display = "none";
-settingsPopup.style.fontSize = "13px";
-settingsPopup.style.zIndex = "10000";
-
-settingsPopup.innerHTML = `
-<div style="margin-bottom:8px;">
-  <label style="font-size:12px;">Edit Username:</label><br>
-  <input type="text" id="usernameInput" placeholder="New username" style="padding:4px 6px; border-radius:6px; border:1px solid #ccc; width:140px;">
-  <button id="saveUsernameBtn" style="margin-left:4px;padding:4px 6px;border:none;background:#0b74de;color:white;border-radius:6px;cursor:pointer;">Save</button>
-</div>
-<button id="logoutBtn" style="border:none;background:#ff006e;color:white;border-radius:6px;padding:6px 12px;cursor:pointer;">Logout</button>
-<hr>
-<button id="googleSignInBtn" style="border:none;background:#fff;color:#444;border-radius:6px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:4px;">
-  <span style="font-weight:bold;">G</span> Sign in with Google
-</button>
-`;
-document.body.appendChild(settingsPopup);
+const userBox = document.getElementById("userBox");
+const settingsPopup = document.getElementById("settingsPopup");
 
 // --- TOGGLE SETTINGS POPUP ---
-userBox.addEventListener("click", e=>{
+userBox.addEventListener("click", (e)=>{
   e.stopPropagation();
-  if(userBox.textContent.trim() !== "Login"){
-    settingsPopup.style.display = settingsPopup.style.display === "none" ? "block" : "none";
-  }
+  settingsPopup.style.display = settingsPopup.style.display==="none"?"block":"none";
 });
-
-// --- CLOSE POPUP WHEN CLICK OUTSIDE ---
-document.addEventListener("click", e=>{
-  if(!userBox.contains(e.target) && !settingsPopup.contains(e.target)){
-    settingsPopup.style.display = "none";
+document.addEventListener("click",(e)=>{
+  if(!settingsPopup.contains(e.target) && e.target!==userBox){
+    settingsPopup.style.display="none";
   }
 });
 
 // --- AUTH STATE ---
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth,user=>{
   if(user){
-    const name = user.displayName || user.email.split("@")[0] || "User";
+    const name = user.displayName||user.email.split("@")[0]||"User";
     userBox.textContent = name;
   }else{
-    userBox.textContent = "Login";
-    // Klick auf Login leitet zu login.html
-    userBox.onclick = ()=> location.href="login.html";
+    userBox.textContent="Guest";
   }
 });
 
-// --- LOGOUT BUTTON ---
+// --- LOGOUT ---
 document.getElementById("logoutBtn").onclick = ()=>{
-  signOut(auth).then(()=> location.reload());
+  signOut(auth).then(()=>location.reload());
 };
 
-// --- SAVE USERNAME BUTTON ---
+// --- SAVE USERNAME ---
 document.getElementById("saveUsernameBtn").onclick = ()=>{
   const newName = document.getElementById("usernameInput").value.trim();
-  if(newName){
-    updateProfile(auth.currentUser, { displayName: newName })
-    .then(()=> {
-      userBox.textContent = newName;
-      settingsPopup.style.display = "none";
-    })
-    .catch(err=>alert(err.message));
+  if(newName && auth.currentUser){
+    updateProfile(auth.currentUser,{displayName:newName}).then(()=>{
+      userBox.textContent=newName;
+      settingsPopup.style.display="none";
+    }).catch(err=>alert(err.message));
   }
 };
 
-// --- GOOGLE SIGN IN ---
-document.getElementById("googleSignInBtn").onclick = ()=>{
-  const provider = new GoogleAuthProvider();
-  signInWithPopup(auth, provider)
-  .then(result=>{
-    const user = result.user;
-    userBox.textContent = user.displayName || user.email.split("@")[0];
-    settingsPopup.style.display = "none";
-  })
-  .catch(err=>alert(err.message));
+// --- GOOGLE LOGIN ---
+document.getElementById("googleLoginBtn").onclick = ()=>{
+  signInWithPopup(auth,provider)
+    .then(result=>{
+      const user = result.user;
+      userBox.textContent = user.displayName||user.email.split("@")[0];
+      settingsPopup.style.display="none";
+    }).catch(err=>alert(err.message));
 };
+
+// --- SEARCH FUNCTIONALITY ---
+const searchInput = document.getElementById("searchInput");
+const gamesGrid = document.getElementById("gamesGrid");
+searchInput.addEventListener("input",()=>{
+  const val = searchInput.value.toLowerCase();
+  Array.from(gamesGrid.children).forEach(card=>{
+    const title = card.querySelector("a").textContent.toLowerCase();
+    card.style.display = title.includes(val)?"block":"none";
+  });
+});
 </script>
 
 </body>
-      </html>
+  </html>
