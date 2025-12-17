@@ -2,80 +2,56 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ArcadeOwl – Login</title>
+<title>Login - ArcadeOwl</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
   margin:0;
-  font-family:system-ui,Segoe UI,Roboto,Arial;
+  font-family:system-ui, Arial;
   background:#0b74de;
   display:flex;
   align-items:center;
   justify-content:center;
   height:100vh;
 }
-
 .card{
   background:white;
-  width:320px;
   padding:24px;
-  border-radius:16px;
-  box-shadow:0 20px 40px rgba(0,0,0,.25);
+  border-radius:14px;
+  width:100%;
+  max-width:340px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
 }
-
-h1{
-  text-align:center;
-  margin:0 0 16px;
-  color:#0b74de;
-}
-
+h1{text-align:center;margin-bottom:16px}
 input{
   width:100%;
   padding:10px;
   margin:8px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-  font-size:14px;
+  font-size:15px;
 }
-
-.password-wrap{
-  position:relative;
-}
-.password-wrap span{
-  position:absolute;
-  right:10px;
-  top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  opacity:.6;
-}
-
 button{
   width:100%;
-  padding:10px;
-  margin-top:12px;
+  padding:12px;
+  margin-top:10px;
+  font-weight:700;
   background:#0b74de;
   color:white;
   border:none;
   border-radius:8px;
-  font-weight:700;
-  cursor:pointer;
 }
-
-.switch{
+.toggle{
   text-align:center;
   margin-top:12px;
-  font-size:13px;
+  font-size:14px;
   cursor:pointer;
   color:#0b74de;
 }
-
 .error{
-  color:#d00000;
-  font-size:13px;
+  color:red;
   text-align:center;
-  min-height:18px;
+  margin-top:10px;
+  font-size:14px;
 }
 </style>
 </head>
@@ -86,76 +62,61 @@ button{
   <h1 id="title">Login</h1>
 
   <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password (min 6 chars)">
 
-  <div class="password-wrap">
-    <input id="password" type="password" placeholder="Password">
-    <span onclick="togglePw()">👁️</span>
-  </div>
+  <button id="actionBtn">Login</button>
 
+  <div class="toggle" id="toggleMode">Create account</div>
   <div class="error" id="error"></div>
-
-  <button onclick="submit()">Login</button>
-
-  <div class="switch" onclick="toggleMode()">
-    No account? Create one
-  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth,
-         signInWithEmailAndPassword,
-         createUserWithEmailAndPassword } from
-"https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
   projectId: "arcadeowl",
-  storageBucket: "arcadeowl.appspot.com",
-  messagingSenderId: "604579422254",
   appId: "1:604579422254:web:19ecace88992c998efffbf"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-let isRegister = false;
+let isLogin = true;
 
-window.toggleMode = () => {
-  isRegister = !isRegister;
-  document.getElementById("title").innerText =
-    isRegister ? "Register" : "Login";
-  document.querySelector("button").innerText =
-    isRegister ? "Create account" : "Login";
-  document.querySelector(".switch").innerText =
-    isRegister ? "Already have an account? Login" : "No account? Create one";
-  document.getElementById("error").innerText = "";
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const btn = document.getElementById("actionBtn");
+const toggle = document.getElementById("toggleMode");
+const title = document.getElementById("title");
+const errorBox = document.getElementById("error");
+
+toggle.onclick = () => {
+  isLogin = !isLogin;
+  title.textContent = isLogin ? "Login" : "Register";
+  btn.textContent = isLogin ? "Login" : "Register";
+  toggle.textContent = isLogin ? "Create account" : "Back to login";
+  errorBox.textContent = "";
 };
 
-window.togglePw = () => {
-  const pw = document.getElementById("password");
-  pw.type = pw.type === "password" ? "text" : "password";
-};
+btn.onclick = async () => {
+  errorBox.textContent = "";
 
-window.submit = () => {
-  const email = email.value.trim();
-  const password = password.value.trim();
-  const errorBox = document.getElementById("error");
-
-  if (!email || !password) {
-    errorBox.innerText = "Fill in all fields";
-    return;
-  }
-
-  if (isRegister) {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(() => location.href = "index.html")
-      .catch(err => errorBox.innerText = err.message);
-  } else {
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => location.href = "index.html")
-      .catch(err => errorBox.innerText = err.message);
+  try{
+    if(isLogin){
+      await signInWithEmailAndPassword(auth, email.value, password.value);
+    }else{
+      await createUserWithEmailAndPassword(auth, email.value, password.value);
+    }
+    location.href = "index.html";
+  }catch(e){
+    errorBox.textContent = e.message;
   }
 };
 </script>
