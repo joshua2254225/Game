@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SurviveX – 10 Days Survival</title>
+<title>SurviveX – Tunnel Defense</title>
 
 <style>
 body{
   margin:0;
-  background:#0f172a;
+  background:#020617;
   font-family:Arial, sans-serif;
   color:white;
   display:flex;
@@ -16,70 +16,89 @@ body{
   height:100vh;
 }
 
+/* TUNNEL */
 #game{
-  width:700px;
-  height:450px;
-  background:#020617;
-  border:3px solid #2563eb;
+  width:360px;
+  height:560px;
+  background:linear-gradient(#020617,#020617);
+  border:4px solid #2563eb;
   position:relative;
   overflow:hidden;
 }
 
+/* Tunnel walls */
+#game::before,
+#game::after{
+  content:"";
+  position:absolute;
+  top:0;
+  width:40px;
+  height:100%;
+  background:#020617;
+  border-left:3px solid #334155;
+  border-right:3px solid #334155;
+}
+#game::before{ left:0; }
+#game::after{ right:0; }
+
+/* PLAYER */
 #player{
-  width:32px;
-  height:32px;
+  width:34px;
+  height:34px;
   background:#22c55e;
   position:absolute;
   bottom:20px;
-  left:334px;
+  left:163px;
   border-radius:6px;
 }
 
-#enemy{
+/* ENEMY */
+.enemy{
   width:32px;
   height:32px;
   background:#ef4444;
   position:absolute;
-  top:40px;
-  left:100px;
+  top:-40px;
   border-radius:6px;
 }
 
+/* BULLET */
 .bullet{
   width:6px;
-  height:12px;
-  background:yellow;
+  height:14px;
+  background:#fde047;
   position:absolute;
-  border-radius:3px;
+  border-radius:4px;
 }
 
+/* UI */
 #ui{
   position:absolute;
-  top:10px;
-  left:10px;
-  font-size:14px;
+  top:8px;
+  left:8px;
+  font-size:13px;
 }
 
+/* MESSAGE */
 #message{
   position:absolute;
   inset:0;
-  background:rgba(0,0,0,.75);
-  display:none;
+  background:rgba(0,0,0,.8);
+  display:flex;
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  font-size:26px;
+  font-size:22px;
   gap:12px;
 }
 
 button{
-  padding:10px 16px;
+  padding:10px 18px;
   border:none;
   background:#2563eb;
   color:white;
   border-radius:8px;
   cursor:pointer;
-  font-size:14px;
 }
 </style>
 </head>
@@ -88,151 +107,154 @@ button{
 
 <div id="game">
   <div id="ui">
-    Day: <span id="day">1</span> / 10<br>
-    Hits today: <span id="hits">0</span> / 5
+    Day: <span id="day">1</span><br>
+    Kills: <span id="kills">0</span>
   </div>
 
   <div id="player"></div>
-  <div id="enemy"></div>
 
   <div id="message">
-    <div id="msgText"></div>
-    <button onclick="startGame()">Start / Restart</button>
+    <div id="msgText">Survive the Tunnel</div>
+    <button onclick="startGame()">Start</button>
   </div>
 </div>
 
 <script>
 const game = document.getElementById("game");
 const player = document.getElementById("player");
-const enemy = document.getElementById("enemy");
 const dayEl = document.getElementById("day");
-const hitsEl = document.getElementById("hits");
+const killsEl = document.getElementById("kills");
 const message = document.getElementById("message");
 const msgText = document.getElementById("msgText");
 
-let playerX, enemyX, enemySpeed;
-let hitsToday, day;
+let playerX = 163;
+let enemies = [];
+let bullets = [];
 let running = false;
 
-const GAME_WIDTH = 700;
-const PLAYER_SPEED = 20;
-const HITS_PER_DAY = 5;
+let day = 1;
+let kills = 0;
+let enemySpeed = 1.4;
+let spawnRate = 1500;
 
-// ---------------- START GAME ----------------
+// ---------------- START ----------------
 function startGame(){
-  message.style.display = "none";
-  running = true;
+  enemies.forEach(e=>e.remove());
+  bullets.forEach(b=>b.remove());
+  enemies = [];
+  bullets = [];
 
-  playerX = 334;
-  enemyX = 100;
-  enemySpeed = 2;
-
-  hitsToday = 0;
   day = 1;
+  kills = 0;
+  enemySpeed = 1.4;
+  spawnRate = 1500;
 
   updateUI();
+  message.style.display = "none";
+  running = true;
 }
 
 // ---------------- UI ----------------
 function updateUI(){
   dayEl.textContent = day;
-  hitsEl.textContent = hitsToday;
+  killsEl.textContent = kills;
 }
 
 // ---------------- PLAYER MOVE ----------------
 document.addEventListener("keydown", e=>{
   if(!running) return;
 
-  if(e.key === "ArrowLeft") playerX -= PLAYER_SPEED;
-  if(e.key === "ArrowRight") playerX += PLAYER_SPEED;
+  if(e.key === "ArrowLeft") playerX -= 18;
+  if(e.key === "ArrowRight") playerX += 18;
   if(e.key === " ") shoot();
 
-  playerX = Math.max(0, Math.min(GAME_WIDTH-32, playerX));
+  playerX = Math.max(40, Math.min(286, playerX));
   player.style.left = playerX + "px";
 });
 
-// Touch shoot
+// Mobile shoot
 game.addEventListener("click", ()=> running && shoot());
 
 // ---------------- SHOOT ----------------
 function shoot(){
-  const bullet = document.createElement("div");
-  bullet.className = "bullet";
-  bullet.style.left = (playerX + 13) + "px";
-  bullet.style.top = "360px";
-  game.appendChild(bullet);
-
-  const interval = setInterval(()=>{
-    let y = bullet.offsetTop - 12;
-    bullet.style.top = y + "px";
-
-    // Collision
-    if(
-      y <= enemy.offsetTop + 32 &&
-      bullet.offsetLeft + 6 >= enemy.offsetLeft &&
-      bullet.offsetLeft <= enemy.offsetLeft + 32
-    ){
-      bullet.remove();
-      clearInterval(interval);
-      enemyHit();
-    }
-
-    if(y < 0){
-      bullet.remove();
-      clearInterval(interval);
-    }
-  },16);
+  const b = document.createElement("div");
+  b.className = "bullet";
+  b.style.left = (playerX + 14) + "px";
+  b.style.top = "480px";
+  game.appendChild(b);
+  bullets.push(b);
 }
 
-// ---------------- ENEMY HIT ----------------
-function enemyHit(){
-  hitsToday++;
-  hitsEl.textContent = hitsToday;
-
-  enemy.style.background = "#fde047";
-  setTimeout(()=> enemy.style.background="#ef4444",100);
-
-  enemyX = Math.random() * (GAME_WIDTH-32);
-  enemy.style.left = enemyX + "px";
-
-  if(hitsToday >= HITS_PER_DAY){
-    nextDay();
-  }
-}
-
-// ---------------- NEXT DAY ----------------
-function nextDay(){
-  day++;
-  if(day > 10){
-    endGame(true);
-    return;
-  }
-
-  hitsToday = 0;
-  enemySpeed += 0.8;
-  updateUI();
-}
-
-// ---------------- END ----------------
-function endGame(win){
-  running = false;
-  message.style.display = "flex";
-  msgText.textContent = win ? "🎉 YOU SURVIVED 10 DAYS!" : "GAME OVER";
-}
-
-// ---------------- ENEMY MOVE ----------------
+// ---------------- SPAWN ENEMY ----------------
 setInterval(()=>{
   if(!running) return;
 
-  enemyX += enemySpeed;
-  if(enemyX <= 0 || enemyX >= GAME_WIDTH-32) enemySpeed *= -1;
-  enemy.style.left = enemyX + "px";
+  const e = document.createElement("div");
+  e.className = "enemy";
+  e.style.left = (40 + Math.random()*246) + "px";
+  game.appendChild(e);
+  enemies.push(e);
+}, spawnRate);
+
+// ---------------- GAME LOOP ----------------
+setInterval(()=>{
+  if(!running) return;
+
+  // Move bullets
+  bullets.forEach((b, bi)=>{
+    b.style.top = (b.offsetTop - 8) + "px";
+    if(b.offsetTop < -20){
+      b.remove();
+      bullets.splice(bi,1);
+    }
+  });
+
+  // Move enemies
+  enemies.forEach((e, ei)=>{
+    e.style.top = (e.offsetTop + enemySpeed) + "px";
+
+    // Collision with player
+    if(e.offsetTop > 460){
+      endGame();
+    }
+
+    // Bullet collision
+    bullets.forEach((b, bi)=>{
+      if(
+        b.offsetTop <= e.offsetTop + 32 &&
+        b.offsetLeft + 6 >= e.offsetLeft &&
+        b.offsetLeft <= e.offsetLeft + 32
+      ){
+        e.remove();
+        b.remove();
+        enemies.splice(ei,1);
+        bullets.splice(bi,1);
+        kill();
+      }
+    });
+  });
 },16);
 
-// Auto show start screen
-message.style.display = "flex";
-msgText.textContent = "Survive 10 Days!";
+// ---------------- KILL ----------------
+function kill(){
+  kills++;
+  killsEl.textContent = kills;
+
+  if(kills % 10 === 0){
+    day++;
+    enemySpeed += 0.4;
+    spawnRate = Math.max(600, spawnRate - 150);
+    updateUI();
+  }
+}
+
+// ---------------- END ----------------
+function endGame(){
+  running = false;
+  message.style.display = "flex";
+  msgText.textContent = "💀 You died in the tunnel";
+}
 </script>
 
 </body>
-</html>
+  </html>
