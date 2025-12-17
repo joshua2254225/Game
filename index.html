@@ -202,11 +202,9 @@ html,body{
 
 <a class="feedback" href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform" target="_blank">💬</a>
 
-<!-- 🔐 USER STATUS – NUR ANZEIGE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut }
-from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
@@ -218,32 +216,68 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// --- USER BOX ---
 const userBox = document.createElement("div");
-userBox.style.position="fixed";
-userBox.style.top="10px";
-userBox.style.right="10px";
-userBox.style.background="rgba(255,255,255,.95)";
-userBox.style.padding="6px 10px";
-userBox.style.borderRadius="8px";
-userBox.style.fontSize="13px";
-userBox.style.boxShadow="0 4px 12px rgba(0,0,0,.2)";
-userBox.style.zIndex="9999";
+userBox.style.position = "fixed";
+userBox.style.top = "10px";
+userBox.style.right = "10px";
+userBox.style.background = "rgba(255,255,255,.95)";
+userBox.style.padding = "6px 12px";
+userBox.style.borderRadius = "8px";
+userBox.style.fontSize = "13px";
+userBox.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
+userBox.style.cursor = "pointer";
+userBox.style.zIndex = "9999";
 document.body.appendChild(userBox);
 
-onAuthStateChanged(auth, user=>{
+// --- SETTINGS POPUP (HIDDEN) ---
+const settingsPopup = document.createElement("div");
+settingsPopup.style.position = "fixed";
+settingsPopup.style.top = "40px";
+settingsPopup.style.right = "10px";
+settingsPopup.style.background = "white";
+settingsPopup.style.padding = "10px 12px";
+settingsPopup.style.borderRadius = "8px";
+settingsPopup.style.boxShadow = "0 6px 18px rgba(0,0,0,.2)";
+settingsPopup.style.display = "none";
+settingsPopup.style.fontSize = "13px";
+settingsPopup.innerHTML = `<button id="logoutBtn" style="
+    border:none;
+    background:#ff006e;
+    color:white;
+    border-radius:6px;
+    padding:6px 12px;
+    cursor:pointer;
+">Logout</button>`;
+document.body.appendChild(settingsPopup);
+
+// --- TOGGLE POPUP ---
+userBox.addEventListener("click", () => {
+  settingsPopup.style.display = settingsPopup.style.display === "none" ? "block" : "none";
+});
+
+// --- LOGOUT ---
+document.body.addEventListener("click", (e) => {
+  if(e.target && e.target.id === "logoutBtn"){
+    signOut(auth).then(() => location.href="login.html");
+  }
+});
+
+// --- AUTH STATE ---
+onAuthStateChanged(auth, user => {
   if(user){
-    const name = user.displayName || user.email;
-    userBox.innerHTML = `
-      👤 ${name}
-      <button id="logoutBtn"
-        style="margin-left:6px;border:none;
-        background:#ff006e;color:white;
-        border-radius:6px;padding:4px 8px;cursor:pointer;">
-        Logout
-      </button>`;
-    logoutBtn.onclick=()=>signOut(auth);
+    const name = user.displayName || user.email || "User";
+    userBox.textContent = name;
   }else{
-    userBox.innerHTML = `👤 Guest <a href="login.html">Login</a>`;
+    userBox.textContent = "Guest";
+    userBox.addEventListener("click", () => location.href="login.html");
+  }
+});
+
+// --- CLOSE POPUP WHEN CLICK OUTSIDE ---
+document.addEventListener("click", (e) => {
+  if(!userBox.contains(e.target) && !settingsPopup.contains(e.target)){
+    settingsPopup.style.display = "none";
   }
 });
 </script>
