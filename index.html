@@ -12,7 +12,8 @@
   --card:#ffffff;
   --max-width:980px;
 }
-html,body{
+
+html, body {
   margin:0;
   font-family:system-ui,Segoe UI,Roboto,Arial;
   background:#f5f7fb;
@@ -94,7 +95,7 @@ html,body{
   font-weight:700;
 }
 
-/* FEEDBACK */
+/* FEEDBACK BUTTON */
 .feedback{
   position:fixed;
   right:16px;
@@ -116,6 +117,7 @@ html,body{
 
 <body>
 
+<!-- TOPBAR -->
 <header class="topbar">
   <span class="wave-title">
     <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
@@ -123,6 +125,7 @@ html,body{
   </span>
 </header>
 
+<!-- MAIN CONTENT -->
 <main class="wrap">
 <ul class="games-list">
 
@@ -219,10 +222,11 @@ html,body{
 
 <a class="feedback" href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform" target="_blank">💬</a>
 
-<!-- USER POPUP -->
+<!-- -------------------- USER BOX / SETTINGS -------------------- -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, updateProfile, GoogleAuthProvider, signInWithPopup } 
+from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
@@ -234,7 +238,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// --- USER BOX ---
+// --- CREATE USER BOX ---
 const userBox = document.createElement("div");
 userBox.style.position = "fixed";
 userBox.style.top = "10px";
@@ -245,10 +249,13 @@ userBox.style.borderRadius = "8px";
 userBox.style.fontSize = "13px";
 userBox.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
 userBox.style.cursor = "pointer";
+userBox.style.display = "flex";
+userBox.style.alignItems = "center";
+userBox.style.gap = "6px";
 userBox.style.zIndex = "9999";
 document.body.appendChild(userBox);
 
-// --- SETTINGS POPUP ---
+// --- CREATE SETTINGS POPUP ---
 const settingsPopup = document.createElement("div");
 settingsPopup.style.position = "fixed";
 settingsPopup.style.top = "40px";
@@ -260,23 +267,31 @@ settingsPopup.style.boxShadow = "0 6px 18px rgba(0,0,0,.2)";
 settingsPopup.style.display = "none";
 settingsPopup.style.fontSize = "13px";
 settingsPopup.style.zIndex = "10000";
+
 settingsPopup.innerHTML = `
-  <div style="margin-bottom:8px;">
-    <label style="font-size:12px;">Edit Username:</label><br>
-    <input type="text" id="usernameInput" placeholder="New username" style="padding:4px 6px; border-radius:6px; border:1px solid #ccc; width:140px;">
-    <button id="saveUsernameBtn" style="margin-left:4px;padding:4px 6px;border:none;background:#0b74de;color:white;border-radius:6px;cursor:pointer;">Save</button>
-  </div>
-  <button id="logoutBtn" style="border:none;background:#ff006e;color:white;border-radius:6px;padding:6px 12px;cursor:pointer;">Logout</button>
+<div style="margin-bottom:8px;">
+  <label style="font-size:12px;">Edit Username:</label><br>
+  <input type="text" id="usernameInput" placeholder="New username" style="padding:4px 6px; border-radius:6px; border:1px solid #ccc; width:140px;">
+  <button id="saveUsernameBtn" style="margin-left:4px;padding:4px 6px;border:none;background:#0b74de;color:white;border-radius:6px;cursor:pointer;">Save</button>
+</div>
+<button id="logoutBtn" style="border:none;background:#ff006e;color:white;border-radius:6px;padding:6px 12px;cursor:pointer;">Logout</button>
+<hr>
+<button id="googleSignInBtn" style="border:none;background:#fff;color:#444;border-radius:6px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+  <span style="font-weight:bold;">G</span> Sign in with Google
+</button>
 `;
 document.body.appendChild(settingsPopup);
 
-// --- TOGGLE POPUP ---
-userBox.addEventListener("click",(e)=>{
-  settingsPopup.style.display = settingsPopup.style.display === "none" ? "block" : "none";
+// --- TOGGLE SETTINGS POPUP ---
+userBox.addEventListener("click", e=>{
+  e.stopPropagation();
+  if(userBox.textContent.trim() !== "Login"){
+    settingsPopup.style.display = settingsPopup.style.display === "none" ? "block" : "none";
+  }
 });
 
 // --- CLOSE POPUP WHEN CLICK OUTSIDE ---
-document.addEventListener("click",(e)=>{
+document.addEventListener("click", e=>{
   if(!userBox.contains(e.target) && !settingsPopup.contains(e.target)){
     settingsPopup.style.display = "none";
   }
@@ -287,28 +302,43 @@ onAuthStateChanged(auth, user=>{
   if(user){
     const name = user.displayName || user.email.split("@")[0] || "User";
     userBox.textContent = name;
-  } else {
-    userBox.textContent = "Guest";
-    userBox.onclick = ()=>location.href="login.html";
+  }else{
+    userBox.textContent = "Login";
+    // Klick auf Login leitet zu login.html
+    userBox.onclick = ()=> location.href="login.html";
   }
 });
 
-// --- LOGOUT ---
+// --- LOGOUT BUTTON ---
 document.getElementById("logoutBtn").onclick = ()=>{
-  signOut(auth).then(()=> location.href="login.html");
+  signOut(auth).then(()=> location.reload());
 };
 
-// --- SAVE USERNAME ---
+// --- SAVE USERNAME BUTTON ---
 document.getElementById("saveUsernameBtn").onclick = ()=>{
   const newName = document.getElementById("usernameInput").value.trim();
   if(newName){
-    updateProfile(auth.currentUser,{ displayName: newName }).then(()=>{
+    updateProfile(auth.currentUser, { displayName: newName })
+    .then(()=> {
       userBox.textContent = newName;
       settingsPopup.style.display = "none";
-    }).catch(err=>alert(err.message));
+    })
+    .catch(err=>alert(err.message));
   }
+};
+
+// --- GOOGLE SIGN IN ---
+document.getElementById("googleSignInBtn").onclick = ()=>{
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(auth, provider)
+  .then(result=>{
+    const user = result.user;
+    userBox.textContent = user.displayName || user.email.split("@")[0];
+    settingsPopup.style.display = "none";
+  })
+  .catch(err=>alert(err.message));
 };
 </script>
 
 </body>
-                                                     </html>
+      </html>
