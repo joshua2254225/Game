@@ -1,75 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Login – ArcadeOwl</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ArcadeOwl – Login</title>
+
 <style>
 body{
   margin:0;
-  font-family:system-ui,Arial;
+  font-family:system-ui,Segoe UI,Roboto,Arial;
   background:#0b74de;
   display:flex;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
   height:100vh;
 }
+
 .card{
-  background:#fff;
+  background:white;
+  width:320px;
   padding:24px;
-  border-radius:12px;
-  width:100%;
-  max-width:360px;
-  box-shadow:0 10px 30px rgba(0,0,0,.2);
+  border-radius:16px;
+  box-shadow:0 20px 40px rgba(0,0,0,.25);
 }
-h1{text-align:center;margin-bottom:16px;}
+
+h1{
+  text-align:center;
+  margin:0 0 16px;
+  color:#0b74de;
+}
+
 input{
   width:100%;
-  padding:12px;
+  padding:10px;
   margin:8px 0;
   border-radius:8px;
   border:1px solid #ccc;
+  font-size:14px;
 }
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  background:#0b74de;
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
+
+.password-wrap{
+  position:relative;
 }
-.eye{
+.password-wrap span{
   position:absolute;
-  right:14px;
+  right:10px;
   top:50%;
   transform:translateY(-50%);
   cursor:pointer;
+  opacity:.6;
 }
-.pw-wrap{position:relative;}
-.error{color:red;text-align:center;margin-top:8px;}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:12px;
+  background:#0b74de;
+  color:white;
+  border:none;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.switch{
+  text-align:center;
+  margin-top:12px;
+  font-size:13px;
+  cursor:pointer;
+  color:#0b74de;
+}
+
+.error{
+  color:#d00000;
+  font-size:13px;
+  text-align:center;
+  min-height:18px;
+}
 </style>
 </head>
+
 <body>
 
 <div class="card">
-  <h1>ArcadeOwl Login</h1>
+  <h1 id="title">Login</h1>
 
   <input id="email" type="email" placeholder="Email">
-  
-  <div class="pw-wrap">
+
+  <div class="password-wrap">
     <input id="password" type="password" placeholder="Password">
-    <span class="eye" onclick="togglePw()">👁</span>
+    <span onclick="togglePw()">👁️</span>
   </div>
 
-  <button onclick="login()">Login</button>
   <div class="error" id="error"></div>
+
+  <button onclick="submit()">Login</button>
+
+  <div class="switch" onclick="toggleMode()">
+    No account? Create one
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth,
+         signInWithEmailAndPassword,
+         createUserWithEmailAndPassword } from
+"https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
@@ -83,22 +120,44 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-window.login = function(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const err = document.getElementById("error");
+let isRegister = false;
 
-  signInWithEmailAndPassword(auth, email, password)
-    .then(()=> location.href="index.html")
-    .catch(e => err.textContent = e.message);
-}
-</script>
+window.toggleMode = () => {
+  isRegister = !isRegister;
+  document.getElementById("title").innerText =
+    isRegister ? "Register" : "Login";
+  document.querySelector("button").innerText =
+    isRegister ? "Create account" : "Login";
+  document.querySelector(".switch").innerText =
+    isRegister ? "Already have an account? Login" : "No account? Create one";
+  document.getElementById("error").innerText = "";
+};
 
-<script>
-function togglePw(){
-  const p = document.getElementById("password");
-  p.type = p.type === "password" ? "text" : "password";
-}
+window.togglePw = () => {
+  const pw = document.getElementById("password");
+  pw.type = pw.type === "password" ? "text" : "password";
+};
+
+window.submit = () => {
+  const email = email.value.trim();
+  const password = password.value.trim();
+  const errorBox = document.getElementById("error");
+
+  if (!email || !password) {
+    errorBox.innerText = "Fill in all fields";
+    return;
+  }
+
+  if (isRegister) {
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(() => location.href = "index.html")
+      .catch(err => errorBox.innerText = err.message);
+  } else {
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => location.href = "index.html")
+      .catch(err => errorBox.innerText = err.message);
+  }
+};
 </script>
 
 </body>
