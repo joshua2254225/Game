@@ -1,415 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1">
-    <title>Geometry Dash — Keep Talking and Nobody Explodes Module</title>
-    <link rel="stylesheet" type="text/css" href="css/font.css">
-    <link rel="stylesheet" type="text/css" href="css/normalize.css">
-    <link rel="stylesheet" type="text/css" href="css/main.css">
-    <script src="js/ktane-utils.js"></script>
-    <style>
-        td {
-            font-size: 14.5px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" href="geometry dash.jpg" type="image">
+    <title>Geometry dash | Alexx743</title>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-01">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Geometry Dash</span>
-            </div>
-            <div class="page-content">
-                <img src="img/Component/Geometry Dash.svg" class="diagram">
-                <h2>On the Subject of Geometry Dash</h2>
-                <p class="flavour-text">I hope RubRub doesn’t see this...</p>
-                <p><i>See Appendix L3V3LS for level identification reference.</i><br>
 
-                <p><strong>NOTE: This module is easier if you have a decent amount of knowledge about the video game Geometry Dash already.</strong></p>
+    <h2>Geometry dash</h2>
 
-                <p>This module is themed after the rhythm game “Geometry Dash”. It starts off with a play button and an image from the game.</p>
+  
+    <div class="topnav">
+        <a href="games.html">
+        <button title="Games" id="Games" class="divbutton"> Games </button> 
+        </a> 
+    
+        <a href="Apps.html">
+        <button title="Apps" id="Apps" class="divbutton"> Apps</button>
+        </a>
+    
+        <a href="index.html">
+        <button title="home" id="home" class="divbutton">home</button>
+        </a>
+    
+        <a href="shooter.html">
+        <button title="shooter" class="divbutton">shooter</button>
+        </a>
+    
+        <a href="sports.html">
+        <button title="sports" class="divbutton">Sports</button>
+        </a>
+    
+        <a href="cars.html">
+        <button title="cars" class="divbutton">Cars</button>
+        </a>
+      </div>
+    .
 
-                <p>Pressing the play button will start a clip of a Geometry Dash level from Appendix L3V3LS. The clip will last for about 10 seconds, and then a new screen will appear showing four cube images from the game as well as a play again and reset button.</p>
+      <iframe src="https://adfree3kh0.github.io/projects/geodash/index.html"></iframe>
 
-                <p>To solve the module the correct cube must be pressed, which is determined by a number. To calculate the number you will need to get a bit of information about the level played in the clip. If the defuser missed important details you can always play the clip again by pressing the play again button. If the defuser doesn’t like the clip and wants a new one, they can press the reset button to reset the module with a new clip. The module can only be reset once, so choose wisely!</p>
+      <button 
+      onclick="iffs('https://adfree3kh0.github.io/projects/geodash/index.html')"
+       class="fullscreen"></button>
+      
+       <script>
+        function iffs(href) {
+      const iframe = document.querySelector("iframe");
+      const stl = iframe.style;
+      stl.border = stl.outline = 'none';
+      stl.width = '100vw';
+      stl.height = '100vh';
+      stl.position = 'fixed';
+      stl.left = stl.right = stl.top = stl.bottom = '0';
+      iframe.src = href;
+      }
+      </script>
 
-                <p>If the incorrect cube is pressed, a strike will be recorded and the module WILL NOT reset.</p>
-
-                <h3>Determining the Number</h3>
-                <p>Using the table on page 2, you will modify a starting number to end up with the number you need to find out which cube is correct. This starting number is the sum of the digits in the serial number. The table has pictures of objects from the game in the leftmost column. If the clip of the level has any of these specified objects present, perform the action on your number for each present object in the middle column. If the object is not present in the clip, perform the rightmost action on your number. Keep in mind an object is considered present if <u>any part of the object is visibly present</u>. All actions must be performed from top to bottom.</p>
-
-                <p>NOTE: Whenever the table references the “level” it means the level played in the clip.</p>
-            </div>
-            <div class="page-footer relative-footer">Page 1 of 6</div>
-        </div>
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Geometry Dash</span>
-            </div>
-            <div class="page-content">
-                <h3>Determining the Number (cont.)</h3>
-                <table>
-                    <col style="width: 40%">
-                    <col style="width: 30%">
-                    <col style="width: 30%">
-                    <tr>
-                        <th>Geometry Dash Objects</th>
-                        <th>If any present in clip...</th>
-                        <th>Otherwise...</th>
-                    </tr>
-                    <tr>
-                        <td style="text-align: center;"><img src="img/Geometry Dash/coin1.png"><img src="img/Geometry Dash/coin2.png"><img src="img/Geometry Dash/coin3.png"></td>
-                        <td>Add the number of vowels (including Y) in the level’s song creator.</td>
-                        <td>Subtract 9.</td>
-                    </tr>
-                    <tr>
-                        <td style="text-align: center;"><img src="img/Geometry Dash/mirror1.png"></td>
-                        <td>If level’s name ends with the letter R, subtract 5. Otherwise, add the number of RJ-45 ports.</td>
-                        <td>Add the alphabetic position of the first letter in the level’s verifier where A=0...Z=25.</td>
-                    </tr>
-                    <tr>
-                        <td style="text-align: center;"><img src="img/Geometry Dash/speed1.png"><img src="img/Geometry Dash/speed2.png"></td>
-                        <td>If the level is a collab (multiple creators), multiply by 3. Otherwise, multiply by 2.</td>
-                        <td>Add the number of creators who made the level.</td>
-                    </tr>
-                    <tr>
-                        <td style="text-align: center;"><img src="img/Geometry Dash/teleport1.png"><img src="img/Geometry Dash/teleport2.png"></td>
-                        <td>Add the sum of the alphabetic positions of each letter in the level’s name where A=1...Z=26.</td>
-                        <td>Add (the number of lit indicators + 7).</td>
-                    </tr>
-                    <tr>
-                        <td style="text-align: center;"><img src="img/Geometry Dash/trans1.png"><img src="img/Geometry Dash/trans2.png"><img src="img/Geometry Dash/trans3.png"></td>
-                        <td>Subtract the sum of the number of battery holders and number of letters in the level’s difficulty.</td>
-                        <td>Multiply by the number of letters in the level’s song title.</td>
-                    </tr>
-                    <tr>
-                        <td style="background-color: #000000; text-align: center;"><img src="img/Geometry Dash/orbs1.png"><img src="img/Geometry Dash/orbs2.png"><img src="img/Geometry Dash/orbs3.png"></td>
-                        <td>Add (8 + the number of unlit indicators).</td>
-                        <td>Add alphabetic position of the second to last letter in the last creator of the level alphabetically where A=1...Z=26.</td>
-                    </tr>
-                    <tr>
-                        <td style="background-color: #000000; text-align: center;"><img src="img/Geometry Dash/pad1.png"><img src="img/Geometry Dash/pad2.png"></td>
-                        <td>Multiply by the sum of the number of Us, Ls, and Es present in the bomb’s serial number and the number of ports.</td>
-                        <td>Subtract the starting number minus the number of letters in the level’s song creator.</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="page-footer relative-footer">Page 2 of 6</div>
-        </div>
-        <div class="page page-bg-03">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Geometry Dash</span>
-            </div>
-            <div class="page-content">
-                <h3>Determining the Number (cont.)</h3>
-                <p>Now take the modified number and modulo it by 20, then add 1. This is the number you need to get the correct cube.</p>
-
-                <h3>Determining the Correct Cube</h3>
-                <p>Using the number you determined look it up in the tables below and get the corresponding cube. This cube is the one that needs to be pressed on the module.</p>
-
-                <table style="margin: 1em auto">
-                    <tr>
-                        <th>1</th>
-                        <th>2</th>
-                        <th>3</th>
-                        <th>4</th>
-                        <th>5</th>
-                    </tr>
-                    <tr>
-                        <td><img src="img/Geometry Dash/cube1.png"></td>
-                        <td><img src="img/Geometry Dash/cube2.png"></td>
-                        <td><img src="img/Geometry Dash/cube3.png"></td>
-                        <td><img src="img/Geometry Dash/cube4.png"></td>
-                        <td><img src="img/Geometry Dash/cube5.png"></td>
-                    </tr>
-                </table>
-                <br>
-                <table style="margin: 1em auto">
-                    <tr>
-                        <th>6</th>
-                        <th>7</th>
-                        <th>8</th>
-                        <th>9</th>
-                        <th>10</th>
-                    </tr>
-                    <tr>
-                        <td><img src="img/Geometry Dash/cube6.png"></td>
-                        <td><img src="img/Geometry Dash/cube7.png"></td>
-                        <td><img src="img/Geometry Dash/cube8.png"></td>
-                        <td><img src="img/Geometry Dash/cube9.png"></td>
-                        <td><img src="img/Geometry Dash/cube10.png"></td>
-                    </tr>
-                </table>
-                <br>
-                <table style="margin: 1em auto">
-                    <tr>
-                        <th>11</th>
-                        <th>12</th>
-                        <th>13</th>
-                        <th>14</th>
-                        <th>15</th>
-                    </tr>
-                    <tr>
-                        <td><img src="img/Geometry Dash/cube11.png"></td>
-                        <td><img src="img/Geometry Dash/cube12.png"></td>
-                        <td><img src="img/Geometry Dash/cube13.png"></td>
-                        <td><img src="img/Geometry Dash/cube14.png"></td>
-                        <td><img src="img/Geometry Dash/cube15.png"></td>
-                    </tr>
-                </table>
-                <br>
-                <table style="margin: 1em auto">
-                    <tr>
-                        <th>16</th>
-                        <th>17</th>
-                        <th>18</th>
-                        <th>19</th>
-                        <th>20</th>
-                    </tr>
-                    <tr>
-                        <td><img src="img/Geometry Dash/cube16.png"></td>
-                        <td><img src="img/Geometry Dash/cube17.png"></td>
-                        <td><img src="img/Geometry Dash/cube18.png"></td>
-                        <td><img src="img/Geometry Dash/cube19.png"></td>
-                        <td><img src="img/Geometry Dash/cube20.png"></td>
-                    </tr>
-                </table>
-            </div>
-            <div class="page-footer relative-footer">Page 3 of 6</div>
-        </div>
-        <div class="page page-bg-04">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Appendix L3V3LS</span>
-            </div>
-            <div class="page-content">
-                <h2>Appendix L3V3LS</h2>
-                <p>The following table lists important information about each Geometry Dash level included in this module. If you don’t know what the levels look like, use <a href="https://docs.google.com/document/d/1BwGZdkIVIWbvvEMhUJirhGUQWPGsfsF3gyDWbAIl0cE/edit?usp=sharing">this</a> for reference.</p>
-                <table style="margin: 1em auto">
-                    <tr>
-                        <th>Level</th>
-                        <th>Creators</th>
-                        <th>Verifier</th>
-                        <th>Difficulty</th>
-                        <th>Song Title</th>
-                        <th>Song Creator</th>
-                    </tr>
-                    <tr>
-                        <td>A Bizarre Phantasm</td>
-                        <td>Hermes, Motu, COSINE, Reple, Ryan LC, Luneth, Koreaqwer, RedDragon, WOOGI1411, ZenthicAlpha, Miner, Zelda, Yuri</td>
-                        <td>GoodSmile</td>
-                        <td>Extreme Demon</td>
-                        <td>Betrayal of Fate</td>
-                        <td>Goukisan</td>
-                    </tr>
-                    <tr>
-                        <td>AntiPixel</td>
-                        <td>Echonox</td>
-                        <td>Echonox</td>
-                        <td>Harder</td>
-                        <td>Grizzly(WIP)</td>
-                        <td>Envy</td>
-                    </tr>
-                    <tr>
-                        <td>ColorZ</td>
-                        <td>Xtobe5</td>
-                        <td>Xtobe5</td>
-                        <td>Normal</td>
-                        <td>Streetlights</td>
-                        <td>Envy</td>
-                    </tr>
-                    <tr>
-                        <td>Drowning</td>
-                        <td>Lugunium, Tronzeki, ConstaNEO, Parallon, Rlol, Nekho, Pineapple, Azartt, KowZ, NoctaFly, Axxorz, Gibbon, Atlas, TiTi26, FreeZor, DarwinGD</td>
-                        <td>HexagonDashers</td>
-                        <td>Insane</td>
-                        <td>Drowning</td>
-                        <td>Omnivore</td>
-                    </tr>
-                    <tr>
-                        <td>Dry Out</td>
-                        <td>RobTop</td>
-                        <td>RobTop</td>
-                        <td>Normal</td>
-                        <td>Dry Out</td>
-                        <td>DJVI</td>
-                    </tr>
-                    <tr>
-                        <td>Dynamic On Track</td>
-                        <td>Crepuscule</td>
-                        <td>Crepuscule</td>
-                        <td>Hard</td>
-                        <td>Back On Track</td>
-                        <td>DJVI</td>
-                    </tr>
-                    <tr>
-                        <td>Electroman Adventures</td>
-                        <td>RobTop</td>
-                        <td>RobTop</td>
-                        <td>Insane</td>
-                        <td>Electroman Adventures</td>
-                        <td>Waterflame</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="page-footer relative-footer">Page 4 of 6</div>
-        </div>
-        <div class="page page-bg-05">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Appendix L3V3LS</span>
-            </div>
-            <div class="page-content">
-                <h2>Appendix L3V3LS (cont.)</h2>
-                <table style="margin: 1em auto">
-                    <tr>
-                        <th>Level</th>
-                        <th>Creators</th>
-                        <th>Verifier</th>
-                        <th>Difficulty</th>
-                        <th>Song Title</th>
-                        <th>Song Creator</th>
-                    </tr>
-                    <tr>
-                        <td>Galatic Fragility</td>
-                        <td>Koreaqwer, Tutti, Ple5, Vortiz, Hades, Gigas, ATHG, Theta, Dark Boshy, Dorami</td>
-                        <td>Tricks33</td>
-                        <td>Insane Demon</td>
-                        <td>Eurodancer</td>
-                        <td>TMM43</td>
-                    </tr>
-                    <tr>
-                        <td>Grind District</td>
-                        <td>TriAxis, Etzer</td>
-                        <td>TriAxis</td>
-                        <td>Harder</td>
-                        <td>Grind District</td>
-                        <td>Waterflame</td>
-                    </tr>
-                    <tr>
-                        <td>Lights And Thunder</td>
-                        <td>Lyod</td>
-                        <td>Lyod</td>
-                        <td>Easy Demon</td>
-                        <td style="font-size:12px">Electrodynamix</td>
-                        <td>Dj-Nate</td>
-                    </tr>
-                    <tr>
-                        <td>love baba</td>
-                        <td>Zobros, Demonico17</td>
-                        <td>Zobros</td>
-                        <td>Insane Demon</td>
-                        <td>The Empire Of Toads</td>
-                        <td>Bossfight</td>
-                    </tr>
-                    <tr>
-                        <td>Lunar Ocean</td>
-                        <td>Gelt</td>
-                        <td>Gelt</td>
-                        <td>Hard</td>
-                        <td>Solar Rain</td>
-                        <td>Geoplex</td>
-                    </tr>
-                    <tr>
-                        <td>Old Auto Zone</td>
-                        <td>Gelt</td>
-                        <td>Gelt</td>
-                        <td>Auto</td>
-                        <td>Clubstep</td>
-                        <td>Dj-Nate</td>
-                    </tr>
-                    <tr>
-                        <td>Problematic</td>
-                        <td>Dhafin</td>
-                        <td>Dhafin</td>
-                        <td>Easy Demon</td>
-                        <td>Problematic</td>
-                        <td>Rukkus</td>
-                    </tr>
-                    <tr>
-                        <td>ReTraY</td>
-                        <td style="font-size:13px">DiMaViKuLov26</td>
-                        <td style="font-size:13px">DiMaViKuLov26</td>
-                        <td>Easy</td>
-                        <td>Golden Haze (Prev)</td>
-                        <td>Detious</td>
-                    </tr>
-                    <tr>
-                        <td>Sakupen Hell</td>
-                        <td>Noobas</td>
-                        <td>TrusTa</td>
-                        <td>Extreme Demon</td>
-                        <td>Iron God: Sakupen Hell Yes RMX</td>
-                        <td>mr-jazzman</td>
-                    </tr>
-                    <tr>
-                        <td>Speed Racer</td>
-                        <td>ZenthicAlpha</td>
-                        <td>ZenthicAlpha</td>
-                        <td>Easy Demon</td>
-                        <td>Chaoz Impact</td>
-                        <td>ParagonX9</td>
-                    </tr>
-                    <tr>
-                        <td>Takeoff</td>
-                        <td>Nasgubb</td>
-                        <td>Nasgubb</td>
-                        <td>Medium Demon</td>
-                        <td>Jet Set</td>
-                        <td style="font-size:13px">MadHouseDude</td>
-                    </tr>
-                    <tr>
-                        <td>Time Machine</td>
-                        <td>RobTop</td>
-                        <td>RobTop</td>
-                        <td>Harder</td>
-                        <td>Time Machine</td>
-                        <td>Waterflame</td>
-                    </tr>
-                    <tr>
-                        <td>Uprise</td>
-                        <td>Blad3m, Menkatjezzz</td>
-                        <td>Ninetails</td>
-                        <td>Extreme Demon</td>
-                        <td>Uprise</td>
-                        <td>Envy</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="page-footer relative-footer">Page 5 of 6</div>
-        </div>
-        <div class="page page-bg-06">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Appendix L3V3LS</span>
-            </div>
-            <div class="page-content">
-                <h2>Appendix L3V3LS (cont.)</h2>
-                <table style="margin: 1em auto">
-                    <tr>
-                        <th>Level</th>
-                        <th>Creators</th>
-                        <th>Verifier</th>
-                        <th>Difficulty</th>
-                        <th>Song Title</th>
-                        <th>Song Creator</th>
-                    </tr>
-                    <tr>
-                        <td>Valor</td>
-                        <td>Inversion, MrSleepy, TheDevon, Mosertron, Megaman9, Pizzafire, Dysfunctional Popo, Benjamaster7, KrmaL, Uzendayo, Viceroy, Alter, Hexhammer, jdfr03</td>
-                        <td>KrmaL</td>
-                        <td>Insane Demon</td>
-                        <td>Vigor</td>
-                        <td>AeronMusic</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="page-footer relative-footer">Page 6 of 6</div>
-        </div>
-    </div>
+<script>
+  document.addEventListener("keydown", 
+  async (e) => { if ("`" == e.key) window.parent.window.location.replace("https://google.com/") });
+</script>
+    
 </body>
-                                                                                                                                                                                  </html>
+</html>
