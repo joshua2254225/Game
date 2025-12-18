@@ -146,18 +146,113 @@ function loop() {
     if (running) o.x -= 6;
     ctx.fillRect(o.x, o.y, o.w, o.h);
 
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const scoreEl = document.getElementById("score");
+
+const GROUND_Y = 260;
+let running = true;
+let score = 0;
+
+let player;
+let spikes;
+let spawnTimer;
+
+/* ================= RESET ================= */
+function resetGame() {
+  player = {
+    x: 80,
+    y: GROUND_Y - 30,
+    size: 30,
+    vy: 0,
+    gravity: 1.2,
+    jump: -18,
+    grounded: true
+  };
+
+  spikes = [];
+  spawnTimer = 0;
+  score = 0;
+  running = true;
+}
+
+/* ================= INPUT ================= */
+function jump() {
+  if (player.grounded && running) {
+    player.vy = player.jump;
+    player.grounded = false;
+  }
+}
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") jump();
+});
+canvas.addEventListener("touchstart", jump);
+
+/* ================= LOOP ================= */
+function loop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Ground
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(0, GROUND_Y, canvas.width, 4);
+
+  if (running) {
+    // Physics
+    player.vy += player.gravity;
+    player.y += player.vy;
+
+    if (player.y >= GROUND_Y - player.size) {
+      player.y = GROUND_Y - player.size;
+      player.vy = 0;
+      player.grounded = true;
+    }
+
+    // Spawn spikes
+    spawnTimer++;
+    if (spawnTimer > 90) {
+      spikes.push({
+        x: canvas.width,
+        y: GROUND_Y,
+        size: 26
+      });
+      spawnTimer = 0;
+    }
+
+    score++;
+    scoreEl.textContent = score;
+  }
+
+  // Player
+  ctx.fillStyle = "#22c55e";
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+
+  // Spikes
+  ctx.fillStyle = "#ef4444";
+  for (let s of spikes) {
+    if (running) s.x -= 6;
+
+    // Draw triangle
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(s.x + s.size / 2, s.y - s.size);
+    ctx.lineTo(s.x + s.size, s.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Collision (simple & safe)
     if (
       running &&
-      player.x < o.x + o.w &&
-      player.x + player.size > o.x &&
-      player.y < o.y + o.h &&
-      player.y + player.size > o.y
+      player.x < s.x + s.size &&
+      player.x + player.size > s.x &&
+      player.y + player.size > s.y - s.size
     ) {
       running = false;
     }
   }
 
-  /* --- GAME OVER SCREEN --- */
+  // GAME OVER
   if (!running) {
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -165,7 +260,6 @@ function loop() {
     ctx.fillStyle = "white";
     ctx.font = "32px Arial";
     ctx.fillText("GAME OVER", 170, 130);
-
     ctx.font = "18px Arial";
     ctx.fillText("Click to Restart", 195, 165);
   }
@@ -173,16 +267,12 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-/* =====================
-   RESTART ON CLICK
-===================== */
 canvas.addEventListener("click", () => {
   if (!running) resetGame();
 });
 
-/* START */
 resetGame();
 loop();
-      </script>
+</script>
 </body>
 </html>
