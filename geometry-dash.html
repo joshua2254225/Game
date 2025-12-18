@@ -44,12 +44,14 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 
+const GROUND_Y = 260; // <-- sichtbarer Boden
+
 /* =====================
    PLAYER
 ===================== */
 let player = {
-  x: 60,
-  y: 230,
+  x: 80,
+  y: GROUND_Y - 30, // <-- korrekt auf Boden
   size: 30,
   vy: 0,
   gravity: 1.2,
@@ -70,7 +72,7 @@ let score = 0;
 let gameOver = false;
 
 /* =====================
-   INPUT (PC + MOBILE)
+   INPUT
 ===================== */
 function jump() {
   if (player.grounded && !gameOver) {
@@ -91,28 +93,37 @@ canvas.addEventListener("touchstart", jump);
 function loop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // PLAYER PHYSICS
+  // --- DRAW GROUND ---
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(0, GROUND_Y, canvas.width, 4);
+
+  // --- PLAYER PHYSICS ---
   player.vy += player.gravity;
   player.y += player.vy;
 
-  if (player.y >= 230) {
-    player.y = 230;
+  if (player.y >= GROUND_Y - player.size) {
+    player.y = GROUND_Y - player.size;
     player.vy = 0;
     player.grounded = true;
   }
 
-  // DRAW PLAYER
+  // --- DRAW PLAYER ---
   ctx.fillStyle = "#22c55e";
   ctx.fillRect(player.x, player.y, player.size, player.size);
 
-  // OBSTACLE SPAWN
+  // --- OBSTACLE SPAWN ---
   obstacleTimer++;
   if (obstacleTimer > 90) {
-    obstacles.push({ x: 600, y: 240, w: 20, h: 20 });
+    obstacles.push({
+      x: canvas.width,
+      y: GROUND_Y - 20,
+      w: 20,
+      h: 20
+    });
     obstacleTimer = 0;
   }
 
-  // OBSTACLES
+  // --- OBSTACLES ---
   ctx.fillStyle = "#ef4444";
   for (let i = obstacles.length - 1; i >= 0; i--) {
     let o = obstacles[i];
@@ -132,20 +143,22 @@ function loop() {
     if (o.x < -50) obstacles.splice(i, 1);
   }
 
-  // SCORE
+  // --- SCORE ---
   if (!gameOver) {
     score++;
     scoreEl.textContent = score;
   } else {
     ctx.fillStyle = "white";
     ctx.font = "30px Arial";
-    ctx.fillText("GAME OVER", 200, 150);
+    ctx.fillText("GAME OVER", 190, 150);
+    ctx.font = "16px Arial";
+    ctx.fillText("Reload to restart", 220, 175);
   }
 
   requestAnimationFrame(loop);
 }
 
 loop();
-</script>
+  </script>
 </body>
 </html>
