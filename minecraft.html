@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <script async src="https://arc.io/widget.min.js#SXrvhKhG"></script>
 <html>
@@ -95,91 +96,93 @@
       font-family: 'Poppins', sans-serif;
 		}
 		
-		/* Mobile Controls Styles */
+		/* Mobile Controls */
 		.mobile-controls {
 			position: fixed;
+			width: 100%;
+			height: 100%;
 			pointer-events: none;
-			z-index: 100;
+			z-index: 50;
 		}
 		
-		.mobile-button {
-			position: absolute;
-			background: rgba(255, 255, 255, 0.3);
-			border: 2px solid rgba(255, 255, 255, 0.5);
-			border-radius: 50%;
-			pointer-events: auto;
-			touch-action: none;
-			user-select: none;
-		}
-		
-		.joystick-container {
+		.joystick-zone {
 			position: fixed;
 			bottom: 20px;
 			left: 20px;
-			width: 120px;
-			height: 120px;
+			width: 150px;
+			height: 150px;
 			pointer-events: auto;
+			z-index: 51;
 		}
 		
 		.joystick-base {
 			width: 100%;
 			height: 100%;
-			background: rgba(255, 255, 255, 0.2);
-			border: 3px solid rgba(255, 255, 255, 0.4);
+			background: rgba(200, 200, 200, 0.3);
+			border: 3px solid rgba(255, 255, 255, 0.5);
 			border-radius: 50%;
 			position: relative;
 		}
 		
 		.joystick-stick {
-			width: 50px;
-			height: 50px;
-			background: rgba(255, 255, 255, 0.5);
-			border: 2px solid rgba(255, 255, 255, 0.7);
+			width: 60px;
+			height: 60px;
+			background: rgba(255, 255, 255, 0.6);
+			border: 3px solid rgba(255, 255, 255, 0.8);
 			border-radius: 50%;
 			position: absolute;
 			top: 50%;
 			left: 50%;
 			transform: translate(-50%, -50%);
+			transition: transform 0.1s;
 		}
 		
-		.action-buttons {
+		.button-zone {
 			position: fixed;
 			bottom: 20px;
 			right: 20px;
 			pointer-events: auto;
+			z-index: 51;
 		}
 		
-		.action-button {
-			width: 60px;
-			height: 60px;
-			background: rgba(255, 255, 255, 0.3);
-			border: 2px solid rgba(255, 255, 255, 0.5);
+		.mobile-btn {
+			width: 70px;
+			height: 70px;
+			background: rgba(200, 200, 200, 0.4);
+			border: 3px solid rgba(255, 255, 255, 0.6);
 			border-radius: 50%;
-			margin: 10px;
-			display: inline-block;
-			text-align: center;
-			line-height: 60px;
+			margin: 8px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
 			color: white;
+			font-size: 24px;
 			font-weight: bold;
 			font-family: 'Poppins', sans-serif;
 			touch-action: none;
 			user-select: none;
+			text-shadow: 1px 1px 2px black;
 		}
 		
-		.look-area {
+		.mobile-btn:active {
+			background: rgba(255, 255, 255, 0.6);
+			transform: scale(0.95);
+		}
+		
+		.look-zone {
 			position: fixed;
 			top: 0;
 			left: 0;
 			width: 100%;
-			height: 70%;
+			height: 65%;
 			pointer-events: auto;
 			touch-action: none;
+			z-index: 49;
 		}
 		
-		@media (max-width: 768px) {
-			.mobile-controls {
-				display: block;
-			}
+		.btn-row {
+			display: flex;
+			justify-content: flex-end;
 		}
 	</style>
 	<body>
@@ -187,21 +190,22 @@
 	
 	<!-- Mobile Controls -->
 	<div class="mobile-controls hidden" id="mobileControls">
-		<!-- Look area (top portion of screen for camera) -->
-		<div class="look-area" id="lookArea"></div>
+		<div class="look-zone" id="lookZone"></div>
 		
-		<!-- Movement joystick -->
-		<div class="joystick-container" id="joystickContainer">
+		<div class="joystick-zone" id="joystickZone">
 			<div class="joystick-base">
 				<div class="joystick-stick" id="joystickStick"></div>
 			</div>
 		</div>
 		
-		<!-- Action buttons -->
-		<div class="action-buttons">
-			<div class="action-button" id="jumpButton">↑</div>
-			<div class="action-button" id="breakButton">⛏</div>
-			<div class="action-button" id="placeButton">+</div>
+		<div class="button-zone">
+			<div class="btn-row">
+				<div class="mobile-btn" id="jumpBtn">↑</div>
+			</div>
+			<div class="btn-row">
+				<div class="mobile-btn" id="breakBtn">⛏</div>
+				<div class="mobile-btn" id="placeBtn">✚</div>
+			</div>
 		</div>
 	</div>
 	
@@ -218,156 +222,200 @@
 		
 		var loadString = ""
 		
-		// Mobile touch controls
-		let mobilecontrols = {
+		// Mobile Controls Object
+		var mobileControls = {
 			enabled: false,
-			joystick: { x: 0, y: 0, active: false },
-			look: { startX: 0, startY: 0, active: false },
-			buttons: {
-				jump: false,
-				break: false,
-				place: false
+			joystick: {
+				active: false,
+				x: 0,
+				y: 0,
+				startX: 0,
+				startY: 0
+			},
+			look: {
+				active: false,
+				lastX: 0,
+				lastY: 0
 			}
-		}
+		};
 		
 		function initMobileControls() {
-			// Detect if mobile device
-			const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-			                 ('ontouchstart' in window) || 
-			                 (navigator.maxTouchPoints > 0);
+			// Check if device is mobile
+			const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+			const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 			
-			if (!isMobile) return;
+			if (!isMobile && !hasTouch) {
+				return;
+			}
 			
 			mobileControls.enabled = true;
 			const controlsDiv = document.getElementById('mobileControls');
-			const joystickContainer = document.getElementById('joystickContainer');
+			const joystickZone = document.getElementById('joystickZone');
 			const joystickStick = document.getElementById('joystickStick');
-			const lookArea = document.getElementById('lookArea');
-			const jumpButton = document.getElementById('jumpButton');
-			const breakButton = document.getElementById('breakButton');
-			const placeButton = document.getElementById('placeButton');
+			const lookZone = document.getElementById('lookZone');
+			const jumpBtn = document.getElementById('jumpBtn');
+			const breakBtn = document.getElementById('breakBtn');
+			const placeBtn = document.getElementById('placeBtn');
 			
-			// Joystick controls
-			function handleJoystickStart(e) {
+			// Joystick handling
+			let joystickTouchId = null;
+			
+			joystickZone.addEventListener('touchstart', function(e) {
 				e.preventDefault();
+				if (joystickTouchId !== null) return;
+				
+				const touch = e.changedTouches[0];
+				joystickTouchId = touch.identifier;
 				mobileControls.joystick.active = true;
-			}
+				
+				const rect = joystickZone.getBoundingClientRect();
+				mobileControls.joystick.startX = rect.left + rect.width / 2;
+				mobileControls.joystick.startY = rect.top + rect.height / 2;
+			});
 			
-			function handleJoystickMove(e) {
+			joystickZone.addEventListener('touchmove', function(e) {
+				e.preventDefault();
 				if (!mobileControls.joystick.active) return;
-				e.preventDefault();
 				
-				const touch = e.touches[0];
-				const rect = joystickContainer.getBoundingClientRect();
-				const centerX = rect.left + rect.width / 2;
-				const centerY = rect.top + rect.height / 2;
-				
-				let deltaX = touch.clientX - centerX;
-				let deltaY = touch.clientY - centerY;
-				
-				const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-				const maxDistance = rect.width / 2 - 25;
-				
-				if (distance > maxDistance) {
-					deltaX = (deltaX / distance) * maxDistance;
-					deltaY = (deltaY / distance) * maxDistance;
+				for (let touch of e.changedTouches) {
+					if (touch.identifier === joystickTouchId) {
+						const rect = joystickZone.getBoundingClientRect();
+						const centerX = rect.left + rect.width / 2;
+						const centerY = rect.top + rect.height / 2;
+						
+						let deltaX = touch.clientX - centerX;
+						let deltaY = touch.clientY - centerY;
+						
+						const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+						const maxDistance = rect.width / 2 - 30;
+						
+						if (distance > maxDistance) {
+							const angle = Math.atan2(deltaY, deltaX);
+							deltaX = Math.cos(angle) * maxDistance;
+							deltaY = Math.sin(angle) * maxDistance;
+						}
+						
+						mobileControls.joystick.x = deltaX / maxDistance;
+						mobileControls.joystick.y = deltaY / maxDistance;
+						
+						joystickStick.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
+						break;
+					}
 				}
-				
-				mobileControls.joystick.x = deltaX / maxDistance;
-				mobileControls.joystick.y = deltaY / maxDistance;
-				
-				joystickStick.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
-			}
+			});
 			
-			function handleJoystickEnd(e) {
+			joystickZone.addEventListener('touchend', function(e) {
 				e.preventDefault();
-				mobileControls.joystick.active = false;
-				mobileControls.joystick.x = 0;
-				mobileControls.joystick.y = 0;
-				joystickStick.style.transform = 'translate(-50%, -50%)';
-			}
-			
-			joystickContainer.addEventListener('touchstart', handleJoystickStart);
-			joystickContainer.addEventListener('touchmove', handleJoystickMove);
-			joystickContainer.addEventListener('touchend', handleJoystickEnd);
+				for (let touch of e.changedTouches) {
+					if (touch.identifier === joystickTouchId) {
+						joystickTouchId = null;
+						mobileControls.joystick.active = false;
+						mobileControls.joystick.x = 0;
+						mobileControls.joystick.y = 0;
+						joystickStick.style.transform = 'translate(-50%, -50%)';
+						break;
+					}
+				}
+			});
 			
 			// Look controls
-			function handleLookStart(e) {
+			let lookTouchId = null;
+			
+			lookZone.addEventListener('touchstart', function(e) {
 				e.preventDefault();
-				const touch = e.touches[0];
+				if (lookTouchId !== null) return;
+				
+				const touch = e.changedTouches[0];
+				lookTouchId = touch.identifier;
 				mobileControls.look.active = true;
-				mobileControls.look.startX = touch.clientX;
-				mobileControls.look.startY = touch.clientY;
-			}
+				mobileControls.look.lastX = touch.clientX;
+				mobileControls.look.lastY = touch.clientY;
+			});
 			
-			function handleLookMove(e) {
+			lookZone.addEventListener('touchmove', function(e) {
+				e.preventDefault();
 				if (!mobileControls.look.active) return;
-				e.preventDefault();
 				
-				const touch = e.touches[0];
-				const deltaX = touch.clientX - mobileControls.look.startX;
-				const deltaY = touch.clientY - mobileControls.look.startY;
-				
-				// Apply camera rotation
-				if (typeof p !== 'undefined') {
-					const sensitivity = settings.mouseSense / 30000;
-					p.rx -= deltaY * sensitivity * 2;
-					p.ry += deltaX * sensitivity * 2;
-					
-					const TAU = Math.PI * 2;
-					const PI1_2 = Math.PI / 2;
-					while(p.ry > TAU) p.ry -= TAU;
-					while(p.ry < 0) p.ry += TAU;
-					if(p.rx > PI1_2) p.rx = PI1_2;
-					if(p.rx < -PI1_2) p.rx = -PI1_2;
+				for (let touch of e.changedTouches) {
+					if (touch.identifier === lookTouchId) {
+						const deltaX = touch.clientX - mobileControls.look.lastX;
+						const deltaY = touch.clientY - mobileControls.look.lastY;
+						
+						if (typeof p !== 'undefined' && typeof settings !== 'undefined') {
+							const sensitivity = settings.mouseSense / 15000;
+							p.rx -= deltaY * sensitivity;
+							p.ry += deltaX * sensitivity;
+							
+							const TAU = Math.PI * 2;
+							const PI1_2 = Math.PI / 2;
+							while(p.ry > TAU) p.ry -= TAU;
+							while(p.ry < 0) p.ry += TAU;
+							if(p.rx > PI1_2) p.rx = PI1_2;
+							if(p.rx < -PI1_2) p.rx = -PI1_2;
+						}
+						
+						mobileControls.look.lastX = touch.clientX;
+						mobileControls.look.lastY = touch.clientY;
+						break;
+					}
 				}
-				
-				mobileControls.look.startX = touch.clientX;
-				mobileControls.look.startY = touch.clientY;
-			}
+			});
 			
-			function handleLookEnd(e) {
+			lookZone.addEventListener('touchend', function(e) {
 				e.preventDefault();
-				mobileControls.look.active = false;
-			}
-			
-			lookArea.addEventListener('touchstart', handleLookStart);
-			lookArea.addEventListener('touchmove', handleLookMove);
-			lookArea.addEventListener('touchend', handleLookEnd);
+				for (let touch of e.changedTouches) {
+					if (touch.identifier === lookTouchId) {
+						lookTouchId = null;
+						mobileControls.look.active = false;
+						break;
+					}
+				}
+			});
 			
 			// Button controls
-			jumpButton.addEventListener('touchstart', (e) => {
+			jumpBtn.addEventListener('touchstart', function(e) {
 				e.preventDefault();
-				mobileControls.buttons.jump = true;
-				Key[' '] = true;
-			});
-			jumpButton.addEventListener('touchend', (e) => {
-				e.preventDefault();
-				mobileControls.buttons.jump = false;
-				Key[' '] = false;
+				if (typeof Key !== 'undefined') {
+					Key[' '] = true;
+				}
 			});
 			
-			breakButton.addEventListener('touchstart', (e) => {
+			jumpBtn.addEventListener('touchend', function(e) {
 				e.preventDefault();
-				mobileControls.buttons.break = true;
-				Key.leftMouse = true;
-			});
-			breakButton.addEventListener('touchend', (e) => {
-				e.preventDefault();
-				mobileControls.buttons.break = false;
-				Key.leftMouse = false;
+				if (typeof Key !== 'undefined') {
+					Key[' '] = false;
+				}
 			});
 			
-			placeButton.addEventListener('touchstart', (e) => {
+			breakBtn.addEventListener('touchstart', function(e) {
 				e.preventDefault();
-				mobileControls.buttons.place = true;
-				Key.rightMouse = true;
+				if (typeof Key !== 'undefined') {
+					Key.leftMouse = true;
+				}
 			});
-			placeButton.addEventListener('touchend', (e) => {
+			
+			breakBtn.addEventListener('touchend', function(e) {
 				e.preventDefault();
-				mobileControls.buttons.place = false;
-				Key.rightMouse = false;
+				if (typeof Key !== 'undefined') {
+					Key.leftMouse = false;
+				}
 			});
+			
+			placeBtn.addEventListener('touchstart', function(e) {
+				e.preventDefault();
+				if (typeof Key !== 'undefined') {
+					Key.rightMouse = true;
+				}
+			});
+			
+			placeBtn.addEventListener('touchend', function(e) {
+				e.preventDefault();
+				if (typeof Key !== 'undefined') {
+					Key.rightMouse = false;
+				}
+			});
+			
+			console.log('Mobile controls initialized');
 		}
 		
 		function showMobileControls() {
@@ -382,18 +430,195 @@
 			}
 		}
 		
-		// Apply joystick input to movement
-		function applyMobileMovement() {
-			if (!mobileControls.enabled || !mobileControls.joystick.active) return;
+		function applyJoystickMovement() {
+			if (!mobileControls.enabled || !mobileControls.joystick.active) {
+				return;
+			}
+			
+			if (typeof Key === 'undefined') return;
 			
 			const jx = mobileControls.joystick.x;
-			const jy = -mobileControls.joystick.y; // Invert Y
+			const jy = mobileControls.joystick.y;
 			
-			// Simulate WASD keys
-			Key.w = jy > 0.3;
-			Key.s = jy < -0.3;
-			Key.a = jx < -0.3;
-			Key.d = jx > 0.3;
+			const threshold = 0.2;
+			
+			Key.w = jy < -threshold;
+			Key.s = jy > threshold;
+			Key.a = jx < -threshold;
+			Key.d = jx > threshold;
 		}
+		
+		// Initialize on load
+		window.addEventListener('load', function() {
+			setTimeout(initMobileControls, 500);
+		});
+		
 	</script>
 	<script type="x-shader/vertex" id="blockVertexShader">
+		attribute vec3  aVertex;
+		attribute vec2  aTexture;
+		attribute float aShadow;
+		varying vec2  vTexture;
+		varying float vShadow;
+		varying float vFog;
+		uniform mat4 uView;
+		uniform float uDist;
+		uniform vec3 uPos;
+
+		void main(void) {
+			vTexture = aTexture;
+			vShadow = aShadow > 0.0 ? aShadow : 1.0;
+			gl_Position = uView * vec4( aVertex, 1.0);
+
+			float range = max(uDist / 5.0, 8.0);
+			vFog = clamp((length(uPos.xz - aVertex.xz) - uDist + range) / range, 0.0, 1.0);
+		}
+	</script>
+	<script type="x-shader/fragment" id="blockFragmentShader">
+		#ifdef GL_FRAGMENT_PRECISION_HIGH
+			precision highp float;
+		#else
+			precision mediump float;
+		#endif
+
+		uniform sampler2D uSampler;
+		varying float vShadow;
+		varying vec2 vTexture;
+		varying float vFog;
+
+		vec4 fog(vec4 color) {
+			color.r += (0.33 - color.r) * vFog;
+			color.g += (0.54 - color.g) * vFog;
+			color.b += (0.72 - color.b) * vFog;
+			return color;
+		}
+
+		void main(void){
+			vec4 color = texture2D(uSampler, vTexture);
+			gl_FragColor = fog(vec4(color.rgb * vShadow, color.a));
+			if (gl_FragColor.a == 0.0) discard;
+		}
+	</script>
+	<script type="x-shader/vertex" id="2dVertexShader">
+		attribute vec2 aVertex;
+		attribute vec2 aTexture;
+		attribute float aShadow;
+		varying vec2 vTexture;
+		varying float vShadow;
+
+		void main(void) {
+			vTexture = aTexture;
+			vShadow = aShadow;
+			gl_Position = vec4(aVertex, 0.5, 1.0);
+		}
+	</script>
+	<script type="x-shader/fragment" id="2dFragmentShader">
+		#ifdef GL_FRAGMENT_PRECISION_HIGH
+			precision highp float;
+		#else
+			precision mediump float;
+		#endif
+
+		uniform sampler2D uSampler;
+		varying vec2 vTexture;
+		varying float vShadow;
+
+		void main(void) {
+			vec4 color = texture2D(uSampler, vTexture);
+			gl_FragColor = vec4(color.rgb * vShadow, color.a);
+			if (gl_FragColor.a == 0.0) discard;
+		}
+	</script>
+	<script type="application/javascript">
+window.canvas = document.getElementById("overlay")
+window.ctx = canvas.getContext("2d")
+window.savebox = document.getElementById("savebox")
+window.boxCenterTop = document.getElementById("boxcentertop")
+window.saveDirections = document.getElementById("savedirections")
+window.message = document.getElementById("message")
+window.worlds = document.getElementById("worlds")
+window.quota = document.getElementById("quota")
+var hoverbox = document.getElementById("onhover")
+ctx.canvas.width  = window.innerWidth
+ctx.canvas.height = window.innerHeight
+
+
+var MathGlob = Math
+function MineKhan() {
+	let Math = MathGlob
+	let setPixel, getPixels
+	let textures = {
+		grassTop: function(n) {
+			let r = 0, g = 0, b = 0, d = 0
+			for (let x = 0; x < 16; x++) {
+				for (let y = 0; y < 16; y++) {
+					d = Math.random() * 0.25 + 0.65
+					r = 0x54 * d
+					g = 0xa0 * d
+					b = 0x48 * d
+					setPixel(n, x, y, r, g, b)
+				}
+			}
+		},
+		grassSide: function(n) {
+			let r = 0, g = 0, b = 0, d = 0
+			let pix = getPixels("0g0g70ordrzz0u30g730wa4vzz0xnyl8f11lrk7315qj7jz1fh47pb6553365533033636350335403653650063306333633300635163503655353653535605335031350330553500033033366333433663663535336655335055335553353530355333033503300333336635353663650660554353355635155305303053556333333366353323553060365553063030663533555365534355335530")
+			for (let i = 0; i < pix.length; i += 4) {
+				setPixel(n, i >> 2 & 15, i >> 6, pix[i], pix[i+1], pix[i+2], pix[i+3])
+			}
+			for (let x = 0; x < 16; x++) {
+				let m = Math.random() * 4 + 1
+				for (let y = 0; y < m; y++) {
+					d = Math.random() * 0.25 + 0.65
+					r = 0x54 * d
+					g = 0xa0 * d
+					b = 0x48 * d
+					setPixel(n, x, y, r, g, b)
+				}
+			}
+		},
+		leaves: function(n) {
+			let r = 0, g = 0, b = 0, a = 0
+			for (let x = 0; x < 16; x++) {
+				for (let y = 0; y < 16; y++) {
+					r = 0
+					g = Math.floor(Math.random() * 30 + 100)
+					b = Math.floor(Math.random() * 30)
+					if (Math.random() < 0.35) {
+						a = 0
+					} else {
+						a = 255
+					}
+					setPixel(n, x, y, r, g, b, a)
+				}
+			}
+		},
+		oakPlanks: function(n) {
+			let r = 0
+			for (let y = 0; y < 16; y++) {
+				let a = (y & 3) === 3 ? 0.7 : 1
+				for (let x = 0; x < 16; x++) {
+					let mid = x === 8 && (y & 7) > 3 && a === 1 ? 0.85 : 1
+					let rit = x === 15 && (y & 7) < 3 && a === 1 ? 0.85 : 1
+					r = (Math.random() * 0.1 + 0.9) * a * mid * rit
+					setPixel(n, x, y, 190 * r, 154 * r, 96 * r)
+				}
+			}
+		},
+		hitbox: function(n) {
+			for (let x = 0; x < 16; x++) {
+				for (let y = 0; y < 16; y++) {
+					setPixel(n, x, y, 255, 255, 0, 255)
+				}
+			}
+		},
+		dirt: "0g0g70ordrzz0u30g730wa4vzz0xnyl8f11lrk7315qj7jz1fh47pb6553365533033636350335403653650063306333633300635163503655353653535605335031350330553500033033366333433663663535336655335055335553353530355333033503300333336635353663650660554353355635155305303053556333333366353323553060365553063030663533555365534355335530",
+		stone: "0g0gf0v74dmg0v74f7c0xf169k0xf17ug0xfcet40xfcge00xfchyw0xfnoxk0zn97g80zn99140znkfzs0znkhko0znkj5k11vh8mw11vsirc5548515111111551595851111155b55155558535155bb555555556556b55bb55b5b85bbb56535bbbbbbbbbcb5b5bbbb6bebbeebebbbbbbbbbeebbebbbbeebb5b1beeeeb555bb555b5a5deebbbbbbb55bbbbeeebb558b555bbabdeebbb51b5551babeebbbb559555555beeb115b15555515552555bb5a5b751051241bb1555551",
+		logSide: "0g0gx06ocs1k06octmg08w9j3s08wkt880b4hkag0b4ssu00b4suew0dcpjw80dcplh40dd0u0o0dd0vlk0fkxl2w0fkxmns0fl8v7c0ht5koo0ht5m9k0ht5nug0htgwe00k1dng80k1dp140k1oxko0m9aeig0m9ag3c0m9ln200m9lomw0ohifp40ohto8o0ohtptk0qpqfaw0qpqgvs0qq1pfc0sxyghk0sxyi2g89ocopmioi3difc581i9sgldof3d5d3633igqctbof3c8q3546ggqcvfi3ogct8546iciutflfrifo85b8rckpq6oftodd63e91dgct8rduhcdc6bdbflqoitafaihc80gbnloiqrgciiic97gbnfqrik9fgiof8569icorir6ogar642dfriourodji8qc008i8powirgoicod30co9ikuqhiqdck333do8foitcgocfgd69dociq9riofchfd3",
+		logTop: "0g0g90l5j1fj0qftm2n0wa7mdb0z2esxr15quebj189da7z1cpma671f7ppfj1hzyayn1012101120110111077776768667777017334454555544811738877776777471164766666666756107576445544674601646636666466471165764655656756116576465464674610657646666566460164764434556756116576666666674610757767777787460175454444444447117776676686677711011101120110211",
+		bedrock: "0g0g509gy58f0e7f7r30o8fd330rkrev31627mkf3111124324211212133434341443012110110111412224232433202422111112014111121134433112221221102211014432344323443410222122211011213234421122344344442110121213211143334134410144431102221123442334402111321134111112343420211101234433211211234421121011044312301123",
+		glass: "0g0g2000000008ww4xk1111111111111111100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011111111111111111",
+		cobblestone: "0g0go08ww4xk0flk8hk0hts9o80k209a00ma8ago0ma8c1k0majkl40oi533s0oigbnc0oigd880qqd4ag0qqocu00qqoeew0syl5h40sywe0o0sywflk0sz7o540v6t52w0v6t6ns0v74f7c0xf169k0xf17ug0xfcge00znkhko0deje0h808bbbe000ekme000079ab90f000000ie0400000j0mlmj0e00j03210b000000000800000b0jcc0jm0040e9809000b0jm000000000mm000mm0jg0nmnejem0n09b08800000ejm0m00005ejjjf0jmj0n0m00ejmjeb0emj0m0fn00000000b000b0bj0el0mlj04450b0b608j0jmj08000000000000000008b8802054048088",
+		mossyCobble: "0g0gb0muaccf0mupnnj0p38xdr0r0pekf0rbmj9b0un11q70w1wkxr0y07svz11vr5rz1a8mosf1ef1r0f4199211276438a9619a8812764813858398951644251118533852182851464110531183233866642a176895308948428981498852118851988111851664158385117641484642305126244558824124185442111155214698112124761318998127651764653885847488164588511858685851588531841183352111338a984",
+		stoneBricks: "0g0gv0hu3i7s0k20auw0ma8ago0ma8c1k0oigbnc0oigd880oirlrs0qqocu00sywe0o0v74f7c0v74gs80xf17ug0xfcge00xfchyw0xfnoxk0xfnqig0zn97g80zn99140znkfzs0znkhko0znkj5k0znvq4811vh8mw11vsh6g11vsirc143p9tk143pbeg1440jy0144bu2g16bxb0816bxcl4krrtrqrooqqooorj9jgjg9b999ccjjf9accchcccaccjjcc9acgchhdjjjjgjjcacgjjcjjjcjgccjjccjjjjjojcjgmjjjccojjoojojjjjjjjc3775587777765542jrssurro7rrrrorrjojoprlc7nooojjojjmooojc7cjjjccjjjjooomc7ccjccccjjjoonjc7cgjcccccijoolc97jcchccc9ccjcccc7gcjfjec1121111221111210",
+		mossyStoneBricks: "0g0
