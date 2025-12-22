@@ -125,6 +125,7 @@ html,body{
   justify-content:center;
   z-index:1000;
 }
+  
 
 /* USER BOX & POPUP */
 #userBox{
@@ -172,6 +173,20 @@ html,body{
 
 <button id="searchBtn">🔍</button>
 
+<input id="searchInput" type="text" placeholder="Search..."
+style="
+display:none;
+position:fixed;
+top:12px;
+left:60px;
+padding:6px 10px;
+border-radius:8px;
+border:1px solid #ccc;
+z-index:1000;
+">
+
+  
+  
 <header class="topbar">
   <span class="wave-title">
     <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
@@ -291,6 +306,24 @@ html,body{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, updateProfile, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
+const searchBtn = document.getElementById("searchBtn");
+const searchInput = document.getElementById("searchInput");
+
+searchBtn.onclick = ()=>{
+  searchInput.style.display =
+    searchInput.style.display === "block" ? "none" : "block";
+  searchInput.focus();
+};
+
+searchInput.addEventListener("input", ()=>{
+  const q = searchInput.value.toLowerCase();
+  document.querySelectorAll(".games-list li").forEach(li=>{
+    li.style.display = li.innerText.toLowerCase().includes(q)
+      ? "flex"
+      : "none";
+  });
+});
+  
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
