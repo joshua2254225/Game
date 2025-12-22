@@ -1,24 +1,33 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ArcadeOwl</title>
 
 <style>
+/* ================= ROOT ================= */
 :root{
   --blue:#0b74de;
-  --muted:#666;
+  --bg:#f5f7fb;
   --card:#ffffff;
-  --max-width:980px;
+  --text:#000;
+  --muted:#666;
+}
+body.dark{
+  --bg:#0f1115;
+  --card:#1b1e24;
+  --text:#fff;
+  --muted:#aaa;
 }
 html,body{
   margin:0;
   font-family:system-ui,Segoe UI,Roboto,Arial;
-  background:#f5f7fb;
+  background:var(--bg);
+  color:var(--text);
 }
 
-/* TOP BAR ZENTRIERT */
+/* ================= TOP BAR ================= */
 .topbar{
   background:var(--blue);
   color:#fff;
@@ -30,358 +39,196 @@ html,body{
   font-size:22px;
 }
 
-/* WAVE TITLE */
-.wave-title span{
-  display:inline-block;
-  font-weight:900;
-  font-size:28px;
-  animation:wave 1s infinite;
-}
-.wave-title span:nth-child(1){animation-delay:0s}
-.wave-title span:nth-child(2){animation-delay:.1s}
-.wave-title span:nth-child(3){animation-delay:.2s}
-.wave-title span:nth-child(4){animation-delay:.3s}
-.wave-title span:nth-child(5){animation-delay:.4s}
-.wave-title span:nth-child(6){animation-delay:.5s}
-.wave-title span:nth-child(7){animation-delay:.6s}
-.wave-title span:nth-child(8){animation-delay:.7s}
-.wave-title span:nth-child(9){animation-delay:.8s}
-@keyframes wave{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-
-/* CONTAINER */
-.wrap{
-  max-width:var(--max-width);
-  margin:20px auto;
-  padding:12px;
-}
-
-/* GAME LIST */
-.games-list{
-  list-style:none;
-  padding:0;
-  margin:0;
-}
-.games-list li{
-  background:var(--card);
-  margin:12px 0;
-  padding:14px 16px;
-  border-radius:12px;
-  box-shadow:0 6px 18px rgba(0,0,0,.06);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.game-title{
-  font-weight:700;
-  color:#0b5fc7;
-  text-decoration:none;
-}
-.game-desc{
-  font-size:13px;
-  color:var(--muted);
-}
-.play-btn{
-  background:var(--blue);
-  color:white;
-  padding:8px 14px;
-  border-radius:8px;
-  text-decoration:none;
-  font-weight:700;
-}
-
-/* FEEDBACK */
-.feedback{
-  position:fixed;
-  right:16px;
-  bottom:16px;
-  background:#ff006e;
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:white;
-  font-size:26px;
-  text-decoration:none;
-  box-shadow:0 6px 20px rgba(0,0,0,.3);
-}
-
-/* SEARCH BUTTON */
+/* ================= SEARCH ================= */
 #searchBtn{
   position:fixed;
   top:10px;
   left:16px;
-  background:var(--card);
-  border:none;
-  border-radius:50%;
   width:36px;
   height:36px;
-  font-size:18px;
+  border-radius:50%;
+  border:none;
   cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,.2);
-  display:flex;
-  align-items:center;
-  justify-content:center;
   z-index:1000;
 }
+#searchInput{
+  position:fixed;
+  top:60px;
+  left:16px;
+  width:180px;
+  padding:6px;
+  display:none;
+}
 
-/* USER BOX & POPUP */
+/* ================= USER ================= */
 #userBox{
   position:fixed;
   top:10px;
   right:16px;
-  background:rgba(255,255,255,.95);
+  background:#fff;
   padding:6px 12px;
   border-radius:8px;
-  font-size:13px;
-  box-shadow:0 4px 12px rgba(0,0,0,.2);
   cursor:pointer;
-  z-index:9999;
+  z-index:1000;
 }
 #settingsPopup{
   position:fixed;
-  top:40px;
+  top:48px;
   right:16px;
-  background:white;
-  padding:10px 12px;
+  background:#fff;
+  padding:10px;
   border-radius:8px;
-  box-shadow:0 6px 18px rgba(0,0,0,.2);
   display:none;
-  font-size:13px;
-  z-index:10000;
+  width:180px;
 }
-#settingsPopup input{
-  padding:4px 6px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  width:140px;
-  font-size:12px;
+
+/* ================= LIST ================= */
+.wrap{max-width:980px;margin:20px auto;padding:12px;}
+.games-list{list-style:none;padding:0;}
+.games-list li{
+  background:var(--card);
+  margin:12px 0;
+  padding:14px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
-#settingsPopup button{
-  padding:4px 6px;
-  border:none;
-  border-radius:6px;
+.play-btn{
+  background:var(--blue);
+  color:white;
+  padding:6px 12px;
+  border-radius:8px;
+  text-decoration:none;
+}
+
+/* ================= ABOUT ================= */
+#about{
+  max-width:980px;
+  margin:20px auto;
+  padding:16px;
+  display:none;
+  font-size:14px;
+  text-align:center;
+}
+#aboutToggle{
+  text-align:center;
+  margin:20px;
   cursor:pointer;
-  font-size:12px;
+  color:var(--blue);
 }
 </style>
 </head>
 
 <body>
 
+<!-- SEARCH -->
 <button id="searchBtn">🔍</button>
+<input id="searchInput" placeholder="Search game...">
 
-<header class="topbar">
-  <span class="wave-title">
-    <span>A</span><span>r</span><span>c</span><span>a</span><span>d</span><span>e</span>
-    <span>O</span><span>w</span><span>l</span>
-  </span>
-</header>
+<!-- TOP -->
+<header class="topbar">ArcadeOwl</header>
 
+<!-- USER -->
+<div id="userBox">Guest</div>
+
+<div id="settingsPopup">
+  <button id="loginBtn">Sign in with Google</button>
+  <button id="logoutBtn">Logout</button>
+  <hr>
+  <button id="darkToggle">🌙 Dark Mode</button>
+</div>
+
+<!-- GAMES -->
 <main class="wrap">
-<ul class="games-list">
+<ul class="games-list" id="gameList">
 
-<li>
-  <div>
-    <a class="game-title" href="color-clicker.html">Color Clicker</a>
-    <div class="game-desc">Fast reaction color game.</div>
-  </div>
+<li data-name="color clicker">
+  <span>Color Clicker</span>
   <a class="play-btn" href="color-clicker.html">Play</a>
 </li>
 
-<li>
-  <div>
-    <a class="game-title" href="emoji-memory.html">Emoji Memory</a>
-    <div class="game-desc">Find all matching emoji pairs.</div>
-  </div>
+<li data-name="emoji memory">
+  <span>Emoji Memory</span>
   <a class="play-btn" href="emoji-memory.html">Play</a>
 </li>
 
-<li>
-  <div>
-    <a class="game-title" href="jump-monkey.html">Monkey Jump</a>
-    <div class="game-desc">Jump over obstacles.</div>
-  </div>
-  <a class="play-btn" href="jump-monkey.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="banana-catcher.html">Banana Catcher</a>
-    <div class="game-desc">Catch bananas, avoid bombs.</div>
-  </div>
-  <a class="play-btn" href="banana-catcher.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="tic-tac-toe.html">Tic Tac Toe</a>
-    <div class="game-desc">2 players classic game.</div>
-  </div>
-  <a class="play-btn" href="tic-tac-toe.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="tic-tac-toe-AI.html">Tic Tac Toe AI</a>
-    <div class="game-desc">Play against the computer.</div>
-  </div>
-  <a class="play-btn" href="tic-tac-toe-AI.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="minesweeper.html">Minesweeper</a>
-    <div class="game-desc">Think smart, click safe.</div>
-  </div>
-  <a class="play-btn" href="minesweeper.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="chess-ai.html">Chess AI</a>
-    <div class="game-desc">Classic chess vs computer.</div>
-  </div>
-  <a class="play-btn" href="chess-ai.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="geometry-dash.html">Geometry Dash</a>
-    <div class="game-desc">Jump and survive.</div>
-  </div>
+<li data-name="geometry dash">
+  <span>Geometry Dash</span>
   <a class="play-btn" href="geometry-dash.html">Play</a>
 </li>
 
-<li>
-  <div>
-    <a class="game-title" href="snake-game.html">Snake Game</a>
-    <div class="game-desc">Eat apples and grow.</div>
-  </div>
-  <a class="play-btn" href="snake-game.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="minecraft.html">Minecraft</a>
-    <div class="game-desc">Creative block building adventure.</div>
-  </div>
+<li data-name="minecraft">
+  <span>Minecraft</span>
   <a class="play-btn" href="minecraft.html">Play</a>
 </li>
 
 </ul>
 </main>
 
-<div id="userBox">Guest</div>
+<!-- ABOUT -->
+<div id="aboutToggle">About</div>
+<section id="about">
+  <h3>About ArcadeOwl</h3>
+  <p>Learning & playing simple HTML / JS games.</p>
+  <p>Contact: your@email.com</p>
+</section>
 
-  <div id="settingsPopup">
-  <div style="margin-bottom:8px;">
-    <strong>Account</strong>
-  </div>
-
-  <div style="margin-bottom:8px;">
-    <label>Edit Username:</label><br>
-    <input type="text" id="usernameInput" placeholder="New username">
-    <button id="saveUsernameBtn" style="background:#0b74de;color:white;">Save</button>
-  </div>
-
-  <!-- LOGOUT NUR HIER -->
-  <button id="logoutBtn" style="background:#ff006e;color:white;width:100%;">
-    Logout
-  </button>
-
-  <hr style="margin:8px 0;">
-
-  <button id="googleLoginBtn" style="background:#4285F4;color:white;width:100%;">
-    Sign in with G
-  </button>
-  </div>
-
-<a class="feedback" href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform" target="_blank">💬</a>
-
+<!-- ================= JS ================= -->
 <script type="module">
+// ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, updateProfile, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
   projectId: "arcadeowl",
-  appId: "1:604579422254:web:19ecace88992c998efffbf"
-};
-const app = initializeApp(firebaseConfig);
+});
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// ===== USER POPUP =====
 const userBox = document.getElementById("userBox");
-const settingsPopup = document.getElementById("settingsPopup");
+const popup = document.getElementById("settingsPopup");
 
-// Toggle Popup
-userBox.addEventListener("click", e=>{
+userBox.onclick = e=>{
   e.stopPropagation();
-  settingsPopup.style.display = settingsPopup.style.display==="none"?"block":"none";
-});
-document.addEventListener("click", e=>{
-  if(!settingsPopup.contains(e.target) && e.target!==userBox){
-    settingsPopup.style.display="none";
-  }
-});
+  popup.style.display = popup.style.display==="block"?"none":"block";
+};
+document.onclick = ()=> popup.style.display="none";
 
-// Auth State
+// ===== AUTH =====
 onAuthStateChanged(auth,user=>{
-  if(user){
-    const name = user.displayName||user.email.split("@")[0]||"User";
-    userBox.textContent = name;
-  }else{
-    userBox.textContent="Guest";
-  }
+  userBox.textContent = user ? user.displayName : "Guest";
 });
+loginBtn.onclick = ()=> signInWithPopup(auth,provider);
+logoutBtn.onclick = ()=> signOut(auth);
 
-// Logout
-document.getElementById("logoutBtn").onclick = ()=>signOut(auth).then(()=>location.reload());
-
-// Save Username
-document.getElementById("saveUsernameBtn").onclick = ()=>{
-  const newName = document.getElementById("usernameInput").value.trim();
-  if(newName && auth.currentUser){
-    updateProfile(auth.currentUser,{displayName:newName}).then(()=>{
-      userBox.textContent=newName;
-      settingsPopup.style.display="none";
-    }).catch(err=>alert(err.message));
-  }
+// ===== SEARCH =====
+searchBtn.onclick = ()=>{
+  searchInput.style.display =
+    searchInput.style.display==="block"?"none":"block";
+  searchInput.focus();
+};
+searchInput.oninput = ()=>{
+  const q = searchInput.value.toLowerCase();
+  document.querySelectorAll("#gameList li").forEach(li=>{
+    li.style.display = li.dataset.name.includes(q)?"flex":"none";
+  });
 };
 
-// Google Login
-document.getElementById("googleLoginBtn").onclick = ()=>{
-  signInWithPopup(auth,provider)
-    .then(result=>{
-      const user = result.user;
-      userBox.textContent = user.displayName||user.email.split("@")[0];
-      settingsPopup.style.display="none";
-    }).catch(err=>alert(err.message));
+// ===== ABOUT =====
+aboutToggle.onclick = ()=>{
+  about.style.display = about.style.display==="block"?"none":"block";
 };
 
-<section id="about" style="
-  max-width:980px;
-  margin:40px auto 20px;
-  padding:16px;
-  font-size:14px;
-  color:#555;
-  text-align:center;
-">
-  <h3 style="margin-bottom:6px;">About ArcadeOwl</h3>
-  <p>
-    ArcadeOwl is a small web arcade made to learn and play simple HTML & JavaScript games.
-    <br>
-    Created for fun, learning and experimentation.
-  </p>
-  <p style="font-size:13px;color:#777;">
-    Contact: your@email.com
-  </p>
-</section>
-  
+// ===== DARK MODE =====
+darkToggle.onclick = ()=>{
+  document.body.classList.toggle("dark");
+};
 </script>
 
 </body>
-                                  </html>
+</html>
