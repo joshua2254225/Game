@@ -1,233 +1,197 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ArcadeOwl</title>
+<meta charset="UTF-8">
+<title>My Games</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* ================= ROOT ================= */
-:root{
-  --blue:#0b74de;
-  --bg:#f5f7fb;
-  --card:#ffffff;
-  --text:#000;
-  --muted:#666;
-}
-body.dark{
-  --bg:#0f1115;
-  --card:#1b1e24;
-  --text:#fff;
-  --muted:#aaa;
-}
-html,body{
+/* ===== BASIC ===== */
+body{
   margin:0;
-  font-family:system-ui,Segoe UI,Roboto,Arial;
-  background:var(--bg);
-  color:var(--text);
+  font-family:system-ui, Arial, sans-serif;
+  background:#0b0f1a;
+  color:white;
 }
 
-/* ================= TOP BAR ================= */
+a{ text-decoration:none; color:white; }
+
+/* ===== TOP BAR ===== */
 .topbar{
-  background:var(--blue);
-  color:#fff;
-  height:56px;
+  background:#2563eb;
+  padding:14px 22px;
   display:flex;
   align-items:center;
-  justify-content:center;
-  font-weight:900;
-  font-size:22px;
+  gap:24px;
+  box-shadow:0 4px 15px rgba(0,0,0,.4);
 }
 
-/* ================= SEARCH ================= */
-#searchBtn{
-  position:fixed;
-  top:10px;
-  left:16px;
-  width:36px;
-  height:36px;
+.topbar a{
+  font-weight:700;
+  opacity:.9;
+}
+
+.topbar a:hover{
+  opacity:1;
+}
+
+.search{
+  margin-left:auto;
+}
+
+.search input{
+  width:38px;
+  padding:6px;
   border-radius:50%;
   border:none;
+  outline:none;
+  text-align:center;
+  font-size:16px;
   cursor:pointer;
-  z-index:1000;
-}
-#searchInput{
-  position:fixed;
-  top:60px;
-  left:16px;
-  width:180px;
-  padding:6px;
-  display:none;
 }
 
-/* ================= USER ================= */
-#userBox{
-  position:fixed;
-  top:10px;
-  right:16px;
-  background:#fff;
-  padding:6px 12px;
-  border-radius:8px;
-  cursor:pointer;
-  z-index:1000;
-}
-#settingsPopup{
-  position:fixed;
-  top:48px;
-  right:16px;
-  background:#fff;
-  padding:10px;
-  border-radius:8px;
-  display:none;
-  width:180px;
+/* ===== GAMES GRID ===== */
+.games{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:22px;
+  padding:26px;
+  max-width:1000px;
+  margin:auto;
 }
 
-/* ================= LIST ================= */
-.wrap{max-width:980px;margin:20px auto;padding:12px;}
-.games-list{list-style:none;padding:0;}
-.games-list li{
-  background:var(--card);
-  margin:12px 0;
+.game{
+  background:#111827;
+  border-radius:14px;
   padding:14px;
-  border-radius:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.play-btn{
-  background:var(--blue);
-  color:white;
-  padding:6px 12px;
-  border-radius:8px;
-  text-decoration:none;
+  cursor:pointer;
+  transition:transform .2s, box-shadow .2s, background .2s;
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
 }
 
-/* ================= ABOUT ================= */
-#about{
-  max-width:980px;
-  margin:20px auto;
-  padding:16px;
-  display:none;
-  font-size:14px;
-  text-align:center;
+.game:hover{
+  transform:translateY(-6px) scale(1.02);
+  background:#1f2937;
+  box-shadow:0 12px 30px rgba(0,0,0,.6);
 }
-#aboutToggle{
+
+.game img{
+  width:100%;
+  border-radius:10px;
+}
+
+.game h3{
+  margin:12px 0 4px;
   text-align:center;
-  margin:20px;
-  cursor:pointer;
-  color:var(--blue);
+  font-size:18px;
+}
+
+/* ===== ABOUT ===== */
+#about{
+  margin-top:60px;
+  padding:40px 25px;
+  background:#020617;
+  border-top:3px solid #2563eb;
+  max-width:1000px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+#about h2{
+  margin-top:0;
+}
+
+#about p{
+  color:#cbd5f5;
+}
+
+/* ===== FOOTER ===== */
+footer{
+  text-align:center;
+  padding:18px;
+  color:#9ca3af;
+  font-size:14px;
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:700px){
+  .games{
+    grid-template-columns:1fr;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<!-- SEARCH -->
-<button id="searchBtn">🔍</button>
-<input id="searchInput" placeholder="Search game...">
+<!-- ===== TOP BAR ===== -->
+<div class="topbar">
+  <a href="#">Home</a>
+  <a href="#games">Games</a>
+  <a href="#about">About</a>
 
-<!-- TOP -->
-<header class="topbar">ArcadeOwl</header>
-
-<!-- USER -->
-<div id="userBox">Guest</div>
-
-<div id="settingsPopup">
-  <button id="loginBtn">Sign in with Google</button>
-  <button id="logoutBtn">Logout</button>
-  <hr>
-  <button id="darkToggle">🌙 Dark Mode</button>
+  <div class="search">
+    <input id="search" type="text" maxlength="1" placeholder="🔍">
+  </div>
 </div>
 
-<!-- GAMES -->
-<main class="wrap">
-<ul class="games-list" id="gameList">
+<!-- ===== GAMES ===== -->
+<div id="games" class="games">
 
-<li data-name="color clicker">
-  <span>Color Clicker</span>
-  <a class="play-btn" href="color-clicker.html">Play</a>
-</li>
+  <div class="game" data-name="minecraft" onclick="openGame('minecraft.html')">
+    <img src="https://i.imgur.com/7QZ6FQx.png">
+    <h3>Minecraft</h3>
+  </div>
 
-<li data-name="emoji memory">
-  <span>Emoji Memory</span>
-  <a class="play-btn" href="emoji-memory.html">Play</a>
-</li>
+  <div class="game" data-name="geometry" onclick="openGame('geometry.html')">
+    <img src="https://i.imgur.com/7CkJQyP.png">
+    <h3>Geometry Dash</h3>
+  </div>
 
-<li data-name="geometry dash">
-  <span>Geometry Dash</span>
-  <a class="play-btn" href="geometry-dash.html">Play</a>
-</li>
+  <div class="game" data-name="shooter" onclick="openGame('shooter.html')">
+    <img src="https://i.imgur.com/6v8RZyN.png">
+    <h3>Shooter</h3>
+  </div>
 
-<li data-name="minecraft">
-  <span>Minecraft</span>
-  <a class="play-btn" href="minecraft.html">Play</a>
-</li>
+  <div class="game" data-name="cars" onclick="openGame('cars.html')">
+    <img src="https://i.imgur.com/Zw6VZpK.png">
+    <h3>Cars</h3>
+  </div>
 
-</ul>
-</main>
+</div>
 
-<!-- ABOUT -->
-<div id="aboutToggle">About</div>
+<!-- ===== ABOUT + CONTACT ===== -->
 <section id="about">
-  <h3>About ArcadeOwl</h3>
-  <p>Learning & playing simple HTML / JS games.</p>
-  <p>Contact: your@email.com</p>
+  <h2>About</h2>
+  <p>
+    This website was created to play and learn how games work.
+    All games are made or collected using HTML, CSS and JavaScript.
+  </p>
+
+  <h3>Contact</h3>
+  <p>
+    📧 Email: your@email.com<br>
+    💬 Suggestions, bugs or ideas are welcome!
+  </p>
 </section>
 
-<!-- ================= JS ================= -->
-<script type="module">
-// ===== FIREBASE =====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+<footer>
+  © 2025 My Games
+</footer>
 
-const app = initializeApp({
-  apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
-  authDomain: "arcadeowl.firebaseapp.com",
-  projectId: "arcadeowl",
-});
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+<!-- ===== SCRIPT ===== -->
+<script>
+function openGame(page){
+  window.location.href = page;
+}
 
-// ===== USER POPUP =====
-const userBox = document.getElementById("userBox");
-const popup = document.getElementById("settingsPopup");
-
-userBox.onclick = e=>{
-  e.stopPropagation();
-  popup.style.display = popup.style.display==="block"?"none":"block";
-};
-document.onclick = ()=> popup.style.display="none";
-
-// ===== AUTH =====
-onAuthStateChanged(auth,user=>{
-  userBox.textContent = user ? user.displayName : "Guest";
-});
-loginBtn.onclick = ()=> signInWithPopup(auth,provider);
-logoutBtn.onclick = ()=> signOut(auth);
-
-// ===== SEARCH =====
-searchBtn.onclick = ()=>{
-  searchInput.style.display =
-    searchInput.style.display==="block"?"none":"block";
-  searchInput.focus();
-};
-searchInput.oninput = ()=>{
-  const q = searchInput.value.toLowerCase();
-  document.querySelectorAll("#gameList li").forEach(li=>{
-    li.style.display = li.dataset.name.includes(q)?"flex":"none";
+/* SEARCH – 1 CHARACTER */
+document.getElementById("search").addEventListener("input", function(){
+  const val = this.value.toLowerCase();
+  document.querySelectorAll(".game").forEach(g=>{
+    g.style.display = !val || g.dataset.name.includes(val) ? "" : "none";
   });
-};
-
-// ===== ABOUT =====
-aboutToggle.onclick = ()=>{
-  about.style.display = about.style.display==="block"?"none":"block";
-};
-
-// ===== DARK MODE =====
-darkToggle.onclick = ()=>{
-  document.body.classList.toggle("dark");
-};
+});
 </script>
 
 </body>
