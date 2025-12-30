@@ -1,551 +1,199 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Point & Click Escape — Beispiel</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elevator Escape – Demo</title>
+
 <style>
-  :root{
-    --bg:#111;
-    --panel:#0f1720;
-    --accent:#2dd4bf;
-    --muted:#94a3b8;
-  }
-  html,body{height:100%;margin:0;background:var(--bg);color:#e6eef3;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;}
-  .wrap{max-width:1200px;margin:18px auto;padding:12px;display:flex;gap:12px;align-items:flex-start;box-sizing:border-box;}
-  .game-area{flex:1;min-width:320px;position:relative}
-  /* Szene: behält Seitenverhältnis, responsive */
-  .scene{
-    width:100%;
-    aspect-ratio:16/9; /* fallback moderne steuerung */
-    background:#223;
-    border-radius:10px;
-    overflow:hidden;
-    position:relative;
-    box-shadow:0 10px 30px rgba(0,0,0,0.6), inset 0 -8px 20px rgba(0,0,0,0.4);
-  }
-  /* Haupthintergrund (Raum) */
-  .scene .background{
-    position:absolute;inset:0;background-size:cover;background-position:center;
-    /* Platzhalter-Grafik: einfach entferne oder ersetze die URL */
-    background-image: url('zimmer.jpg');
-    display:block;
-  }
-
-  /* Unsichtbare Hotspots (absolute, in %) */
-  .hotspot{
-    position:absolute;
-    cursor:pointer;
-    outline: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  /* Debug-Style: zeige Hotspots wenn data-debug="true" */
-  .hotspot.debug{
-    background: rgba(255,255,255,0.08);
-    border:1px dashed rgba(255,255,255,0.12);
-  }
-  /* Icon für Hotspot wenn benötigt */
-  .hotspot .hint{
-    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:14px;color:var(--muted);pointer-events:none;
-  }
-
-  /* Zoom-Ansicht (overlay) */
-  .zoom-panel{
-    position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.2),rgba(0,0,0,0.7));
-    display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;z-index:20;
-    transition:opacity .25s ease, transform .25s ease;
-  }
-  .zoom-panel.hidden{opacity:0;pointer-events:none;transform:translateY(6px)}
-  .zoom-content{
-    width:90%;max-width:900px;height:80%;background:#0b1220;border-radius:8px;position:relative;overflow:hidden;
-    box-shadow:0 20px 50px rgba(0,0,0,0.6);
-  }
-  .zoom-background{position:absolute;inset:0;background-size:cover;background-position:center;}
-  .zoom-back{
-    position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,0.5);color:#fff;padding:8px;border-radius:30px;cursor:pointer;
-    display:flex;align-items:center;gap:8px;font-weight:600;backdrop-filter: blur(4px);
-  }
-  .zoom-back svg{width:18px;height:18px;transform:rotate(180deg)}
-
-  /* Items that sit in a zoom view (clickable to collect) */
-  .zoom-item{
-    position:absolute;cursor:pointer;border-radius:6px;padding:4px;display:flex;align-items:center;justify-content:center;
-    user-select:none;
-  }
-  .zoom-item .label{font-size:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.8)}
-  .zoom-item.collected{display:none}
-
-  /* Inventory sidebar */
-  .sidebar{width:220px;background:linear-gradient(180deg,#071226,#051019);border-radius:10px;padding:12px;box-sizing:border-box;flex-shrink:0}
-  .sidebar h3{margin:0 0 8px 0;font-size:15px;color:var(--muted)}
-  .inventory{display:flex;flex-direction:column;gap:8px}
-  .inventory-row{display:flex;gap:8px;flex-wrap:wrap}
-  .inv-slot{
-    width:56px;height:56px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;cursor:pointer;
-    position:relative;border:1px solid rgba(255,255,255,0.03);
-  }
-  .inv-slot img{max-width:42px;max-height:42px;pointer-events:none}
-  .inv-slot.selected{outline:3px solid rgba(45,212,191,0.18);box-shadow:0 6px 18px rgba(45,212,191,0.06) inset;}
-  .inv-slot .name{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted)}
-  .inv-empty{opacity:0.35;font-size:13px;color:var(--muted);padding:8px;text-align:center}
-
-  /* Message area */
-  .message{margin-top:12px;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px;font-size:13px;color:var(--muted);min-height:40px}
-
-  /* small screens */
-  @media (max-width:800px){
-    .wrap{flex-direction:column;padding:8px}
-    .sidebar{width:100%;display:flex;flex-direction:row;align-items:center;gap:8px;overflow:auto;padding:8px}
-    .inventory{flex-direction:row}
-    .inv-slot{width:48px;height:48px}
-  }
+body{
+  margin:0;
+  background:#0b1020;
+  color:#e5e7eb;
+  font-family:system-ui, sans-serif;
+}
+#game{
+  max-width:1100px;
+  margin:auto;
+  padding:10px;
+}
+#scene{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#1e293b; /* Raum-Platzhalter */
+  border-radius:12px;
+  overflow:hidden;
+}
+.hotspot{
+  position:absolute;
+  cursor:pointer;
+}
+#zoom{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+#zoomContent{
+  position:relative;
+  width:80%;
+  height:80%;
+  background:#334155;
+  border-radius:10px;
+}
+.zoomItem{
+  position:absolute;
+  background:#22c55e;
+  padding:6px;
+  border-radius:6px;
+  cursor:pointer;
+}
+#back{
+  position:absolute;
+  bottom:10px;
+  left:10px;
+  background:#000;
+  padding:8px;
+  border-radius:20px;
+  cursor:pointer;
+}
+#inventory{
+  display:flex;
+  gap:10px;
+  padding:10px;
+}
+.item{
+  width:50px;
+  height:50px;
+  background:#475569;
+  border-radius:6px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
+}
+.item.selected{
+  outline:3px solid #2dd4bf;
+}
+#msg{
+  padding:8px;
+  color:#94a3b8;
+}
 </style>
 </head>
-<body>
-<div class="wrap">
-  <div class="game-area" role="application" aria-label="Escape-Spiel">
-    <div class="scene" id="scene" aria-hidden="false">
-      <div class="background" id="background"></div>
-      <!-- Hotspots werden dynamisch eingefügt -->
-      <div id="hotspots-layer"></div>
 
-      <!-- Zoom overlay -->
-      <div class="zoom-panel hidden" id="zoomPanel" aria-hidden="true">
-        <div class="zoom-content" id="zoomContent">
-          <div class="zoom-background" id="zoomBackground"></div>
-          <div id="zoomItemsLayer"></div>
-          <div class="zoom-back" id="zoomBack" title="Zurück">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 11l5-5 5 5M7 17l5-5 5 5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Zurück
-          </div>
-        </div>
+<body>
+<div id="game">
+  <div id="scene">
+    <!-- Hotspots -->
+    <div class="hotspot" style="left:55%;top:60%;width:20%;height:15%" onclick="openZoom('box')"></div>
+    <div class="hotspot" style="left:70%;top:25%;width:20%;height:50%" onclick="useElevator()"></div>
+    <div class="hotspot" style="left:40%;top:30%;width:10%;height:30%" onclick="openPanel()"></div>
+
+    <!-- Zoom -->
+    <div id="zoom">
+      <div id="zoomContent">
+        <div id="zoomItems"></div>
+        <div id="back" onclick="closeZoom()">⬇ Zurück</div>
       </div>
     </div>
   </div>
 
-  <aside class="sidebar" aria-label="Inventar und Informationen">
-    <h3>Inventar</h3>
-    <div class="inventory" id="inventory">
-      <!-- Inventory slots -->
-      <div class="inventory-row" id="inventoryRow"></div>
-      <div class="inv-empty" id="invEmpty">Noch keine Gegenstände</div>
-    </div>
-    <div class="message" id="message">Klicke auf Bereiche im Raum, um sie zu untersuchen.</div>
-  </aside>
+  <div id="inventory"></div>
+  <div id="msg">Untersuche den Raum.</div>
 </div>
 
 <script>
-/*
-  Point & Click Escape - Single file
-  - Konfiguration: Räume, Hotspots, Zoom-Bilder, Items
-  - Positionsangaben in Prozent (x,y,width,height) damit alles responsiv bleibt
-  - Wie man Bilder ersetzt: Ersetze 'zimmer.jpg', 'zoom_kiste.jpg', 'icon_key.png' usw. mit deinem Pfad.
-*/
+let inventory=[];
+let selected=null;
+let powerOn=false;
+let panelSeq=[];
+const correctSeq=[3,1,2];
 
-/* ==========================
-   SPIELDATEN (modular)
-   Füge hier neue Räume/hotspots/items hinzu.
-   ========================== */
+function msg(t){document.getElementById("msg").textContent=t;}
 
-const GAME = {
-  debugHotspots: false, // true -> zeigt die Hotspot-Flächen als leicht sichtbare Flächen
-  startRoom: 'room1',
-  rooms: {
-    room1: {
-      id: 'room1',
-      name: 'Aufzug Zimmer',
-      background: 'zimmer.jpg', // ersetze durch z.B. 'images/room1.jpg'
-      hotspots: {
-        table_box: {
-          id:'table_box',
-          // Position in % relativ zur Szene (left, top, width, height)
-          rect: { x:60, y:58, w:18, h:12 },
-          title: 'Kiste auf dem Tisch',
-          zoomId: 'zoom_box'
-        },
-        ladder_area: {
-          id:'ladder_area',
-          rect:{ x:18, y:32, w:18, h:40},
-          title:'Leiter',
-          // Kein Zoom, hier zeigt sich nur eine Nachricht oder kann Item benutzen
-          accepts: ['rope'],
-          onUse: (hotspot, itemId, state) => {
-            // Beispiel: wenn man Seil benutzt -> Lösungszustand
-            state.message = 'Du hast das Seil an der Leiter befestigt. Du kannst jetzt hochklettern (Placeholder).';
-            state.hotspots['ladder_area'].solved = true;
-            return { success:true, consume:true };
-          }
-        },
-        door_locked: {
-          id:'door_locked',
-          rect:{ x:5, y:12, w:20, h:65},
-          title:'Verschlossene Tür',
-          accepts: ['key_gold'],
-          onUse: (hotspot, itemId, state) => {
-            state.message = 'Die Tür ist aufgeschlossen! Ein neuer Bereich ist jetzt zugänglich (Demo).';
-            hotspot.solved = true;
-            // z.B. reveal new hotspot:
-            state.hotspots['door_locked'].unlocked = true;
-            return { success:true, consume:true };
-          }
-        }
-      }
-    }
-  },
-
-  // Zoom-Ansichten: detaillierte Bilder + Items, können mehrfach vorhanden sein
-  zooms: {
-    zoom_box: {
-      id:'zoom_box',
-      title:'Kiste nah',
-      background:'zoom_kiste.jpg',
-      items: {
-        key_gold: {
-          id:'key_gold',
-          name:'Goldener Schlüssel',
-          icon:'icon_key.png',
-          rect:{ x:74, y:70, w:8, h:12 }, // Position in % innerhalb zoom-content
-          collected:false
-        },
-        note_piece: {
-          id:'note_piece',
-          name:'Papierschnipsel',
-          icon:'icon_note.png',
-          rect:{ x:32, y:62, w:12, h:10 },
-          collected:false
-        }
-      }
-    }
-  },
-
-  // Allgemeine Items, z.B. solche, die man im Inventar haben kann
-  items: {
-    rope: { id:'rope', name:'Seil', icon:'icon_rope.png', collected:false }
-    // rope könnte durch ein Hotspot oder Szene sichtbar gemacht werden
-  }
-};
-
-/* ==========================
-   Spielzustand (laufzeit)
-   ========================== */
-const State = {
-  currentRoom: null,
-  zoomOpen: null, // zoomId wenn offen
-  inventory: {}, // itemId -> itemData
-  selectedItem: null,
-  message: '',
-  hotspots: {}, // runtime copy of hotspots for current room
-};
-
-/* ==========================
-   Hilfsfunktionen
-   ========================== */
-function pctRectStyle(rect){
-  // rect: {x,y,w,h} als Prozent -> CSS style string
-  return `left:${rect.x}%;top:${rect.y}%;width:${rect.w}%;height:${rect.h}%;`;
+function addItem(name){
+  inventory.push(name);
+  renderInv();
 }
 
-function setMessage(text){
-  State.message = text || '';
-  document.getElementById('message').textContent = State.message;
-}
-
-/* ==========================
-   Rendering / DOM Aufbau
-   ========================== */
-
-const sceneEl = document.getElementById('scene');
-const backgroundEl = document.getElementById('background');
-const hotspotsLayer = document.getElementById('hotspots-layer');
-const zoomPanel = document.getElementById('zoomPanel');
-const zoomBackground = document.getElementById('zoomBackground');
-const zoomItemsLayer = document.getElementById('zoomItemsLayer');
-const zoomBackBtn = document.getElementById('zoomBack');
-const inventoryRow = document.getElementById('inventoryRow');
-const invEmpty = document.getElementById('invEmpty');
-
-function init(){
-  loadRoom(GAME.startRoom);
-  renderInventory();
-  zoomBackBtn.addEventListener('click', closeZoom);
-  setMessage('Klicke auf Bereiche im Raum, um sie zu untersuchen.');
-  // debug toggle: drücken von D schaltet debug-mode
-  window.addEventListener('keydown', (e)=>{
-    if(e.key.toLowerCase()==='d'){
-      GAME.debugHotspots = !GAME.debugHotspots;
-      renderHotspots();
-    }
+function renderInv(){
+  const inv=document.getElementById("inventory");
+  inv.innerHTML="";
+  inventory.forEach(i=>{
+    const d=document.createElement("div");
+    d.className="item"+(selected===i?" selected":"");
+    d.textContent=i;
+    d.onclick=()=>{selected=(selected===i?null:i);renderInv();}
+    inv.appendChild(d);
   });
 }
 
-/* Laden eines Raumes */
-function loadRoom(roomId){
-  const room = GAME.rooms[roomId];
-  if(!room) {
-    setMessage('Raum nicht gefunden: ' + roomId);
-    return;
+function openZoom(type){
+  const z=document.getElementById("zoom");
+  const zi=document.getElementById("zoomItems");
+  zi.innerHTML="";
+  z.style.display="flex";
+
+  if(type==="box"){
+    msg("Eine Kiste.");
+    zi.innerHTML+=`
+      <div class="zoomItem" style="left:20%;top:40%" onclick="pickup('Key')">🔑 Schlüssel</div>
+      <div class="zoomItem" style="left:60%;top:40%" onclick="pickup('Note')">📄 Zettel (3)</div>`;
   }
-  State.currentRoom = roomId;
-  // runtime kopie der hotspots, damit wir Zustände wie solved setzen können
-  State.hotspots = JSON.parse(JSON.stringify(room.hotspots));
-  // set background (fallback color if not exists)
-  backgroundEl.style.backgroundImage = `url('${room.background}')`;
-  renderHotspots();
-}
 
-/* Hotspots rendering */
-function renderHotspots(){
-  hotspotsLayer.innerHTML = '';
-  const room = GAME.rooms[State.currentRoom];
-  for(const [id, hs] of Object.entries(State.hotspots)){
-    const el = document.createElement('button');
-    el.className = 'hotspot' + (GAME.debugHotspots ? ' debug' : '');
-    el.style.cssText = pctRectStyle(hs.rect);
-    el.setAttribute('data-id', id);
-    el.setAttribute('aria-label', hs.title || id);
-    // small visual for debug / accessibility
-    const hint = document.createElement('span');
-    hint.className='hint';
-    hint.textContent = hs.title || id;
-    if(GAME.debugHotspots) el.appendChild(hint);
-
-    // click handler: either open zoom or try use selected inventory item / message
-    el.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      onHotspotClick(id);
+  if(type==="panel"){
+    msg("Ein Zahlenpanel.");
+    [1,2,3].forEach(n=>{
+      const b=document.createElement("div");
+      b.className="zoomItem";
+      b.style.left=(20+n*15)+"%";
+      b.style.top="40%";
+      b.textContent=n;
+      b.onclick=()=>press(n);
+      zi.appendChild(b);
     });
-    hotspotsLayer.appendChild(el);
   }
 }
 
-/* Hotspot click logic */
-function onHotspotClick(hotspotId){
-  const hotspot = State.hotspots[hotspotId];
-  if(!hotspot) return;
-  // If a zoom is referenced -> open zoom
-  if(hotspot.zoomId){
-    openZoom(hotspot.zoomId);
-    return;
-  }
-  // If an item is selected -> try using it on hotspot
-  if(State.selectedItem){
-    attemptUseItemOnHotspot(State.selectedItem, hotspotId);
-    return;
-  }
-  // Otherwise, display info / fallback
-  setMessage(hotspot.title || 'Du untersuchst ' + hotspotId);
-}
-
-/* Zoom öffnen */
-function openZoom(zoomId){
-  const zoom = GAME.zooms[zoomId];
-  if(!zoom) { setMessage('Zoom nicht gefunden: '+zoomId); return; }
-  State.zoomOpen = zoomId;
-  zoomBackground.style.backgroundImage = `url('${zoom.background}')`;
-  // render items in zoom
-  zoomItemsLayer.innerHTML = '';
-  for(const [itemId, item] of Object.entries(zoom.items || {})){
-    const runtimeCollected = item.collected || (GAME.items[itemId] && GAME.items[itemId].collected) || false;
-    const div = document.createElement('div');
-    div.className = 'zoom-item' + (runtimeCollected ? ' collected' : '');
-    div.style.cssText = pctRectStyle(item.rect);
-    div.setAttribute('data-item', itemId);
-    // item appearance (placeholder)
-    const box = document.createElement('div');
-    box.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
-    // Use icon if available, else text block
-    if(item.icon){
-      const img = document.createElement('img');
-      img.src = item.icon;
-      img.alt = item.name || itemId;
-      img.style.maxWidth='100%'; img.style.maxHeight='100%';
-      box.appendChild(img);
-    } else {
-      const label = document.createElement('div');
-      label.className='label';
-      label.textContent = item.name || itemId;
-      box.appendChild(label);
-    }
-    div.appendChild(box);
-
-    div.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      collectItemFromZoom(zoomId, itemId);
-    });
-
-    zoomItemsLayer.appendChild(div);
-  }
-
-  // show overlay
-  zoomPanel.classList.remove('hidden');
-  zoomPanel.setAttribute('aria-hidden','false');
-}
-
-/* Close zoom */
 function closeZoom(){
-  State.zoomOpen = null;
-  zoomPanel.classList.add('hidden');
-  zoomPanel.setAttribute('aria-hidden','true');
+  document.getElementById("zoom").style.display="none";
 }
 
-/* Collect item from zoom */
-function collectItemFromZoom(zoomId, itemId){
-  const zoom = GAME.zooms[zoomId];
-  if(!zoom) return;
-  const item = zoom.items[itemId];
-  if(!item) return;
-  if(item.collected) return;
-  // add to inventory (runtime)
-  item.collected = true;
-  GAME.items[itemId] = GAME.items[itemId] || { id:itemId, name:item.name, icon:item.icon, collected:true };
-  GAME.items[itemId].collected = true;
-  State.inventory[itemId] = GAME.items[itemId];
-  setMessage(`Du hast "${item.name}" aufgenommen.`);
-  renderInventory();
-  // hide element in zoom
-  const el = zoomItemsLayer.querySelector(`[data-item="${itemId}"]`);
-  if(el) el.classList.add('collected');
-}
-
-/* Inventory rendering */
-function renderInventory(){
-  inventoryRow.innerHTML = '';
-  const ids = Object.keys(State.inventory);
-  if(ids.length===0){
-    invEmpty.style.display='block';
-  } else invEmpty.style.display='none';
-
-  ids.forEach(id=>{
-    const item = State.inventory[id];
-    const slot = document.createElement('div');
-    slot.className = 'inv-slot' + (State.selectedItem===id ? ' selected' : '');
-    slot.setAttribute('data-item', id);
-    slot.title = item.name || id;
-    // image or fallback
-    if(item.icon){
-      const img = document.createElement('img');
-      img.src = item.icon;
-      img.alt = item.name || id;
-      slot.appendChild(img);
-    } else {
-      const t = document.createElement('div');
-      t.style.fontSize='12px'; t.style.padding='4px'; t.textContent = item.name || id;
-      slot.appendChild(t);
-    }
-    const nameLabel = document.createElement('div');
-    nameLabel.className='name';
-    nameLabel.textContent = item.name;
-    slot.appendChild(nameLabel);
-
-    slot.addEventListener('click', (ev)=>{
-      ev.stopPropagation();
-      onSelectInventoryItem(id);
-    });
-
-    inventoryRow.appendChild(slot);
-  });
-
-  // deselect if selected item no longer in inventory
-  if(State.selectedItem && !State.inventory[State.selectedItem]) State.selectedItem = null;
-  updateInventorySelectionVisual();
-}
-
-/* Select/deselect inventory item */
-function onSelectInventoryItem(id){
-  if(State.selectedItem === id){
-    State.selectedItem = null;
-    setMessage('Gegenstand abgewählt.');
-  } else {
-    State.selectedItem = id;
-    setMessage('Gegenstand ausgewählt: ' + (GAME.items[id]?.name || id));
-  }
-  updateInventorySelectionVisual();
-}
-
-/* Update inventory slot visual */
-function updateInventorySelectionVisual(){
-  document.querySelectorAll('.inv-slot').forEach(s=>{
-    const id = s.getAttribute('data-item');
-    if(State.selectedItem === id) s.classList.add('selected'); else s.classList.remove('selected');
-  });
-}
-
-/* Versuch ein Item auf Hotspot zu benutzen */
-function attemptUseItemOnHotspot(itemId, hotspotId){
-  const hotspot = State.hotspots[hotspotId];
-  if(!hotspot) { setMessage('Hotspot nicht gefunden'); return; }
-  const accepts = hotspot.accepts || [];
-  // if hotspot defines accepts and item is included
-  if(accepts.includes(itemId)){
-    // call onUse if provided
-    if(typeof hotspot.onUse === 'function'){
-      // pass runtime state so handler can update it
-      const result = hotspot.onUse(hotspot, itemId, { message: State.message, hotspots: State.hotspots });
-      // Default consume true on success
-      const consumed = (result && result.consume) ? true : false;
-      if(result && result.success){
-        setMessage('Gegenstand erfolgreich verwendet.');
-        if(consumed) removeFromInventory(itemId);
-        renderHotspots();
-        renderInventory();
-        return;
-      } else {
-        setMessage(result?.message || 'Nichts passierte.');
-        return;
-      }
-    } else {
-      // default success action
-      setMessage('Gegenstand angewendet.');
-      removeFromInventory(itemId);
-      renderInventory();
-      return;
-    }
-  } else {
-    setMessage('Der Gegenstand passt hier nicht.');
-    // Optionally deselect item after wrong try:
-    // State.selectedItem = null; updateInventorySelectionVisual();
+function pickup(i){
+  if(!inventory.includes(i)){
+    addItem(i);
+    msg(i+" aufgenommen.");
   }
 }
 
-/* Entfernt Item aus Inventar (z.B. wenn es verbraucht wird) */
-function removeFromInventory(itemId){
-  delete State.inventory[itemId];
-  if(GAME.items[itemId]) GAME.items[itemId].collected = false;
-  if(State.selectedItem === itemId) State.selectedItem = null;
-  setMessage('Gegenstand wurde entfernt: ' + itemId);
+function openPanel(){
+  if(selected!=="Key"){msg("Das Panel ist verschlossen.");return;}
+  openZoom("panel");
 }
 
-/* ==========================
-   Demo: Ein paar Interaktionen automatisieren
-   ========================== */
+function press(n){
+  panelSeq.push(n);
+  msg("Gedrückt: "+panelSeq.join("-"));
+  if(panelSeq.length===3){
+    if(JSON.stringify(panelSeq)===JSON.stringify(correctSeq)){
+      powerOn=true;
+      msg("Strom aktiviert!");
+      closeZoom();
+    }else{
+      msg("Falsche Reihenfolge.");
+      panelSeq=[];
+    }
+  }
+}
 
-// Wir müssen die onUse-Funktionen im GAME-Objekt so ausführen, dass sie Zugriff auf State (laufzeit) haben.
-// Beim Laden konvertieren wir ggf. die onUse-Felder in ausführbare Funktionen (falls sie als string definiert wären).
-(function bindRuntimeHandlers(){
-  // Beispiel: wir binden die bereits im GAME definierten onUse (falls vorhanden) so dass sie Zugang zu State haben.
-  // In unserem GAME oben ist onUse direkt als Funktion definiert und benutzt "state" parameter.
-})();
-
-/* ==========================
-   Starten
-   ========================== */
-init();
-
-/* ==========================
-   Erweiterungsanleitung (kurz):
-   - Einen neuen Raum hinzufügen:
-     GAME.rooms.newRoomId = {
-       id:'newRoomId', background:'myroom.jpg', hotspots:{ ... }
-     }
-   - Einen Hotspot definieren:
-     hotspots: {
-       myHotspot: { rect:{x:10,y:10,w:20,h:15}, title:'...', zoomId:'zoom_abc', accepts:['itemId'], onUse: function(hs,itemId,state){ ... } }
-     }
-   - Einen neuen Zoom definieren:
-     GAME.zooms.zoom_abc = { id:'zoom_abc', background:'zoom_abc.jpg', items: { item1: {id:'item1',name:'',icon:'',rect:{x:..}} } }
-   - Ein Item zum Inventar bringen: beim Sammeln in collectItemFromZoom wird es automatisch hinzugefügt.
-   ========================== */
-
+function useElevator(){
+  if(!powerOn){msg("Der Aufzug hat keinen Strom.");return;}
+  msg("🎉 Du bist entkommen!");
+}
 </script>
 </body>
 </html>
