@@ -166,38 +166,47 @@ html,body{
   cursor:pointer;
   font-size:12px;
 }
-</style>
 
-<style>
+.games-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:14px;
+}
+
+/* GAME CARD */
 .game-card{
-  width:180px;
+  background:#1e1e1e;
+  border-radius:14px;
+  overflow:hidden;
   text-decoration:none;
   color:white;
-  display:inline-block;
-  margin:12px;
-  background:#1e1e1e;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 6px 16px rgba(0,0,0,.4);
-  transition:.2s;
+  box-shadow:0 6px 16px rgba(0,0,0,.25);
+  transition:transform .15s ease;
 }
 
 .game-card:hover{
-  transform:scale(1.05);
+  transform:scale(1.03);
 }
 
 .game-card img{
   width:100%;
+  height:140px;
+  object-fit:cover;
   display:block;
 }
 
 .game-title{
-  padding:8px;
+  padding:10px;
   text-align:center;
-  font-weight:bold;
+  font-weight:700;
+  font-size:14px;
   background:#111;
-}
+  }
+
+  
 </style>
+
+
   
 </head>
 
@@ -227,97 +236,26 @@ z-index:1000;
 </header>
 
 <main class="wrap">
-<ul class="games-list">
 
-<li>
-  <div>
-    <a class="game-title" href="color-clicker.html">Color Clicker</a>
-    <div class="game-desc">Fast reaction color game.</div>
-  </div>
-  <a class="play-btn" href="color-clicker.html">Play</a>
-</li>
+<div class="games-grid">
 
-<li>
-  <div>
-    <a class="game-title" href="emoji-memory.html">Emoji Memory</a>
-    <div class="game-desc">Find all matching emoji pairs.</div>
-  </div>
-  <a class="play-btn" href="emoji-memory.html">Play</a>
-</li>
+  <a href="emoji-memory.html" class="game-card">
+    <img src="images/emoji-memory.jpg" alt="Emoji Memory">
+    <div class="game-title">Emoji Memory</div>
+  </a>
 
-<li>
-  <div>
-    <a class="game-title" href="jump-monkey.html">Monkey Jump</a>
-    <div class="game-desc">Jump over obstacles.</div>
-  </div>
-  <a class="play-btn" href="jump-monkey.html">Play</a>
-</li>
+  <a href="snake-game.html" class="game-card">
+    <img src="images/snake.jpg" alt="Snake">
+    <div class="game-title">Snake</div>
+  </a>
 
-<li>
-  <div>
-    <a class="game-title" href="banana-catcher.html">Banana Catcher</a>
-    <div class="game-desc">Catch bananas, avoid bombs.</div>
-  </div>
-  <a class="play-btn" href="banana-catcher.html">Play</a>
-</li>
+  <a href="tic-tac-toe.html" class="game-card">
+    <img src="images/tictactoe.jpg" alt="Tic Tac Toe">
+    <div class="game-title">Tic Tac Toe</div>
+  </a>
 
-<li>
-  <div>
-    <a class="game-title" href="tic-tac-toe.html">Tic Tac Toe</a>
-    <div class="game-desc">2 players classic game.</div>
-  </div>
-  <a class="play-btn" href="tic-tac-toe.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="tic-tac-toe-AI.html">Tic Tac Toe AI</a>
-    <div class="game-desc">Play against the computer.</div>
-  </div>
-  <a class="play-btn" href="tic-tac-toe-AI.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="minesweeper.html">Minesweeper</a>
-    <div class="game-desc">Think smart, click safe.</div>
-  </div>
-  <a class="play-btn" href="minesweeper.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="chess-ai.html">Chess AI</a>
-    <div class="game-desc">Classic chess vs computer.</div>
-  </div>
-  <a class="play-btn" href="chess-ai.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="geometry-dash.html">Geometry Dash</a>
-    <div class="game-desc">Jump and survive.</div>
-  </div>
-  <a class="play-btn" href="geometry-dash.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="snake-game.html">Snake Game</a>
-    <div class="game-desc">Eat apples and grow.</div>
-  </div>
-  <a class="play-btn" href="snake-game.html">Play</a>
-</li>
-
-<li>
-  <div>
-    <a class="game-title" href="minecraft.html">Minecraft</a>
-    <div class="game-desc">Creative block building adventure.</div>
-  </div>
-  <a class="play-btn" href="minecraft.html">Play</a>
-</li>
-
-</ul>
+</div>
+  
 </main>
 
 <div id="userBox">Guest</div>
