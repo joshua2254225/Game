@@ -126,10 +126,6 @@ button.secondary{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword,
-         createUserWithEmailAndPassword,
-         updateProfile }
-from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -138,7 +134,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-const firebaseConfig = {
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
   projectId: "arcadeowl",
