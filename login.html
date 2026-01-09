@@ -15,7 +15,6 @@ body{
   background:linear-gradient(135deg,#0b74de,#7b2cff);
   font-family:system-ui,Segoe UI,Roboto,Arial;
 }
-
 .card{
   background:white;
   width:320px;
@@ -23,13 +22,11 @@ body{
   border-radius:16px;
   box-shadow:0 20px 40px rgba(0,0,0,.3);
 }
-
 h1{
   text-align:center;
   color:#0b74de;
   margin-bottom:16px;
 }
-
 input{
   width:100%;
   padding:10px;
@@ -38,7 +35,6 @@ input{
   border:1px solid #ccc;
   font-size:14px;
 }
-
 button{
   width:100%;
   padding:10px;
@@ -50,12 +46,10 @@ button{
   font-weight:700;
   cursor:pointer;
 }
-
 button.secondary{
   background:#eee;
   color:#333;
 }
-
 .toggle{
   margin-top:12px;
   text-align:center;
@@ -63,7 +57,6 @@ button.secondary{
   cursor:pointer;
   color:#0b74de;
 }
-
 .eye{
   position:absolute;
   right:12px;
@@ -71,11 +64,9 @@ button.secondary{
   cursor:pointer;
   font-size:14px;
 }
-
 .field{
   position:relative;
 }
-
 .msg{
   text-align:center;
   color:red;
@@ -98,15 +89,11 @@ button.secondary{
       <span class="eye" onclick="togglePass('loginPass')">👁️</span>
     </div>
     <button onclick="login()">Login</button>
-<button class="secondary" onclick="googleLogin()">
-  Sign in with Google
-</button>
-    <div class="toggle" onclick="showRegister()">
-      No account? Register
-    </div>
+    <button class="secondary" onclick="googleLogin()">Sign in with Google</button>
+    <div class="toggle" onclick="showRegister()">No account? Register</div>
   </div>
 
-  <!-- REGISTER (HIDDEN) -->
+  <!-- REGISTER -->
   <div id="registerBox" style="display:none">
     <input id="regName" placeholder="Username">
     <input id="regEmail" type="email" placeholder="Email">
@@ -115,90 +102,99 @@ button.secondary{
       <span class="eye" onclick="togglePass('regPass')">👁️</span>
     </div>
     <button onclick="register()">Create account</button>
-
-    <div class="toggle" onclick="showLogin()">
-      Already have an account?
-    </div>
+    <div class="toggle" onclick="showLogin()">Already have an account?</div>
   </div>
 
   <div class="msg" id="msg"></div>
 </div>
 
 <script type="module">
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";const firebaseConfig = {
+
+// Firebase config
+const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
   projectId: "arcadeowl",
-  appId: "1:604579422254:web:19ecace88992c998efffbf"
+  storageBucket: "arcadeowl.firebasestorage.app",
+  messagingSenderId: "604579422254",
+  appId: "1:604579422254:web:19ecace88992c998efffbf",
+  measurementId: "G-5FPFJKSPKZ"
 };
 
+// Init Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+const msg = document.getElementById("msg");
 
+// Google Login
 window.googleLogin = async () => {
   try{
-    await signInWithPopup(auth, provider);
-    // ✅ AUTO REDIRECT
+    const result = await signInWithPopup(auth, provider);
     location.href = "index.html";
   }catch(e){
+    console.error(e);
     msg.textContent = e.message;
   }
 };
+
+// Email/Pass Login
 window.login = async () => {
   try{
-    await signInWithEmailAndPassword(
-      auth,
-      loginEmail.value,
-      loginPass.value
-    );
-    location.href="index.html";
+    await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value);
+    location.href = "index.html";
   }catch(e){
+    console.error(e);
     msg.textContent = e.message;
   }
 };
 
+// Register
 window.register = async () => {
   try{
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      regEmail.value,
-      regPass.value
-    );
-    await updateProfile(cred.user,{
-      displayName: regName.value
-    });
-    location.href="index.html";
+    const cred = await createUserWithEmailAndPassword(auth, regEmail.value, regPass.value);
+    await updateProfile(cred.user, { displayName: regName.value });
+    location.href = "index.html";
   }catch(e){
+    console.error(e);
     msg.textContent = e.message;
   }
 };
 
+// Toggle login/register
 window.showRegister = () => {
-  loginBox.style.display="none";
-  registerBox.style.display="block";
+  loginBox.style.display = "none";
+  registerBox.style.display = "block";
   msg.textContent="";
-  const msg = document.getElementById("msg");
 };
-
 window.showLogin = () => {
-  registerBox.style.display="none";
-  loginBox.style.display="block";
+  registerBox.style.display = "none";
+  loginBox.style.display = "block";
   msg.textContent="";
 };
 
+// Toggle password visibility
 window.togglePass = id => {
-  const i=document.getElementById(id);
+  const i = document.getElementById(id);
   i.type = i.type==="password"?"text":"password";
 };
+
+// Auto redirect if already logged in
+onAuthStateChanged(auth, user => {
+  if(user){
+    location.href = "index.html";
+  }
+});
 </script>
 
 </body>
