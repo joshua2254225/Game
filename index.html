@@ -198,7 +198,24 @@ html,body{
   display:block;
   }
 
+/* LOGIN BUTTON */
+.login-btn{
+  position:fixed;
+  top:12px;
+  right:12px;
+  padding:8px 14px;
+  border-radius:8px;
+  background:#ff9800;
+  color:#000;
+  font-weight:700;
+  text-decoration:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+  z-index:10001;
+}
 
+.login-btn:hover{
+  background:#ffc107;
+  }
 
   
 </style>
@@ -209,6 +226,8 @@ html,body{
 
 <body>
 
+<a href="login.html" class="login-btn">Login</a>
+  
 <button id="searchBtn">🔍</button>
 
 <input id="searchInput" type="text" placeholder="Search..."
