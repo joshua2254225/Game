@@ -370,14 +370,7 @@ document.getElementById("saveUsernameBtn").onclick = ()=>{
 };
 
 // Google Login
-document.getElementById("googleLoginBtn").onclick = ()=>{
-  signInWithPopup(auth,provider)
-    .then(result=>{
-      const user = result.user;
-      userBox.textContent = user.displayName||user.email.split("@")[0];
-      settingsPopup.style.display="none";
-    }).catch(err=>alert(err.message));
-};
+
 </script>
 
 
