@@ -339,12 +339,19 @@ document.addEventListener("click", e=>{
 });
 
 // Auth State
-onAuthStateChanged(auth,user=>{
-  if(user){
-    const name = user.displayName||user.email.split("@")[0]||"User";
+onAuthStateChanged(auth, user => {
+  if (user) {
+    const name = user.displayName || user.email.split("@")[0] || "User";
     userBox.textContent = name;
-  }else{
-    userBox.textContent="Guest";
+
+    // Login-Button verstecken
+    loginBtn.style.display = "none";
+    userBox.style.display = "block";
+  } else {
+    // Nicht eingeloggt
+    userBox.textContent = "Guest";
+    userBox.style.display = "none";
+    loginBtn.style.display = "block";
   }
 });
 
