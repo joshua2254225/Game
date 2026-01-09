@@ -98,7 +98,9 @@ button.secondary{
       <span class="eye" onclick="togglePass('loginPass')">👁️</span>
     </div>
     <button onclick="login()">Login</button>
-
+<button class="secondary" onclick="googleLogin()">
+  Sign in with Google
+</button>
     <div class="toggle" onclick="showRegister()">
       No account? Register
     </div>
@@ -128,7 +130,14 @@ import { getAuth, signInWithEmailAndPassword,
          createUserWithEmailAndPassword,
          updateProfile }
 from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
@@ -138,7 +147,17 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
+window.googleLogin = async () => {
+  try{
+    await signInWithPopup(auth, provider);
+    // ✅ AUTO REDIRECT
+    location.href = "index.html";
+  }catch(e){
+    msg.textContent = e.message;
+  }
+};
 window.login = async () => {
   try{
     await signInWithEmailAndPassword(
