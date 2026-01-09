@@ -211,6 +211,31 @@ html,body{
   background:#ffc107;
   }
 
+/* LOCKED GAME */
+.game-card.locked{
+  position:relative;
+  pointer-events:none;
+}
+
+.game-card.locked img{
+  filter:grayscale(1) brightness(.5);
+}
+
+.lock-overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.55);
+  color:white;
+  font-weight:700;
+  text-align:center;
+  font-size:14px;
+  padding:10px;
+    }
+
+  
   
 </style>
 
@@ -266,9 +291,10 @@ z-index:1000;
     <img src="images/Tic-tac-toeAI.jpg" alt="Tic Tac Toe AI">
   </a>
 
-  <a href="minecraft.html" class="game-card">
-    <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
-  </a>
+  <div class="game-card locked" id="minecraftCard">
+  <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
+  <div class="lock-overlay">🔒 Only for logged-in users</div>
+  </div>
 
 
   
@@ -290,7 +316,11 @@ z-index:1000;
 
 <a class="feedback" href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform" target="_blank">💬</a>
 
+
+
+  
 <script type="module">
+  
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getAuth,
@@ -374,7 +404,20 @@ document.getElementById("saveUsernameBtn").onclick = ()=>{
   }
 };
 
-// Google Login
+  const minecraftCard = document.getElementById("minecraftCard");
+
+onAuthStateChanged(auth, user => {
+  if(user){
+    // 🔓 freischalten
+    minecraftCard.outerHTML = `
+      <a href="minecraft.html" class="game-card">
+        <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
+      </a>
+    `;
+  }
+});
+
+
 
 </script>
 
