@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="ro">
 <head>
 <meta charset="UTF-8">
-<title>Geografie Lernspiel</title>
-
+<title>Carpații – Joc Geografie</title>
+<link rel="stylesheet" href="style.css">
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -11,87 +11,76 @@
     text-align: center;
   }
 
-  h2 {
-    margin-top: 20px;
-  }
-
   #map-container {
     position: relative;
     display: inline-block;
-    margin-top: 20px;
   }
 
   #map {
     width: 600px;
-    border: 3px solid #333;
   }
 
-  /* Klickbare Bereiche */
-  .area {
+  .zone {
     position: absolute;
     cursor: pointer;
   }
 
-  /* Nur zum Testen sichtbar – später entfernen */
-  .area:hover {
-    background: rgba(0, 255, 0, 0.3);
+  /* NUR zum Lernen sichtbar – später entfernen */
+  .zone:hover {
+    background: rgba(0, 150, 255, 0.3);
   }
 
   #result {
     margin-top: 15px;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
-  }
-
-  #score {
-    margin-top: 10px;
-    font-size: 18px;
   }
 </style>
 </head>
 
 <body>
 
-<h2 id="question">Wo liegt Italien?</h2>
+<h2 id="question">Indică pe hartă: <b>Carpații Meridionali</b></h2>
 
 <div id="map-container">
-  <img id="map" src="images/Romania_location_map_Topographic.png">
+  <img id="map" src="images/Romania_location_map_Topographic.png" alt="Harta României">
 
-  <!-- RICHTIGE Antwort -->
-  <div class="area" 
-       style="top: 260px; left: 280px; width: 80px; height: 120px;"
-       onclick="answer(true)">
+  <!-- Carpații Orientali (EST) -->
+  <div class="zone"
+       style="top: 120px; left: 320px; width: 130px; height: 260px;"
+       onclick="answer('orientali')">
   </div>
 
-  <!-- FALSCHE Antwort (z. B. Frankreich) -->
-  <div class="area" 
-       style="top: 230px; left: 220px; width: 80px; height: 100px;"
-       onclick="answer(false)">
+  <!-- Carpații Meridionali (SUD) -->
+  <div class="zone"
+       style="top: 260px; left: 230px; width: 200px; height: 120px;"
+       onclick="answer('meridionali')">
+  </div>
+
+  <!-- Carpații Occidentali (VEST / Apuseni) -->
+  <div class="zone"
+       style="top: 200px; left: 160px; width: 120px; height: 160px;"
+       onclick="answer('occidentali')">
   </div>
 </div>
 
 <div id="result"></div>
-<div id="score">Punkte: 0</div>
 
 <script>
-  let score = 0;
+  const correctAnswer = "meridionali";
 
-  function answer(correct) {
+  function answer(choice) {
     const result = document.getElementById("result");
-    const scoreText = document.getElementById("score");
 
-    if (correct) {
+    if (choice === correctAnswer) {
       result.style.color = "green";
-      result.textContent = "✅ Richtig!";
-      score++;
+      result.textContent = "✔️ Corect!";
     } else {
       result.style.color = "red";
-      result.textContent = "❌ Falsch!";
+      result.textContent = "❌ Greșit!";
     }
-
-    scoreText.textContent = "Punkte: " + score;
   }
 </script>
 
 </body>
-    </html>
+</html>
