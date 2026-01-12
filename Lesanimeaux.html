@@ -15,6 +15,16 @@
     cursor: pointer;
     border: 0.1px solid rgba(0,0,0,0.02); /* Nur zur Hilfe beim Bauen sichtbar */
   }
+  .zone {
+  position: absolute;
+  cursor: pointer;
+}
+
+/* DEBUG-MODUS */
+.debug {
+  background: rgba(0, 150, 255, 0.35);
+  outline: 2px dashed blue;
+}
   .pixel:hover { background: rgba(255, 255, 255, 0.3); }
 
   #ui { margin-top: 20px; }
@@ -46,6 +56,9 @@
 
   let currentStep = 0;
 
+zone.className = "zone debug";   // sichtbar
+// zone.className = "zone";      // unsichtbar
+  
   function initGame() {
     const container = document.getElementById('game-container');
     
