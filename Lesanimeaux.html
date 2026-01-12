@@ -1,1 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Geografie Lernspiel</title>
 
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #eef2f3;
+    text-align: center;
+  }
+
+  h2 {
+    margin-top: 20px;
+  }
+
+  #map-container {
+    position: relative;
+    display: inline-block;
+    margin-top: 20px;
+  }
+
+  #map {
+    width: 600px;
+    border: 3px solid #333;
+  }
+
+  /* Klickbare Bereiche */
+  .area {
+    position: absolute;
+    cursor: pointer;
+  }
+
+  /* Nur zum Testen sichtbar – später entfernen */
+  .area:hover {
+    background: rgba(0, 255, 0, 0.3);
+  }
+
+  #result {
+    margin-top: 15px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  #score {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+</style>
+</head>
+
+<body>
+
+<h2 id="question">Wo liegt Italien?</h2>
+
+<div id="map-container">
+  <img id="map" src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Europe_blank_map.png">
+
+  <!-- RICHTIGE Antwort -->
+  <div class="area" 
+       style="top: 260px; left: 280px; width: 80px; height: 120px;"
+       onclick="answer(true)">
+  </div>
+
+  <!-- FALSCHE Antwort (z. B. Frankreich) -->
+  <div class="area" 
+       style="top: 230px; left: 220px; width: 80px; height: 100px;"
+       onclick="answer(false)">
+  </div>
+</div>
+
+<div id="result"></div>
+<div id="score">Punkte: 0</div>
+
+<script>
+  let score = 0;
+
+  function answer(correct) {
+    const result = document.getElementById("result");
+    const scoreText = document.getElementById("score");
+
+    if (correct) {
+      result.style.color = "green";
+      result.textContent = "✅ Richtig!";
+      score++;
+    } else {
+      result.style.color = "red";
+      result.textContent = "❌ Falsch!";
+    }
+
+    scoreText.textContent = "Punkte: " + score;
+  }
+</script>
+
+</body>
+    </html>
