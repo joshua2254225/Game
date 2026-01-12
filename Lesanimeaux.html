@@ -3,82 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <title>Carpații – Joc Geografie</title>
-<link rel="stylesheet" href="style.css">
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background: #eef2f3;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f4f8;
     text-align: center;
+    margin-top: 50px;
   }
 
-  #map-container {
+  #game-wrapper {
     position: relative;
     display: inline-block;
+    border: 5px solid #fff;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
   }
 
-  #map {
-    width: 600px;
+  #map-image {
+    display: block;
+    width: 800px; /* Größer für bessere Bedienung */
+    height: auto;
   }
 
-  .zone {
+  /* Die SVG liegt genau über dem Bild */
+  #map-overlay {
     position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Die anklickbaren Gebiete */
+  .zone {
+    fill: transparent;
     cursor: pointer;
+    transition: fill 0.2s, stroke 0.2s;
+    stroke: transparent;
+    stroke-width: 2;
   }
 
-  /* NUR zum Lernen sichtbar – später entfernen */
   .zone:hover {
-    background: rgba(0, 150, 255, 0.3);
+    fill: rgba(255, 255, 255, 0.3);
+    stroke: rgba(0, 0, 0, 0.2);
   }
 
-  #result {
-    margin-top: 15px;
-    font-size: 22px;
-    font-weight: bold;
+  /* Feedback Farben */
+  .flash-correct { fill: rgba(0, 255, 0, 0.4) !important; }
+  .flash-wrong { fill: rgba(255, 0, 0, 0.4) !important; }
+
+  #ui-container {
+    margin-top: 20px;
   }
+
+  #question { font-size: 24px; margin-bottom: 10px; }
+  #result { font-size: 20px; font-weight: bold; min-height: 30px; }
+  
+  b { color: #2c3e50; text-decoration: underline; }
 </style>
 </head>
-
 <body>
 
-<h2 id="question">Indică pe hartă: <b>Carpații Meridionali</b></h2>
+<div id="question">Indică pe hartă: <b id="target-name">Carpații Meridionali</b></div>
 
-<div id="map-container">
-  <img id="map" src="images/Romania_location_map_Topographic.png" alt="Harta României">
-
-  <!-- Carpații Orientali (EST) -->
-  <div class="zone"
-       style="top: 120px; left: 320px; width: 130px; height: 260px;"
-       onclick="answer('orientali')">
-  </div>
-
-  <!-- Carpații Meridionali (SUD) -->
-  <div class="zone"
-       style="top: 260px; left: 230px; width: 200px; height: 120px;"
-       onclick="answer('meridionali')">
-  </div>
-
-  <!-- Carpații Occidentali (VEST / Apuseni) -->
-  <div class="zone"
-       style="top: 200px; left: 160px; width: 120px; height: 160px;"
-       onclick="answer('occidentali')">
-  </div>
+<div id="game-wrapper">
+  <img id="map-image" src="images/Romania_location_map_Topographic.png" alt="Harta României">
+  
+  <svg id="map-overlay" viewBox="0 0 800 570">
+    <polygon class="zone" id="orientali" 
+             points="450,100 580,120 620,380 500,430 430,350 420,150" 
+             onclick="checkAnswer('orientali')"></polygon>
+    
+    <polygon class="zone" id="meridionali" 
+             points="250,420 480,430 480,480 350,500 230,480" 
+             onclick="checkAnswer('meridionali')"></polygon>
+    
+    <polygon class="zone" id="occidentali" 
+             points="220,250 330,240 350,380 230,410 180,350" 
+             onclick="checkAnswer('occidentali')"></polygon>
+  </svg>
 </div>
 
-<div id="result"></div>
+<div id="ui-container">
+  <div id="result">Klicke auf das Gebirge!</div>
+  <button onclick="resetGame()" style="margin-top:10px; padding:8px 16px; cursor:pointer;">Neustart</button>
+</div>
 
 <script>
-  const correctAnswer = "meridionali";
+  // Aktuelle Lösung für die Runde
+  let currentTarget = "meridionali";
+  const names = {
+    'orientali': 'Carpații Orientali',
+    'meridionali': 'Carpații Meridionali',
+    'occidentali': 'Carpații Occidentali'
+  };
 
-  function answer(choice) {
-    const result = document.getElementById("result");
+  function checkAnswer(clickedId) {
+    const resultDiv = document.getElementById("result");
+    const element = document.getElementById(clickedId);
 
-    if (choice === correctAnswer) {
-      result.style.color = "green";
-      result.textContent = "✔️ Corect!";
+    if (clickedId === currentTarget) {
+      resultDiv.style.color = "green";
+      resultDiv.textContent = "✔️ Corect! Ai găsit " + names[clickedId];
+      element.classList.add('flash-correct');
+      
+      // Nach 2 Sekunden nächste Aufgabe (optional)
+      setTimeout(nextQuestion, 1500);
     } else {
-      result.style.color = "red";
-      result.textContent = "❌ Greșit!";
+      resultDiv.style.color = "red";
+      resultDiv.textContent = "❌ Greșit! Încearcă din nou.";
+      element.classList.add('flash-wrong');
+      setTimeout(() => element.classList.remove('flash-wrong'), 500);
     }
+  }
+
+  function nextQuestion() {
+    const keys = Object.keys(names);
+    currentTarget = keys[Math.floor(Math.random() * keys.length)];
+    document.getElementById("target-name").textContent = names[currentTarget];
+    document.getElementById("result").textContent = "Unde sunt " + names[currentTarget] + "?";
+    
+    // Alle Farben zurücksetzen
+    document.querySelectorAll('.zone').forEach(el => el.classList.remove('flash-correct'));
+  }
+
+  function resetGame() {
+    nextQuestion();
   }
 </script>
 
