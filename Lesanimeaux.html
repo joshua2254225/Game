@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Les Animaux – RO ⇄ FR</title>
 
 <style>
@@ -12,15 +14,18 @@
     padding: 30px 10px;
   }
 
-  .card {
+    .card {
     background: white;
-    max-width: 380px;
-    margin: 0 auto;
+    width: 90%;            /* Nutzt 90% des Bildschirms auf dem Handy */
+    max-width: 450px;      /* Wird auf dem PC nicht breiter als 450px */
+    margin: 20px auto;
     padding: 25px;
     border-radius: 18px;
     box-shadow: 0 15px 30px rgba(0,0,0,0.2);
     text-align: center;
+    box-sizing: border-box; /* Verhindert, dass Padding die Box sprengt */
   }
+
 
   h1 {
     margin-top: 0;
