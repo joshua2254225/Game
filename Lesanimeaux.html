@@ -2,18 +2,30 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Les Animaux – Joc de vocabular</title>
+<title>Les Animaux – RO ⇄ FR</title>
 
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background: #f2f6f8;
+    background: linear-gradient(135deg, #74ebd5, #9face6);
+    font-family: "Segoe UI", Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .card {
+    background: white;
+    width: 360px;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
     text-align: center;
-    padding: 30px;
   }
 
   h1 {
-    margin-bottom: 10px;
+    margin-top: 0;
   }
 
   #question {
@@ -22,16 +34,27 @@
   }
 
   input {
+    width: 90%;
+    padding: 10px;
     font-size: 18px;
-    padding: 8px;
-    width: 250px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
   }
 
   button {
+    margin-top: 12px;
+    padding: 10px 18px;
     font-size: 16px;
-    padding: 8px 14px;
-    margin-top: 10px;
+    border: none;
+    border-radius: 8px;
     cursor: pointer;
+    background: #4a6cf7;
+    color: white;
+  }
+
+  button:hover {
+    background: #3b5be3;
   }
 
   #result {
@@ -41,91 +64,109 @@
   }
 
   #score {
-    margin-top: 10px;
-    font-size: 18px;
+    margin-top: 8px;
+    font-size: 16px;
   }
 
-  #mode {
-    margin-top: 20px;
+  .modes button {
+    background: #eee;
+    color: #333;
+    margin: 5px;
   }
 </style>
 </head>
 
 <body>
 
-<h1>🐶 Les Animaux</h1>
+<div class="card">
+  <h1>🐶 Les Animaux</h1>
 
-<div id="question"></div>
+  <div id="question"></div>
 
-<input id="answerInput" placeholder="Scrie aici..." autocomplete="off">
-<br>
-<button onclick="checkAnswer()">Verifică</button>
+  <input id="answer" placeholder="Scrie răspunsul">
+  <br>
+  <button onclick="check()">Verifică</button>
 
-<div id="result"></div>
-<div id="score">Puncte: 0</div>
+  <div id="result"></div>
+  <div id="score">Puncte: 0</div>
 
-<div id="mode">
-  <button onclick="setMode('ro-fr')">Română → Franceză</button>
-  <button onclick="setMode('fr-ro')">Franceză → Română</button>
+  <div class="modes">
+    <button onclick="setMode('ro-fr')">RO → FR</button>
+    <button onclick="setMode('fr-ro')">FR → RO</button>
+  </div>
 </div>
 
 <script>
-const words = [
+const animals = [
   { ro: "câine", fr: "chien" },
   { ro: "pisică", fr: "chat" },
   { ro: "cal", fr: "cheval" },
   { ro: "vacă", fr: "vache" },
+  { ro: "oaie", fr: "mouton" },
+  { ro: "capră", fr: "chèvre" },
+  { ro: "porc", fr: "cochon" },
+  { ro: "iepure", fr: "lapin" },
   { ro: "pasăre", fr: "oiseau" },
-  { ro: "pește", fr: "poisson" }
+  { ro: "pește", fr: "poisson" },
+  { ro: "urs", fr: "ours" },
+  { ro: "lup", fr: "loup" }
 ];
 
-let mode = "ro-fr"; // ro->fr oder fr->ro
+let mode = "ro-fr";
+let pool = [];
 let current;
 let score = 0;
 
-function newQuestion() {
-  current = words[Math.floor(Math.random() * words.length)];
-  document.getElementById("answerInput").value = "";
-  document.getElementById("result").textContent = "";
-
-  if (mode === "ro-fr") {
-    document.getElementById("question").textContent =
-      "Scrie în franceză: " + current.ro;
-  } else {
-    document.getElementById("question").textContent =
-      "Scrie în română: " + current.fr;
-  }
-
-  document.getElementById("answerInput").focus();
+function shuffle(array) {
+  return array.sort(() => Math.random() - 0.5);
 }
 
-function checkAnswer() {
-  const input = document.getElementById("answerInput").value.trim().toLowerCase();
+function newRound() {
+  pool = shuffle([...animals]);
+}
+
+function newQuestion() {
+  if (pool.length === 0) {
+    newRound();
+  }
+
+  current = pool.pop();
+  document.getElementById("answer").value = "";
+  document.getElementById("result").textContent = "";
+
+  document.getElementById("question").textContent =
+    mode === "ro-fr"
+      ? "Scrie în franceză: " + current.ro
+      : "Scrie în română: " + current.fr;
+
+  document.getElementById("answer").focus();
+}
+
+function check() {
+  const input = document.getElementById("answer").value.trim().toLowerCase();
+  const correct = mode === "ro-fr" ? current.fr : current.ro;
   const result = document.getElementById("result");
 
-  let correctAnswer =
-    mode === "ro-fr" ? current.fr : current.ro;
-
-  if (input === correctAnswer.toLowerCase()) {
+  if (input === correct.toLowerCase()) {
     result.style.color = "green";
     result.textContent = "✔️ Corect!";
     score++;
   } else {
     result.style.color = "red";
-    result.textContent = "❌ Greșit! Răspuns: " + correctAnswer;
+    result.textContent = "❌ Corect era: " + correct;
   }
 
   document.getElementById("score").textContent = "Puncte: " + score;
-
-  setTimeout(newQuestion, 1500);
+  setTimeout(newQuestion, 1200);
 }
 
-function setMode(newMode) {
-  mode = newMode;
+function setMode(m) {
+  mode = m;
+  newRound();
   newQuestion();
 }
 
-// Start
+newRound();
 newQuestion();
 </script>
 
