@@ -83,6 +83,7 @@
     font-size: 16px;
   }
 
+  <div id="timer">⏱️ Timp: 0s</div>
   .modes {
     margin-top: 15px;
   }
@@ -106,7 +107,7 @@
   <button id="checkBtn">Verifică</button>
 
   <div id="result"></div>
-  <div id="score">Puncte: 0</div>
+<div id="score">✔️ Corecte: 0 | ❌ Greșite: 0</div>
 
   <div class="modes">
     <button onclick="setMode('ro-fr')">RO → FR</button>
@@ -115,6 +116,12 @@
 </div>
 
 <script>
+
+let time = 0;
+let timer;
+
+
+  
 const animals = [
   { ro: "câine", fr: "chien" },
   { ro: "pisică", fr: "chat" },
@@ -144,20 +151,46 @@ const animals = [
 ];
 
 let mode = "ro-fr";
-let pool = [];
+let index = 0;
+let correctCount = 0;
+let wrongCount = 0;
 let current;
 let score = 0;
 
-function shuffle(arr) {
-  return arr.sort(() => Math.random() - 0.5);
-}
-
-function newRound() {
-  pool = shuffle([...animals]);
-}
-
 function newQuestion() {
-  if (pool.length === 0) newRound();
+  if (index >= animals.length) {
+    question.innerHTML = "🎉 Felicitări!<br>Ai terminat!";
+    return;
+
+    if (index >= animals.length) {
+  clearInterval(timer);
+  question.innerHTML =
+    "🎉 Gata!<br>" +
+    "✔️ Corecte: " + correctCount + "<br>" +
+    "❌ Greșite: " + wrongCount + "<br>" +
+    "⏱️ Timp: " + time + "s";
+  return;
+  }
+  }
+
+  function startTimer() {
+  timer = setInterval(() => {
+    time++;
+    document.getElementById("timer").textContent = "⏱️ Timp: " + time + "s";
+  }, 1000);
+  }
+
+  current = animals[index];
+  answer.value = "";
+  result.textContent = "";
+
+  question.innerHTML =
+    mode === "ro-fr"
+      ? "Scrie în franceză:<br><b>" + current.ro + "</b>"
+      : "Scrie în română:<br><b>" + current.fr + "</b>";
+
+  setTimeout(() => answer.focus(), 50);
+    }
 
   current = pool.pop();
   answer.value = "";
@@ -173,21 +206,26 @@ function newQuestion() {
 }
 
 function check() {
+function check() {
   const input = answer.value.trim().toLowerCase();
   const correct = mode === "ro-fr" ? current.fr : current.ro;
 
   if (input === correct.toLowerCase()) {
     result.style.color = "green";
     result.textContent = "✔️ Corect!";
-    score++;
+    correctCount++;
   } else {
     result.style.color = "red";
     result.textContent = "❌ Corect era: " + correct;
+    wrongCount++;
   }
 
-  scoreBox.textContent = "Puncte: " + score;
+  index++;
+  scoreBox.textContent =
+    "✔️ Corecte: " + correctCount + " | ❌ Greșite: " + wrongCount;
+
   setTimeout(newQuestion, 1200);
-}
+  }
 
 function setMode(m) {
   mode = m;
@@ -210,6 +248,10 @@ answer.addEventListener("keydown", e => {
 
 newRound();
 newQuestion();
+
+
+  newQuestion();
+startTimer();
 </script>
 
 </body>
