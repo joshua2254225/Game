@@ -186,6 +186,8 @@ let mode = "ro-fr";
 let pool = [];
 let correctCount = 0;
 let wrongCount = 0;
+ let attemptPerQuestion = 0; // Zählt die Versuche für die aktuelle Frage
+
 let current;
 let time = 0;
 let timer;
@@ -227,24 +229,60 @@ function newQuestion() {
   setTimeout(() => answer.focus(), 50);
 }
 
+
 function check() {
   if (!current) return;
   const input = answer.value.trim().toLowerCase();
   const correct = mode === "ro-fr" ? current.fr : current.ro;
 
   if (input === correct.toLowerCase()) {
+    // RICHTIG
     result.style.color = "#27ae60";
     result.textContent = "✔️ Excelent!";
     answer.style.borderColor = "#27ae60";
     correctCount++;
+    attemptPerQuestion = 0; // Reset für die nächste Frage
+    
+    scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
+    
+    const currentBtn = document.getElementById("checkBtn");
+    currentBtn.disabled = true;
+    setTimeout(() => {
+      currentBtn.disabled = false;
+      newQuestion();
+    }, 1200);
+
   } else {
-    result.style.color = "#e74c3c";
-    result.textContent = "❌ " + correct;
-    answer.style.borderColor = "#e74c3c";
+    // FALSCH
+    wrongCount++; // Fehler zählt sofort
+    attemptPerQuestion++; // Erhöht die Versuche für diese Frage
+    scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
+    
     document.querySelector('.card').classList.add('shake');
     setTimeout(() => document.querySelector('.card').classList.remove('shake'), 400);
-    wrongCount++;
+
+    if (attemptPerQuestion === 1) {
+      // Erster Fehler
+      result.style.color = "#f39c12"; // Orange für "fast richtig"
+      result.textContent = "❌ Mai încearcă o dată!";
+      answer.value = ""; // Feld leeren für neuen Versuch
+      answer.focus();
+    } else {
+      // Zweiter Fehler
+      result.style.color = "#e74c3c"; // Rot
+      result.textContent = "❌ Corect era: " + correct;
+      attemptPerQuestion = 0; // Reset für die nächste Frage
+      
+      const currentBtn = document.getElementById("checkBtn");
+      currentBtn.disabled = true;
+      setTimeout(() => {
+        currentBtn.disabled = false;
+        newQuestion();
+      }, 2000); // Etwas länger zeigen, damit man die Antwort lesen kann
+    }
   }
+}
+
 
   scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
   
@@ -277,7 +315,8 @@ function setMode(m) {
   mode = m;
   document.getElementById("btn-ro-fr").classList.toggle("active", m === 'ro-fr');
   document.getElementById("btn-fr-ro").classList.toggle("active", m === 'fr-ro');
-  
+  attemptPerQuestion = 0;
+
   // Falls das Spiel schon lief, neu starten
   correctCount = 0;
   wrongCount = 0;
