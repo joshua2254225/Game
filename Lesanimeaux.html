@@ -288,16 +288,7 @@ function check() {
 }
 
 
-  scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
   
-  // Kurz warten, dann nächste Frage
-  const currentBtn = document.getElementById("checkBtn");
-  currentBtn.disabled = true;
-  setTimeout(() => {
-    currentBtn.disabled = false;
-    newQuestion();
-  }, 1200);
-}
 
 function showEndScreen() {
   clearInterval(timer);
