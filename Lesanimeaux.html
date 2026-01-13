@@ -1,98 +1,77 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Les Animaux – RO ⇄ FR</title>
 
 <style>
-  body {
-    background: linear-gradient(135deg, #74ebd5, #9face6);
-    font-family: "Segoe UI", Arial, sans-serif;
-    margin: 0;
-        padding: 20px 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+body {
+  background: linear-gradient(135deg, #74ebd5, #9face6);
+  font-family: "Segoe UI", Arial, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  }
+.card {
+  background: white;
+  width: 90%;
+  max-width: 450px;
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
 
-    .card {
-    background: white;
-    width: 90%;            /* Nutzt 90% des Bildschirms auf dem Handy */
-    max-width: 450px;      /* Wird auf dem PC nicht breiter als 450px */
-    margin: 20px auto;
-    padding: 25px;
-    border-radius: 18px;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-    text-align: center;
-    box-sizing: border-box; /* Verhindert, dass Padding die Box sprengt */
-  }
+#question {
+  font-size: 22px;
+  margin: 20px 0;
+}
 
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 18px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  text-align: center;
+}
 
-  h1 {
-    margin-top: 0;
-  }
+input:focus {
+  outline: none;
+  border-color: #4a6cf7;
+}
 
-  #question {
-    font-size: 22px;
-    margin: 20px 0;
-  }
+button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #4a6cf7;
+  color: white;
+}
 
-  input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px;
-    font-size: 18px;
-    border-radius: 10px;
-    border: 2px solid #ddd;
-    text-align: center;
-  }
+#result {
+  margin-top: 15px;
+  font-size: 20px;
+  font-weight: bold;
+}
 
-  input:focus {
-    outline: none;
-    border-color: #4a6cf7;
-  }
+#score, #timer {
+  margin-top: 8px;
+  font-size: 16px;
+}
 
-  button {
-    width: 100%;
-    margin-top: 12px;
-    padding: 12px;
-    font-size: 16px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #4a6cf7;
-    color: white;
-  }
-
-  button:hover {
-    background: #3b5be3;
-  }
-
-  #result {
-    margin-top: 15px;
-    font-size: 20px;
-    font-weight: bold;
-  }
-
-  #score {
-    margin-top: 8px;
-    font-size: 16px;
-  }
-
-  <div id="timer">⏱️ Timp: 0s</div>
-  .modes {
-    margin-top: 15px;
-  }
-
-  .modes button {
-    background: #eee;
-    color: #333;
-    margin-top: 6px;
-  }
+.modes button {
+  background: #eee;
+  color: #333;
+}
 </style>
 </head>
 
@@ -107,7 +86,8 @@
   <button id="checkBtn">Verifică</button>
 
   <div id="result"></div>
-<div id="score">✔️ Corecte: 0 | ❌ Greșite: 0</div>
+  <div id="score">✔️ Corecte: 0 | ❌ Greșite: 0</div>
+  <div id="timer">⏱️ Timp: 0s</div>
 
   <div class="modes">
     <button onclick="setMode('ro-fr')">RO → FR</button>
@@ -116,38 +96,15 @@
 </div>
 
 <script>
-
-let time = 0;
-let timer;
-
-
-  
 const animals = [
   { ro: "câine", fr: "chien" },
   { ro: "pisică", fr: "chat" },
   { ro: "cal", fr: "cheval" },
   { ro: "vacă", fr: "vache" },
   { ro: "oaie", fr: "mouton" },
-  { ro: "porcușor de Guineea", fr: "cochon d'Inde" },
   { ro: "iepure", fr: "lapin" },
   { ro: "pasăre", fr: "oiseau" },
-  { ro: "buburuză", fr: "coccinelle" },
-  { ro: "pinguin", fr: "pingouin" },
-  { ro: "raton", fr: "raton" },
-    { ro: "panda", fr: "panda" },
-  { ro: "maimuță", fr: "singe" },
-  { ro: "gorilă", fr: "gorille" },
-  { ro: "jirafă", fr: "girafe" },
-  { ro: "arici", fr: "hérisson" },
-  { ro: "bufniță", fr: "hibou" },
-  { ro: "crab", fr: "crabe" },
-  { ro: "rață", fr: "canard" },
-    { ro: "hipopotam", fr: "hippopotamé" },
-  { ro: "pește", fr: "poisson" },
-  { ro: "urs", fr: "ours" },
-  { ro: "lup", fr: "loup" },
-  { ro: "delfin", fr:"dauphin" },
-   { ro: "broască țestoasă", fr:"tortue" }
+  { ro: "urs", fr: "ours" }
 ];
 
 let mode = "ro-fr";
@@ -155,29 +112,31 @@ let index = 0;
 let correctCount = 0;
 let wrongCount = 0;
 let current;
-let score = 0;
+let time = 0;
+let timer;
+
+const answer = document.getElementById("answer");
+const question = document.getElementById("question");
+const result = document.getElementById("result");
+const scoreBox = document.getElementById("score");
+const timerBox = document.getElementById("timer");
+
+function startTimer() {
+  timer = setInterval(() => {
+    time++;
+    timerBox.textContent = "⏱️ Timp: " + time + "s";
+  }, 1000);
+}
 
 function newQuestion() {
   if (index >= animals.length) {
-    question.innerHTML = "🎉 Felicitări!<br>Ai terminat!";
+    clearInterval(timer);
+    question.innerHTML =
+      "🎉 Gata!<br>" +
+      "✔️ Corecte: " + correctCount + "<br>" +
+      "❌ Greșite: " + wrongCount + "<br>" +
+      "⏱️ Timp: " + time + "s";
     return;
-
-    if (index >= animals.length) {
-  clearInterval(timer);
-  question.innerHTML =
-    "🎉 Gata!<br>" +
-    "✔️ Corecte: " + correctCount + "<br>" +
-    "❌ Greșite: " + wrongCount + "<br>" +
-    "⏱️ Timp: " + time + "s";
-  return;
-  }
-  }
-
-  function startTimer() {
-  timer = setInterval(() => {
-    time++;
-    document.getElementById("timer").textContent = "⏱️ Timp: " + time + "s";
-  }, 1000);
   }
 
   current = animals[index];
@@ -190,22 +149,8 @@ function newQuestion() {
       : "Scrie în română:<br><b>" + current.fr + "</b>";
 
   setTimeout(() => answer.focus(), 50);
-    }
-
-  current = pool.pop();
-  answer.value = "";
-  result.textContent = "";
-
-  question.textContent =
-    mode === "ro-fr"
-      ? "Scrie în franceză: " + current.ro
-      : "Scrie în română: " + current.fr;
-
-  // 🔥 FIX: Fokus garantiert
-  setTimeout(() => answer.focus(), 50);
 }
 
-function check() {
 function check() {
   const input = answer.value.trim().toLowerCase();
   const correct = mode === "ro-fr" ? current.fr : current.ro;
@@ -225,33 +170,28 @@ function check() {
     "✔️ Corecte: " + correctCount + " | ❌ Greșite: " + wrongCount;
 
   setTimeout(newQuestion, 1200);
-  }
+}
 
 function setMode(m) {
   mode = m;
-  newRound();
+  index = 0;
+  correctCount = 0;
+  wrongCount = 0;
+  time = 0;
+  clearInterval(timer);
+  scoreBox.textContent = "✔️ Corecte: 0 | ❌ Greșite: 0";
+  timerBox.textContent = "⏱️ Timp: 0s";
+  startTimer();
   newQuestion();
 }
 
-/* === INIT === */
-const answer = document.getElementById("answer");
-const result = document.getElementById("result");
-const question = document.getElementById("question");
-const scoreBox = document.getElementById("score");
-
 document.getElementById("checkBtn").onclick = check;
-
-// ENTER-Taste funktioniert jetzt
 answer.addEventListener("keydown", e => {
   if (e.key === "Enter") check();
 });
 
-newRound();
-newQuestion();
-
-
-  newQuestion();
 startTimer();
+newQuestion();
 </script>
 
 </body>
