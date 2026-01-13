@@ -6,114 +6,163 @@
 <title>Les Animaux – RO ⇄ FR</title>
 
 <style>
+  * { box-sizing: border-box; transition: all 0.3s ease; }
 
-  * {
-  box-sizing: border-box;
-}
+  body {
+    background: linear-gradient(135deg, #74ebd5, #acb6e5);
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2d3436;
+  }
 
-body {
-  background: linear-gradient(135deg, #74ebd5, #9face6);
-  font-family: "Segoe UI", Arial, sans-serif;
-  margin: 0;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .card {
+    background: rgba(255, 255, 255, 0.95);
+    width: 92%;
+    max-width: 420px;
+    padding: 35px 25px;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
 
-.card {
-  background: white;
-  width: 90%;
-  max-width: 450px;
-  padding: 25px;
-  border-radius: 18px;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
+  h1 { margin-top: 0; font-size: 28px; color: #4a6cf7; }
 
-#question {
-  font-size: 22px;
-  margin: 20px 0;
-}
+  #question {
+    font-size: 22px;
+    margin: 25px 0;
+    line-height: 1.5;
+  }
 
-input {
-  width: 100%;
-  padding: 12px;
-  font-size: 18px;
-  border-radius: 10px;
-  border: 2px solid #ddd;
-  text-align: center;
-}
+  #question b {
+    font-size: 28px;
+    color: #2d3436;
+    display: block;
+    margin-top: 5px;
+  }
 
-input:focus {
-  outline: none;
-  border-color: #4a6cf7;
-}
+  input {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 12px;
+    border: 2px solid #dfe6e9;
+    text-align: center;
+    background: #f9f9f9;
+  }
 
-button {
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px;
-  font-size: 16px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  background: #4a6cf7;
-  color: white;
-}
+  input:focus {
+    outline: none;
+    border-color: #4a6cf7;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(74, 108, 247, 0.1);
+  }
 
-#result {
-  margin-top: 15px;
-  font-size: 20px;
-  font-weight: bold;
-}
+  /* Primärer Button */
+  #checkBtn, .restart-btn {
+    width: 100%;
+    margin-top: 15px;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #4a6cf7;
+    color: white;
+    box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
+  }
 
-#score, #timer {
-  margin-top: 8px;
-  font-size: 16px;
-}
+  #checkBtn:active, .restart-btn:active { transform: scale(0.98); }
 
-.modes button {
-  background: #eee;
-  color: #333;
-}
+  #result {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    min-height: 30px;
+  }
+
+  .stats-container {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #636e72;
+  }
+
+  .modes {
+    margin-top: 25px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .modes button {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    color: #636e72;
+  }
+
+  .modes button.active {
+    background: #4a6cf7;
+    color: white;
+    border-color: #4a6cf7;
+  }
+
+  /* Animation für richtige/falsche Antwort */
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
 </style>
 </head>
 
 <body>
 
 <div class="card">
-  <h1>🐶 Les Animaux</h1>
+  <h1 id="title">🐶 Les Animaux</h1>
 
-  <div id="question"></div>
+  <div id="game-area">
+    <div id="question"></div>
+    <input id="answer" placeholder="Scrie răspunsul" autocomplete="off">
+    <button id="checkBtn">Verifică</button>
+    <div id="result"></div>
+  </div>
 
-  <input id="answer" placeholder="Scrie răspunsul" autocomplete="off">
-  <button id="checkBtn">Verifică</button>
-
-  <div id="result"></div>
-  <div id="score">✔️ Corecte: 0 | ❌ Greșite: 0</div>
-  <div id="timer">⏱️ Timp: 0s</div>
+  <div class="stats-container">
+    <div id="score">✔️ 0 | ❌ 0</div>
+    <div id="timer">⏱️ 0s</div>
+  </div>
 
   <div class="modes">
-    <button onclick="setMode('ro-fr')">RO → FR</button>
-    <button onclick="setMode('fr-ro')">FR → RO</button>
+    <button id="btn-ro-fr" class="active" onclick="setMode('ro-fr')">RO → FR</button>
+    <button id="btn-fr-ro" onclick="setMode('fr-ro')">FR → RO</button>
   </div>
 </div>
 
 <script>
 const animals = [
-  { ro: "câine", fr: "chien" },
-  { ro: "pisică", fr: "chat" },
-  { ro: "cal", fr: "cheval" },
-  { ro: "vacă", fr: "vache" },
-  { ro: "oaie", fr: "mouton" },
-  { ro: "iepure", fr: "lapin" },
-  { ro: "pasăre", fr: "oiseau" },
-  { ro: "urs", fr: "ours" }
+  { ro: "câine", fr: "chien" }, { ro: "pisică", fr: "chat" },
+  { ro: "cal", fr: "cheval" }, { ro: "vacă", fr: "vache" },
+  { ro: "oaie", fr: "mouton" }, { ro: "iepure", fr: "lapin" },
+  { ro: "pasăre", fr: "oiseau" }, { ro: "urs", fr: "ours" }
 ];
 
 let mode = "ro-fr";
-let index = 0;
+let pool = [];
 let correctCount = 0;
 let wrongCount = 0;
 let current;
@@ -125,79 +174,108 @@ const question = document.getElementById("question");
 const result = document.getElementById("result");
 const scoreBox = document.getElementById("score");
 const timerBox = document.getElementById("timer");
+const gameArea = document.getElementById("game-area");
+
+function shuffle(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
 
 function startTimer() {
+  clearInterval(timer);
   timer = setInterval(() => {
     time++;
-    timerBox.textContent = "⏱️ Timp: " + time + "s";
+    timerBox.textContent = "⏱️ " + time + "s";
   }, 1000);
 }
 
 function newQuestion() {
-  if (index >= animals.length) {
-    clearInterval(timer);
-    question.innerHTML =
-      "🎉 Gata!<br>" +
-      "✔️ Corecte: " + correctCount + "<br>" +
-      "❌ Greșite: " + wrongCount + "<br>" +
-      "⏱️ Timp: " + time + "s";
+  if (pool.length === 0) {
+    showEndScreen();
     return;
   }
 
-  current = animals[index];
+  current = pool.pop();
   answer.value = "";
   result.textContent = "";
+  answer.style.borderColor = "#dfe6e9";
 
-  question.innerHTML =
-    mode === "ro-fr"
-      ? "Scrie în franceză:<br><b>" + current.ro + "</b>"
-      : "Scrie în română:<br><b>" + current.fr + "</b>";
+  question.innerHTML = mode === "ro-fr" 
+    ? "Scrie în franceză: <b>" + current.ro + "</b>" 
+    : "Scrie în română: <b>" + current.fr + "</b>";
 
   setTimeout(() => answer.focus(), 50);
 }
 
 function check() {
+  if (!current) return;
   const input = answer.value.trim().toLowerCase();
   const correct = mode === "ro-fr" ? current.fr : current.ro;
 
   if (input === correct.toLowerCase()) {
-    result.style.color = "green";
-    result.textContent = "✔️ Corect!";
+    result.style.color = "#27ae60";
+    result.textContent = "✔️ Excelent!";
+    answer.style.borderColor = "#27ae60";
     correctCount++;
   } else {
-    result.style.color = "red";
-    result.textContent = "❌ Corect era: " + correct;
+    result.style.color = "#e74c3c";
+    result.textContent = "❌ " + correct;
+    answer.style.borderColor = "#e74c3c";
+    document.querySelector('.card').classList.add('shake');
+    setTimeout(() => document.querySelector('.card').classList.remove('shake'), 400);
     wrongCount++;
   }
 
-  index++;
-  scoreBox.textContent =
-    "✔️ Corecte: " + correctCount + " | ❌ Greșite: " + wrongCount;
+  scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
+  
+  // Kurz warten, dann nächste Frage
+  const currentBtn = document.getElementById("checkBtn");
+  currentBtn.disabled = true;
+  setTimeout(() => {
+    currentBtn.disabled = false;
+    newQuestion();
+  }, 1200);
+}
 
-  setTimeout(newQuestion, 1200);
+function showEndScreen() {
+  clearInterval(timer);
+  gameArea.innerHTML = `
+    <div style="font-size: 50px; margin-bottom: 10px;">🏆</div>
+    <h2>Gata!</h2>
+    <p>Ai terminat în <b>${time} secunde</b>.</p>
+    <p style="color: #27ae60">✔️ Corecte: ${correctCount}</p>
+    <p style="color: #e74c3c">❌ Greșite: ${wrongCount}</p>
+    <button class="restart-btn" onclick="resetGame()">Joc Nou</button>
+  `;
+}
+
+function resetGame() {
+  location.reload(); // Einfachste Art für einen sauberen Neustart
 }
 
 function setMode(m) {
   mode = m;
-  index = 0;
+  document.getElementById("btn-ro-fr").classList.toggle("active", m === 'ro-fr');
+  document.getElementById("btn-fr-ro").classList.toggle("active", m === 'fr-ro');
+  
+  // Falls das Spiel schon lief, neu starten
   correctCount = 0;
   wrongCount = 0;
   time = 0;
-  clearInterval(timer);
-  scoreBox.textContent = "✔️ Corecte: 0 | ❌ Greșite: 0";
-  timerBox.textContent = "⏱️ Timp: 0s";
+  pool = shuffle([...animals]);
+  scoreBox.textContent = "✔️ 0 | ❌ 0";
   startTimer();
   newQuestion();
 }
 
+// Event Listeners
 document.getElementById("checkBtn").onclick = check;
-answer.addEventListener("keydown", e => {
-  if (e.key === "Enter") check();
-});
+answer.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
 
+// Initialer Start
+pool = shuffle([...animals]);
 startTimer();
 newQuestion();
 </script>
 
 </body>
-  </html>
+</html>
