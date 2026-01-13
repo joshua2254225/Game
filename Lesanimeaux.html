@@ -1,118 +1,132 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Carpații României - Quiz</title>
+<title>Les Animaux – Joc de vocabular</title>
+
 <style>
-  body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
-  #game-container { position: relative; display: inline-block; margin-top: 20px; border: 3px solid #333; }
-  #map { width: 800px; display: block; }
-  
-  /* Die Klick-Zonen */
-  .pixel {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.0); /* Fast unsichtbar */
-    cursor: pointer;
-    border: 0.1px solid rgba(0,0,0,0.02); /* Nur zur Hilfe beim Bauen sichtbar */
+  body {
+    font-family: Arial, sans-serif;
+    background: #f2f6f8;
+    text-align: center;
+    padding: 30px;
   }
-  .zone {
-  position: absolute;
-  cursor: pointer;
-}
 
-/* DEBUG-MODUS */
-.debug {
-  background: rgba(0, 150, 255, 0.35);
-  outline: 2px dashed blue;
-}
-  .pixel:hover { background: rgba(255, 255, 255, 0.3); }
+  h1 {
+    margin-bottom: 10px;
+  }
 
-  #ui { margin-top: 20px; }
-  .target-box { font-size: 24px; font-weight: bold; padding: 10px; background: white; display: inline-block; border-radius: 8px; }
-  #message { height: 30px; margin-top: 10px; font-weight: bold; }
-  .correct-flash { background: rgba(0, 255, 0, 0.5) !important; }
+  #question {
+    font-size: 22px;
+    margin: 20px 0;
+  }
+
+  input {
+    font-size: 18px;
+    padding: 8px;
+    width: 250px;
+  }
+
+  button {
+    font-size: 16px;
+    padding: 8px 14px;
+    margin-top: 10px;
+    cursor: pointer;
+  }
+
+  #result {
+    margin-top: 15px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  #score {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+
+  #mode {
+    margin-top: 20px;
+  }
 </style>
 </head>
+
 <body>
 
-<div id="ui">
-  <div class="target-box">Indică: <span id="current-target">...</span></div>
-  <div id="message"></div>
+<h1>🐶 Les Animaux</h1>
+
+<div id="question"></div>
+
+<input id="answerInput" placeholder="Scrie aici..." autocomplete="off">
+<br>
+<button onclick="checkAnswer()">Verifică</button>
+
+<div id="result"></div>
+<div id="score">Puncte: 0</div>
+
+<div id="mode">
+  <button onclick="setMode('ro-fr')">Română → Franceză</button>
+  <button onclick="setMode('fr-ro')">Franceză → Română</button>
 </div>
 
-<div id="game-container" id="map-area">
-  <img id="map" src="images/Romania_location_map_Topographic.png">
-  </div>
-
 <script>
-  const groups = [
-    { id: 'orientali', name: 'Carpații Orientali', 
-      coords: [400,80,180,300] }, // [left, top, width, height]
-    { id: 'meridionali', name: 'Carpații Meridionali', 
-      coords: [[250,420,230,70], [300,480,150,30]] },
-    { id: 'occidentali', name: 'Carpații Occidentali', 
-      coords: [[180,220,130,150], [200,370,50,60]] }
-  ];
+const words = [
+  { ro: "câine", fr: "chien" },
+  { ro: "pisică", fr: "chat" },
+  { ro: "cal", fr: "cheval" },
+  { ro: "vacă", fr: "vache" },
+  { ro: "pasăre", fr: "oiseau" },
+  { ro: "pește", fr: "poisson" }
+];
 
-  let currentStep = 0;
+let mode = "ro-fr"; // ro->fr oder fr->ro
+let current;
+let score = 0;
 
-zone.className = "zone debug";   // sichtbar
-// zone.className = "zone";      // unsichtbar
-  
-  function initGame() {
-    const container = document.getElementById('game-container');
-    
-    groups.forEach(group => {
-      group.coords.forEach(rect => {
-        const div = document.createElement('div');
-        div.className = 'pixel';
-        div.style.left = rect[0] + 'px';
-        div.style.top = rect[1] + 'px';
-        div.style.width = rect[2] + 'px';
-        div.style.height = rect[3] + 'px';
-        
-        div.onclick = (e) => handleHit(group.id, e.target);
-        container.appendChild(div);
-      });
-    });
-    
-    updateTarget();
+function newQuestion() {
+  current = words[Math.floor(Math.random() * words.length)];
+  document.getElementById("answerInput").value = "";
+  document.getElementById("result").textContent = "";
+
+  if (mode === "ro-fr") {
+    document.getElementById("question").textContent =
+      "Scrie în franceză: " + current.ro;
+  } else {
+    document.getElementById("question").textContent =
+      "Scrie în română: " + current.fr;
   }
 
-  function updateTarget() {
-    if(currentStep < groups.length) {
-      document.getElementById('current-target').textContent = groups[currentStep].name;
-    } else {
-      document.getElementById('current-target').textContent = "Felicitări! Joc terminat.";
-      document.getElementById('message').textContent = "Ai găsit toate grupele!";
-    }
+  document.getElementById("answerInput").focus();
+}
+
+function checkAnswer() {
+  const input = document.getElementById("answerInput").value.trim().toLowerCase();
+  const result = document.getElementById("result");
+
+  let correctAnswer =
+    mode === "ro-fr" ? current.fr : current.ro;
+
+  if (input === correctAnswer.toLowerCase()) {
+    result.style.color = "green";
+    result.textContent = "✔️ Corect!";
+    score++;
+  } else {
+    result.style.color = "red";
+    result.textContent = "❌ Greșit! Răspuns: " + correctAnswer;
   }
 
-  function handleHit(groupId, element) {
-    const msg = document.getElementById('message');
-    const targetId = groups[currentStep].id;
+  document.getElementById("score").textContent = "Puncte: " + score;
 
-    if (groupId === targetId) {
-      msg.style.color = "green";
-      msg.textContent = "✔️ Corect!";
-      
-      // Markiere alle Teile dieser Gruppe als gefunden
-      document.querySelectorAll('.pixel').forEach(p => {
-         // (Simpler Check für diese Demo)
-      });
+  setTimeout(newQuestion, 1500);
+}
 
-      currentStep++;
-      setTimeout(() => {
-        msg.textContent = "";
-        updateTarget();
-      }, 1000);
-    } else {
-      msg.style.color = "red";
-      msg.textContent = "❌ Greșit! Mai încearcă.";
-    }
-  }
+function setMode(newMode) {
+  mode = newMode;
+  newQuestion();
+}
 
-  window.onload = initGame;
+// Start
+newQuestion();
 </script>
 
 </body>
