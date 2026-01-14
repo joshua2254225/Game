@@ -20,6 +20,26 @@
     color: #2d3436;
   }
 
+#startScreen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.start-card {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  width: 90%;
+  max-width: 350px;
+}
+
+ 
   .card {
     background: rgba(255, 255, 255, 0.95);
     width: 92%;
@@ -132,6 +152,15 @@
 
 <body>
 
+
+ <div id="startScreen">
+  <div class="start-card">
+    <h2>🐾 Les Animaux</h2>
+    <p>Alege modul și apasă START</p>
+    <button onclick="startGame()">▶️ START</button>
+  </div>
+ </div>
+
 <div class="card">
   <h1 id="title">🐶 Les Animaux</h1>
 
@@ -146,6 +175,7 @@
     <div id="score">✔️ 0 | ❌ 0</div>
     <div id="timer">⏱️ 0s</div>
   </div>
+ <button id="audioBtn">🔊 Ascultă</button>
 
   <div class="modes">
     <button id="btn-ro-fr" class="active" onclick="setMode('ro-fr')">RO → FR</button>
@@ -245,6 +275,14 @@ function newQuestion() {
 
   setTimeout(() => answer.focus(), 50);
 }
+ document.getElementById("audioBtn").onclick = () => {
+  if (!current) return;
+  if (mode === "ro-fr") {
+    speak(current.fr, "fr-FR");
+  } else {
+    speak(current.ro, "ro-RO");
+  }
+};
 
 
 function check() {
@@ -343,8 +381,22 @@ answer.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
 
 // Initialer Start
 pool = shuffle([...animals]);
-startTimer();
-newQuestion();
+function startGame() {
+  document.getElementById("startScreen").style.display = "none";
+  pool = shuffle([...animals]);
+  startTimer();
+  newQuestion();
+ }
+
+
+ function speak(text, lang) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance);
+ }
 </script>
 
 </body>
