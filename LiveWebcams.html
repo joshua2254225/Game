@@ -2,40 +2,101 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Mein Webcam-Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Webcam Dashboard</title>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; }
-        .grid-container {
-            display: grid;
-            /* Erstellt 2 Spalten - du kannst es auf 3 oder mehr ändern */
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 15px;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
             padding: 20px;
         }
-        iframe {
-            width: 100%;
-            height: 350px;
-            border: 2px solid #444;
+
+        h1 {
+            text-align: center;
+            color: #ff0000; /* YouTube Rot */
+        }
+
+        .grid-container {
+            display: grid;
+            /* Automatische Spalten: Mindestens 450px breit, sonst untereinander */
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .cam-card {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .cam-card p {
+            margin: 0 0 10px 5px;
+            font-weight: bold;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Format */
+            height: 0;
+            overflow: hidden;
             border-radius: 8px;
         }
-        h1 { text-align: center; }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Anpassung für kleine Handys */
+        @media (max-width: 500px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h1>Live Webcams</h1>
+    <h1>Live Webcam Monitor</h1>
 
     <div class="grid-container">
-        <div>
-            <p>Kamera Arad - Zentrum</p>
-            <iframe src="HIER_LINK_1_EINFÜGEN" frameborder="0" allowfullscreen></iframe>
+        
+        <div class="cam-card">
+            <p>Cluj-Napoca - Piața Unirii</p>
+            <div class="video-container">
+                <iframe 
+                    src="https://www.youtube.com/embed/f43H3pS3l50?autoplay=1&mute=1" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            </div>
         </div>
 
-        <div>
-            <p>Kamera Arad - Brücke</p>
-            <iframe src="HIER_LINK_2_EINFÜGEN" frameborder="0" allowfullscreen></iframe>
+        <div class="cam-card">
+            <p>Zweite Kamera (Hier Link einfügen)</p>
+            <div class="video-container">
+                <iframe 
+                    src="https://www.youtube.com/embed/f43H3pS3l50?mute=1" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            </div>
         </div>
+
     </div>
+
+    <p style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #888;">
+        Hinweis: Damit die Videos direkt starten, sind sie standardmäßig stummgeschaltet (mute=1).
+    </p>
 
 </body>
 </html>
