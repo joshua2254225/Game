@@ -15,13 +15,12 @@
 
         h1 {
             text-align: center;
-            color: #ff0000; /* YouTube Rot */
+            color: #ff0000;
         }
 
         .grid-container {
             display: grid;
-            /* Automatische Spalten: Mindestens 450px breit, sonst untereinander */
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
             max-width: 1200px;
             margin: 0 auto;
@@ -41,7 +40,7 @@
 
         .video-container {
             position: relative;
-            padding-bottom: 56.25%; /* 16:9 Format */
+            padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
             border-radius: 8px;
@@ -55,13 +54,6 @@
             height: 100%;
             border: 0;
         }
-
-        /* Anpassung für kleine Handys */
-        @media (max-width: 500px) {
-            .grid-container {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
@@ -71,10 +63,10 @@
     <div class="grid-container">
         
         <div class="cam-card">
-            <p>Cluj-Napoca - Piața Unirii</p>
+            <p>Timișoara - Piața Victoriei</p>
             <div class="video-container">
-                <iframe
-                    src="https://www.youtube.com/live/u4UZ4UvZXrg?si=NmBCbcc2kQTARkfV"
+                <iframe 
+                    src="https://www.youtube.com/embed/u4UZ4UvZXrg?autoplay=1&mute=1" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowfullscreen>
                 </iframe>
@@ -82,10 +74,10 @@
         </div>
 
         <div class="cam-card">
-            <p>Zweite Kamera (Hier Link einfügen)</p>
+            <p>Cluj-Napoca - Piața Unirii</p>
             <div class="video-container">
                 <iframe 
-                    src="https://www.youtube.com/embed/f43H3pS3l50?mute=1" 
+                    src="https://www.youtube.com/embed/f43H3pS3l50?autoplay=1&mute=1" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowfullscreen>
                 </iframe>
@@ -95,7 +87,7 @@
     </div>
 
     <p style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #888;">
-        Hinweis: Damit die Videos direkt starten, sind sie standardmäßig stummgeschaltet (mute=1).
+        Hinweis: Damit YouTube die Einbettung erlaubt, muss der Link das Wort "embed" enthalten.
     </p>
 
 </body>
