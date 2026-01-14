@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mein Webcam Dashboard</title>
+    <title>Mein 8-Kamera Dashboard</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,13 +16,15 @@
         h1 {
             text-align: center;
             color: #ff0000;
+            margin-bottom: 30px;
         }
 
         .grid-container {
             display: grid;
+            /* Erstellt Spalten, die mindestens 350px breit sind */
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
@@ -31,19 +33,23 @@
             padding: 10px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid #333;
         }
 
         .cam-card p {
             margin: 0 0 10px 5px;
             font-weight: bold;
+            font-size: 0.9em;
+            color: #ccc;
         }
 
         .video-container {
             position: relative;
-            padding-bottom: 56.25%;
+            padding-bottom: 56.25%; /* 16:9 Format */
             height: 0;
             overflow: hidden;
             border-radius: 8px;
+            background: #000;
         }
 
         .video-container iframe {
@@ -54,54 +60,81 @@
             height: 100%;
             border: 0;
         }
+
+        /* Spezial-Style für Handys */
+        @media (max-width: 400px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h1>Live Webcam Monitor</h1>
+    <h1>Live Webcam Monitor (8 Cams)</h1>
 
     <div class="grid-container">
         
         <div class="cam-card">
-            <p>Las Vegas Airport - Runway 26R/L</p>
+            <p>Las Vegas Airport</p>
             <div class="video-container">
-                <iframe 
-                    src="https://www.youtube.com/embed/cn8_34TuMaM?autoplay=1&mute=1" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
+                <iframe src="https://www.youtube.com/embed/cn8_34TuMaM?autoplay=1&mute=1" allowfullscreen></iframe>
             </div>
         </div>
 
-<div class="cam-card">
+        <div class="cam-card">
             <p>Cluj-Napoca - Piața Unirii</p>
             <div class="video-container">
                 <iframe src="https://www.youtube.com/embed/f43H3pS3l50?autoplay=1&mute=1" allowfullscreen></iframe>
             </div>
-</div>
+        </div>
 
         <div class="cam-card">
-            <p>Timișoara - Piața Victoriei</p>
+            <p>New York - Times Square</p>
             <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/S2p_8m6XvP8?autoplay=1&mute=1" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/1-iS7LArMPA?autoplay=1&mute=1" allowfullscreen></iframe>
             </div>
         </div>
-        
+
         <div class="cam-card">
-            <p>Den Haag - Straßenbahn Cabview</p>
+            <p>Den Haag - Tram POV</p>
             <div class="video-container">
-                <iframe 
-                    src="https://www.youtube.com/embed/F_JwmmbBA6I?autoplay=1&mute=1" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
+                <iframe src="https://www.youtube.com/embed/F_JwmmbBA6I?autoplay=1&mute=1" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <div class="cam-card">
+            <p>Mallorca - Magaluf Beach</p>
+            <div class="video-container">
+                <iframe src="https://www.youtube.com/embed/4c2IB5cLLtU?autoplay=1&mute=1" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <div class="cam-card">
+            <p>Isle of Cumbrae - Millport</p>
+            <div class="video-container">
+                <iframe src="https://www.youtube.com/embed/x89jHE3hL8U?autoplay=1&mute=1" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <div class="cam-card">
+            <p>Norwegen - Eisenbahn Cabview</p>
+            <div class="video-container">
+                <iframe src="https://www.youtube.com/embed/tAWFO8_O_7M?autoplay=1&mute=1" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <div class="cam-card">
+            <p>Dublin - Temple Bar</p>
+            <div class="video-container">
+                <iframe src="https://www.youtube.com/embed/u4UZ4UvZXrg?autoplay=1&mute=1" allowfullscreen></iframe>
             </div>
         </div>
 
     </div>
 
     <p style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #888;">
-        Tipp: Falls ein Stream schwarz bleibt, lade die Seite einmal neu (F5).
+        Hinweis: Alle Kameras sind stummgeschaltet, damit sie automatisch starten.
     </p>
 
 </body>
