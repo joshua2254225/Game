@@ -287,58 +287,57 @@ function newQuestion() {
 
 function check() {
   if (!current) return;
+
   const input = normalize(answer.value.trim());
-const correct = normalize(mode === "ro-fr" ? current.fr : current.ro);
+  const correct = normalize(mode === "ro-fr" ? current.fr : current.ro);
 
-if (input === correct) {
-
-  if (input === correct.toLowerCase()) {
+  if (input === correct) {
     // RICHTIG
     result.style.color = "#27ae60";
     result.textContent = "✔️ Excelent!";
     answer.style.borderColor = "#27ae60";
     correctCount++;
-    attemptPerQuestion = 0; // Reset für die nächste Frage
-    
+    attemptPerQuestion = 0;
+
     scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
-    
-    const currentBtn = document.getElementById("checkBtn");
-    currentBtn.disabled = true;
+
+    const btn = document.getElementById("checkBtn");
+    btn.disabled = true;
     setTimeout(() => {
-      currentBtn.disabled = false;
+      btn.disabled = false;
       newQuestion();
     }, 1200);
 
   } else {
     // FALSCH
-    wrongCount++; // Fehler zählt sofort
-    attemptPerQuestion++; // Erhöht die Versuche für diese Frage
+    wrongCount++;
+    attemptPerQuestion++;
     scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
-    
+
     document.querySelector('.card').classList.add('shake');
     setTimeout(() => document.querySelector('.card').classList.remove('shake'), 400);
 
     if (attemptPerQuestion === 1) {
-      // Erster Fehler
-      result.style.color = "#f39c12"; // Orange für "fast richtig"
+      result.style.color = "#f39c12";
       result.textContent = "❌ Mai încearcă o dată!";
-      answer.value = ""; // Feld leeren für neuen Versuch
+      answer.value = "";
       answer.focus();
     } else {
-      // Zweiter Fehler
-      result.style.color = "#e74c3c"; // Rot
-      result.textContent = "❌ Corect era: " + correct;
-      attemptPerQuestion = 0; // Reset für die nächste Frage
-      
-      const currentBtn = document.getElementById("checkBtn");
-      currentBtn.disabled = true;
+      result.style.color = "#e74c3c";
+      result.textContent = "❌ Corect era: " +
+        (mode === "ro-fr" ? current.fr : current.ro);
+
+      attemptPerQuestion = 0;
+
+      const btn = document.getElementById("checkBtn");
+      btn.disabled = true;
       setTimeout(() => {
-        currentBtn.disabled = false;
+        btn.disabled = false;
         newQuestion();
-      }, 2000); // Etwas länger zeigen, damit man die Antwort lesen kann
+      }, 2000);
     }
   }
-}
+ }
 
 
   
@@ -380,7 +379,7 @@ document.getElementById("checkBtn").onclick = check;
 answer.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
 
 // Initialer Start
-pool = shuffle([...animals]);
+
 function startGame() {
   document.getElementById("startScreen").style.display = "none";
   pool = shuffle([...animals]);
