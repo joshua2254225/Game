@@ -206,8 +206,12 @@ const timerBox = document.getElementById("timer");
 const gameArea = document.getElementById("game-area");
 
 function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
-}
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+ }
 
  function normalize(text) {
   return text
@@ -245,8 +249,10 @@ function newQuestion() {
 
 function check() {
   if (!current) return;
-  const input = answer.value.trim().toLowerCase();
-  const correct = mode === "ro-fr" ? current.fr : current.ro;
+  const input = normalize(answer.value.trim());
+const correct = normalize(mode === "ro-fr" ? current.fr : current.ro);
+
+if (input === correct) {
 
   if (input === correct.toLowerCase()) {
     // RICHTIG
