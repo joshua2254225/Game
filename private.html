@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Private Area</title>
+
+<style>
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#0b74de,#7b2cff);
+  font-family:system-ui,Segoe UI,Roboto,Arial;
+}
+
+.card{
+  background:#fff;
+  width:320px;
+  padding:22px;
+  border-radius:16px;
+  box-shadow:0 20px 40px rgba(0,0,0,.3);
+}
+
+h1{
+  text-align:center;
+  margin-bottom:16px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#0b74de;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.msg{
+  text-align:center;
+  color:red;
+  font-size:13px;
+  margin-top:8px;
+}
+
+.hidden{
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="card" id="loginBox">
+  <h1>🔒 Private Login</h1>
+
+  <input id="username" placeholder="Username">
+  <input id="code" type="password" placeholder="Access code">
+
+  <button onclick="checkLogin()">Enter</button>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<!-- PRIVATE CONTENT -->
+<div class="card hidden" id="privateBox">
+  <h1>✅ Access granted</h1>
+  <p style="text-align:center">
+    Willkommen <b id="userName"></b> 👋
+  </p>
+
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+/* =============================
+   HIER EINSTELLEN
+============================= */
+const ALLOWED_USERNAME = "jsrz";
+const SECRET_CODE = "4321";
+/* ============================= */
+
+function checkLogin(){
+  const u = username.value.trim();
+  const c = code.value.trim();
+
+  if(u === ALLOWED_USERNAME && c === SECRET_CODE){
+    loginBox.classList.add("hidden");
+    privateBox.classList.remove("hidden");
+    userName.textContent = u;
+    msg.textContent = "";
+  }else{
+    msg.textContent = "❌ Falscher Benutzername oder Code";
+  }
+}
+
+function logout(){
+  location.reload();
+}
+</script>
+
+</body>
+</html>
