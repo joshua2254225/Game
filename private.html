@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Private Area</title>
 
 <style>
@@ -17,7 +17,7 @@ body{
 }
 
 .card{
-  background:#fff;
+  background:white;
   width:320px;
   padding:22px;
   border-radius:16px;
@@ -65,44 +65,59 @@ button{
 
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN BOX -->
 <div class="card" id="loginBox">
   <h1>🔒 Private Login</h1>
 
   <input id="username" placeholder="Username">
-  <input id="code" type="password" placeholder="Access code">
+  <input id="code" type="password" placeholder="Access Code">
 
-  <button onclick="checkLogin()">Enter</button>
+  <button onclick="checkLogin()">Login</button>
 
   <div class="msg" id="msg"></div>
 </div>
 
 <!-- PRIVATE CONTENT -->
 <div class="card hidden" id="privateBox">
-  <h1>✅ Access granted</h1>
+  <h1>✅ Zugriff erlaubt</h1>
+
   <p style="text-align:center">
     Willkommen <b id="userName"></b> 👋
   </p>
+
+  <!-- 🔐 NUR NACH LOGIN SICHTBAR -->
+  <img
+    src="secret-image.jpg"
+    id="secretImage"
+    class="hidden"
+    style="width:100%; border-radius:12px; margin-top:14px;"
+    alt="Secret Image"
+  >
 
   <button onclick="logout()">Logout</button>
 </div>
 
 <script>
-/* =============================
-   HIER EINSTELLEN
-============================= */
-const ALLOWED_USERNAME = "jsrz";
-const SECRET_CODE = "4321";
-/* ============================= */
+// 🔐 HIER DEINE ZUGANGSDATEN
+const ALLOWED_USERNAME = "admin";
+const SECRET_CODE = "1234";
+
+// ELEMENTE
+const loginBox = document.getElementById("loginBox");
+const privateBox = document.getElementById("privateBox");
+const msg = document.getElementById("msg");
 
 function checkLogin(){
-  const u = username.value.trim();
-  const c = code.value.trim();
+  const u = document.getElementById("username").value.trim();
+  const c = document.getElementById("code").value.trim();
 
   if(u === ALLOWED_USERNAME && c === SECRET_CODE){
     loginBox.classList.add("hidden");
     privateBox.classList.remove("hidden");
-    userName.textContent = u;
+
+    document.getElementById("userName").textContent = u;
+    document.getElementById("secretImage").classList.remove("hidden");
+
     msg.textContent = "";
   }else{
     msg.textContent = "❌ Falscher Benutzername oder Code";
