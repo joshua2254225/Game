@@ -85,14 +85,17 @@ button{
     Willkommen <b id="userName"></b> 👋
   </p>
 
-  <!-- 🔐 NUR NACH LOGIN SICHTBAR -->
-  <img
-    src="secret-image.mp4"
-    id="secretImage"
-    class="hidden"
-    style="width:100%; border-radius:12px; margin-top:14px;"
-    alt="Secret Image"
-  >
+  <!-- 🔐 NUR NACH LOGIN -->
+
+  <video
+  id="secretImage"
+  class="hidden"
+  style="width:100%; border-radius:12px; margin-top:14px;"
+  controls
+>
+  <source src="secret-image.mp4" type="video/mp4">
+  Dein Browser unterstützt kein Video.
+  </video>
 
   <button onclick="logout()">Logout</button>
 </div>
