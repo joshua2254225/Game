@@ -190,16 +190,81 @@ button:disabled {
   background: #e74c3c;
   color: white;
   }
+
+.home {
+  text-align: center;
+}
+
+.home button {
+  width: 100%;
+  max-width: 300px;
+  margin: 12px auto;
+  padding: 16px;
+  font-size: 18px;
+  border-radius: 14px;
+  border: none;
+  background: #4a6cf7;
+  color: white;
+  cursor: pointer;
+  }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #74ebd5, #acb6e5);
+  z-index: 3000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlay-header {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.overlay-header button {
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  }
+  
 </style>
 </head>
 
 <body>
 
+<div id="homeScreen" class="home">
+  <h1>🐾 Les Animaux</h1>
 
-<div id="startPopup" class="popup">
-  <div class="popup-card">
-    <h2>🐾 Les Animaux</h2>
+  <button onclick="openMode('learn')">📘 Învățare</button>
+  <button onclick="openMode('exercise')">✏️ Exersare</button>
+  <button onclick="openMode('test')">📝 Test</button>
+</div>
 
+<div id="modeOverlay" class="overlay hidden">
+  <div class="overlay-header">
+    <button onclick="closeMode()">✖</button>
+  </div>
+
+  <!-- LERNEN -->
+  <div id="learnView" class="card hidden">
+    <!-- dein Lern-Code -->
+  </div>
+
+  <!-- EXERSARE -->
+  <div id="exerciseView" class="card hidden">
+    <!-- dein Üben-Code -->
+  </div>
+
+  <!-- TEST -->
+  <div id="testView" class="card hidden">
+    <h1>📝 Test</h1>
+    <p>În curând…</p>
+  </div>
+</div>
 
     <div id="exerciseView" class="card hidden">
   <h1>✏️ Exersare</h1>
@@ -333,18 +398,37 @@ function hideAllViews() {
   document.querySelectorAll(".card").forEach(v => v.classList.add("hidden"));
 }
 
-function openLearn() {
-  startPopup.style.display = "none";
-  hideAllViews();
-  document.querySelector(".card").classList.remove("hidden"); // learn card
+const home = document.getElementById("homeScreen");
+const overlay = document.getElementById("modeOverlay");
+
+function hideAllViews() {
+  document.querySelectorAll(".card").forEach(v => v.classList.add("hidden"));
 }
 
-function openExercise() {
-  startPopup.style.display = "none";
+function openMode(mode) {
+  home.style.display = "none";
+  overlay.classList.remove("hidden");
   hideAllViews();
-  exerciseView.classList.remove("hidden");
-  startExercise();
+
+  if (mode === "learn") {
+    document.getElementById("learnView").classList.remove("hidden");
+    loadCard(); // Lernstart
+  }
+
+  if (mode === "exercise") {
+    document.getElementById("exerciseView").classList.remove("hidden");
+    startExercise();
+  }
+
+  if (mode === "test") {
+    document.getElementById("testView").classList.remove("hidden");
+  }
 }
+
+function closeMode() {
+  overlay.classList.add("hidden");
+  home.style.display = "block";
+  }
 
 /* -------- EXERSARE -------- */
 
