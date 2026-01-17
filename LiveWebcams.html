@@ -3,114 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Webcam Hub</title>
+    <title>Global Webcam Explorer 15</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #121212; color: white; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: #fff; margin: 0; padding: 10px; }
         
-        header { position: sticky; top: 0; z-index: 1000; background: #121212; padding-bottom: 20px; text-align: center; }
-        h1 { color: #ff0000; margin-bottom: 15px; }
+        header { 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            background: #0f0f0f; 
+            padding: 15px 0; 
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
 
-        /* Suchfeld Styling */
         #searchBar {
-            width: 80%;
-            max-width: 600px;
-            padding: 12px 20px;
+            width: 90%;
+            max-width: 700px;
+            padding: 12px 25px;
             font-size: 16px;
-            border-radius: 25px;
+            border-radius: 30px;
             border: 2px solid #ff0000;
-            background: #1e1e1e;
+            background: #1a1a1a;
             color: white;
-            outline: none;
+            box-shadow: 0 0 15px rgba(255,0,0,0.2);
         }
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-            max-width: 1600px;
-            margin: 0 auto;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 15px;
+            max-width: 1800px;
+            margin: 20px auto;
         }
 
         .cam-card {
-            background: #1e1e1e;
-            padding: 10px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            transition: transform 0.2s;
+            background: #1a1a1a;
+            padding: 8px;
+            border-radius: 10px;
+            transition: opacity 0.3s;
         }
 
-        /* Versteckt Karten, die nicht zum Filter passen */
         .cam-card.hidden { display: none; }
 
-        .cam-card p { margin: 5px; font-weight: bold; color: #ccc; }
-        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; background: #000; }
-        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .cam-card p { 
+            margin: 5px 0 10px 5px; 
+            font-size: 0.85em; 
+            font-weight: 600; 
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-container { 
+            position: relative; 
+            padding-bottom: 56.25%; 
+            height: 0; 
+            background: #000; 
+            border-radius: 6px;
+        }
+
+        .video-container iframe { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; 
+        }
+
+        @media (max-width: 450px) {
+            .grid-container { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Live Webcam Explorer</h1>
-        <input type="text" id="searchBar" placeholder="Suche nach Land, Stadt oder Typ (z.B. Zug, USA, Rumänien)..." onkeyup="filterCams()">
-    </header>
+<header>
+    <input type="text" id="searchBar" placeholder="Suche: Zug, Stadt, Strand, USA, Europa..." onkeyup="filterCams()">
+</header>
 
-    <div class="grid-container" id="camGrid">
+<div class="grid-container" id="camGrid">
 
-        <div class="cam-card" data-tags="rumänien cluj stadt">
-            <p>Cluj-Napoca - Rumänien</p>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/f43H3pS3l50?autoplay=1&mute=1" loading="lazy"></iframe>
-            </div>
-        </div>
+    <div class="cam-card" data-tags="usa vegas flughafen flugzeug airport">
+        <p>Las Vegas Airport (USA)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/cn8_34TuMaM?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
 
-        <div class="cam-card" data-tags="usa vegas flughafen airport flugzeug">
-            <p>Las Vegas Airport - USA</p>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/cn8_34TuMaM?autoplay=1&mute=1" loading="lazy"></iframe>
-            </div>
-        </div>
+    <div class="cam-card" data-tags="niederlande den haag tram zug bahn pov">
+        <p>Den Haag Tram (NL)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/F_JwmmbBA6I?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
 
-        <div class="cam-card" data-tags="niederlande tram zug bahn pov">
-            <p>Den Haag - Tram POV</p>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/F_JwmmbBA6I?autoplay=1&mute=1" loading="lazy"></iframe>
-            </div>
-        </div>
+    <div class="cam-card" data-tags="rumänien cluj stadt platz">
+        <p>Cluj-Napoca (RO)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/f43H3pS3l50?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
 
-        <div class="cam-card" data-tags="norwegen zug bahn schnee">
-            <p>Norwegen Eisenbahn - Zug</p>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/tAWFO8_O_7M?autoplay=1&mute=1" loading="lazy"></iframe>
-            </div>
-        </div>
+    <div class="cam-card" data-tags="usa new york times square stadt">
+        <p>Times Square 4K (USA)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/rnXIjl_Rzy4?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
 
-        <div class="cam-card" data-tags="usa new york times square stadt">
-            <p>New York - Times Square</p>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/rnXIjl_Rzy4?autoplay=1&mute=1" loading="lazy"></iframe>
-            </div>
-        </div>
+    <div class="cam-card" data-tags="norwegen zug bahn schnee winter">
+        <p>Bergensbanen Zug (NO)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/tAWFO8_O_7M?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
 
-        </div>
+    <div class="cam-card" data-tags="japan tokio stadt kreuzung shibuya">
+        <p>Tokio - Shibuya Crossing (JP)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/W9m_m7vX6v8?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
 
-    <script>
-        // Die Filter-Funktion
-        function filterCams() {
-            let input = document.getElementById('searchBar').value.toLowerCase();
-            let cards = document.getElementsByClassName('cam-card');
+    <div class="cam-card" data-tags="ukraine kiew stadt platz">
+        <p>Kiew - Majdan Platz (UA)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/Noc_beXitjM?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
 
-            for (let i = 0; i < cards.length; i++) {
-                let tags = cards[i].getAttribute('data-tags').toLowerCase();
-                let title = cards[i].getElementsByTagName('p')[0].innerText.toLowerCase();
-                
-                if (tags.includes(input) || title.includes(input)) {
-                    cards[i].classList.remove('hidden');
-                } else {
-                    cards[i].classList.add('hidden');
-                }
+    <div class="cam-card" data-tags="schweiz alpen zug bahn natur">
+        <p>Bernina Express (CH)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/u_X_X3B2mRE?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cam-card" data-tags="deutschland hamburg hafen schiff">
+        <p>Hamburger Hafen (DE)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/n9ISt-9Lms8?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cam-card" data-tags="italien venedig kanal stadt">
+        <p>Venedig - Rialto Brücke (IT)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/ph1vpnYIxJk?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cam-card" data-tags="afrika tiere wasserloch natur">
+        <p>Namibia - Wasserloch (AFR)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/O8Xf9vV6R_A?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cam-card" data-tags="usa unterwasser fische aquarium">
+        <p>Monterey Bay Aquarium (USA)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/mY8__n6VayU?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cam-card" data-tags="brasilien strand meer copacabana">
+        <p>Rio - Copacabana (BR)</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/j_N_x5vX2_w?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cam-card" data-tags="weltall iss erde space">
+        <p>ISS - Erde aus dem All</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/P9C25Un7xaM?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cam-card" data-tags="usa bären fluss natur">
+        <p>Brooks Falls - Bären & Lachse</p>
+        <div class="video-container"><iframe src="https://www.youtube.com/embed/IcWTPFnq0o4?autoplay=1&mute=1" loading="lazy"></iframe></div>
+    </div>
+
+</div>
+
+<script>
+    function filterCams() {
+        let input = document.getElementById('searchBar').value.toLowerCase();
+        let cards = document.getElementsByClassName('cam-card');
+        for (let i = 0; i < cards.length; i++) {
+            let tags = cards[i].getAttribute('data-tags');
+            if (tags.toLowerCase().includes(input)) {
+                cards[i].classList.remove('hidden');
+            } else {
+                cards[i].classList.add('hidden');
             }
         }
-    </script>
+    }
+</script>
 
 </body>
 </html>
