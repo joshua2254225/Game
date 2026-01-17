@@ -6,6 +6,42 @@
 <title>ArcadeOwl – Învățare</title>
 
 <style>
+
+
+  .popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.popup-card {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+}
+
+.popup-card button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: none;
+  background: #4a6cf7;
+  color: white;
+  cursor: pointer;
+}
+
+.popup-card button:disabled {
+  opacity: 0.5;
+}
 * {
   box-sizing: border-box;
   font-family: 'Segoe UI', sans-serif;
@@ -131,11 +167,57 @@ button:disabled {
   font-size: 14px;
   color: #636e72;
 }
+
+  .hidden {
+  display: none;
+}
+
+.option {
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  background: #f1f2f6;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.option.correct {
+  background: #2ecc71;
+  color: white;
+}
+
+.option.wrong {
+  background: #e74c3c;
+  color: white;
+  }
 </style>
 </head>
 
 <body>
 
+
+<div id="startPopup" class="popup">
+  <div class="popup-card">
+    <h2>🐾 Les Animaux</h2>
+
+
+    <div id="exerciseView" class="card hidden">
+  <h1>✏️ Exersare</h1>
+
+  <div id="exerciseQuestion" style="font-size:22px; margin:20px 0;"></div>
+
+  <div id="options"></div>
+
+  <div id="exerciseResult" style="margin-top:15px;font-weight:bold;"></div>
+
+  <button id="nextExerciseBtn" disabled>➡️ Următoarea</button>
+    </div>
+    <button onclick="openLearn()">📘 Învățare</button>
+    <button onclick="openExercise()">✏️ Exersare</button>
+    <button disabled>📝 Test (în curând)</button>
+  </div>
+</div>
+  
 <div class="topbar">
   <a href="https://joshua2254225.github.io/Game/index.html">🦉 ArcadeOwl</a>
 </div>
@@ -227,6 +309,115 @@ nextBtn.onclick = () => {
 };
 
 loadCard();
+
+  const startPopup = document.getElementById("startPopup");
+const exerciseView = document.getElementById("exerciseView");
+
+// Gemeinsame Daten (bleiben für ALLE Modi)
+const animals = [
+  { ro: "câine", fr: "chien" },
+  { ro: "pisică", fr: "chat" },
+  { ro: "cal", fr: "cheval" },
+  { ro: "vacă", fr: "vache" },
+  { ro: "oaie", fr: "mouton" },
+  { ro: "iepure", fr: "lapin" }
+];
+
+function shuffle(arr) {
+  return arr.sort(() => Math.random() - 0.5);
+}
+
+/* -------- NAVIGARE -------- */
+
+function hideAllViews() {
+  document.querySelectorAll(".card").forEach(v => v.classList.add("hidden"));
+}
+
+function openLearn() {
+  startPopup.style.display = "none";
+  hideAllViews();
+  document.querySelector(".card").classList.remove("hidden"); // learn card
+}
+
+function openExercise() {
+  startPopup.style.display = "none";
+  hideAllViews();
+  exerciseView.classList.remove("hidden");
+  startExercise();
+}
+
+/* -------- EXERSARE -------- */
+
+let exercisePool = [];
+let exerciseIndex = 0;
+let locked = false;
+
+const qEl = document.getElementById("exerciseQuestion");
+const optionsEl = document.getElementById("options");
+const resultEl = document.getElementById("exerciseResult");
+const nextBtn = document.getElementById("nextExerciseBtn");
+
+function startExercise() {
+  exercisePool = shuffle([...animals]);
+  exerciseIndex = 0;
+  showExercise();
+}
+
+function showExercise() {
+  locked = false;
+  resultEl.textContent = "";
+  nextBtn.disabled = true;
+  optionsEl.innerHTML = "";
+
+  const item = exercisePool[exerciseIndex];
+
+  qEl.textContent = `Care este traducerea în franceză pentru „${item.ro}”?`;
+
+  let answers = shuffle([
+    item.fr,
+    ...shuffle(animals.filter(a => a !== item))
+      .slice(0, 3)
+      .map(a => a.fr)
+  ]);
+
+  answers.forEach(ans => {
+    const div = document.createElement("div");
+    div.className = "option";
+    div.textContent = ans;
+    div.onclick = () => checkAnswer(div, ans === item.fr);
+    optionsEl.appendChild(div);
+  });
+}
+
+function checkAnswer(el, correct) {
+  if (locked) return;
+  locked = true;
+
+  if (correct) {
+    el.classList.add("correct");
+    resultEl.textContent = "✔️ Corect!";
+  } else {
+    el.classList.add("wrong");
+    resultEl.textContent = "❌ Greșit!";
+    document.querySelectorAll(".option").forEach(o => {
+      if (o.textContent === exercisePool[exerciseIndex].fr) {
+        o.classList.add("correct");
+      }
+    });
+  }
+
+  nextBtn.disabled = false;
+}
+
+nextBtn.onclick = () => {
+  exerciseIndex++;
+  if (exerciseIndex >= exercisePool.length) {
+    alert("🎉 Ai terminat Exersarea!");
+    location.reload();
+    return;
+  }
+  showExercise();
+};
 </script>
 
 </body>
