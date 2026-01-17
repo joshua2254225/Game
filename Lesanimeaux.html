@@ -250,13 +250,23 @@ function shuffle(array) {
     .replace(/[\u0300-\u036f]/g, "");
  }
 
-function startTimer() {
+
+ function startTimer() {
   clearInterval(timer);
   timer = setInterval(() => {
     time++;
-    timerBox.textContent = "⏱️ " + time + "s";
+
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+
+    const formatted =
+      minutes > 0
+        ? `${minutes}:${seconds.toString().padStart(2, "0")}`
+        : `${seconds}s`;
+
+    timerBox.textContent = "⏱️ " + formatted;
   }, 1000);
-}
+ }
 
 function newQuestion() {
   if (pool.length === 0) {
