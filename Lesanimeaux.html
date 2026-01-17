@@ -3,45 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArcadeOwl – Învățare</title>
+<title>ArcadeOwl – Les Animaux</title>
 
 <style>
-
-
-  .popup {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.popup-card {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 320px;
-  text-align: center;
-}
-
-.popup-card button {
-  width: 100%;
-  margin-top: 12px;
-  padding: 14px;
-  font-size: 16px;
-  border-radius: 12px;
-  border: none;
-  background: #4a6cf7;
-  color: white;
-  cursor: pointer;
-}
-
-.popup-card button:disabled {
-  opacity: 0.5;
-}
 * {
   box-sizing: border-box;
   font-family: 'Segoe UI', sans-serif;
@@ -49,49 +13,71 @@
 
 body {
   margin: 0;
-  background: linear-gradient(135deg, #74ebd5, #acb6e5);
   min-height: 100vh;
+  background: linear-gradient(135deg, #74ebd5, #acb6e5);
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 70px;
 }
 
-/* TOPBAR */
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 56px;
-  background: #4a6cf7;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-.topbar a {
-  color: white;
-  text-decoration: none;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-/* MAIN CARD */
-.card {
+/* HOME */
+.home {
   background: white;
-  width: 92%;
-  max-width: 460px;
-  padding: 30px 25px;
+  padding: 30px;
   border-radius: 22px;
+  width: 90%;
+  max-width: 420px;
   text-align: center;
   box-shadow: 0 20px 40px rgba(0,0,0,0.2);
 }
 
-h1 {
-  margin-top: 0;
-  color: #4a6cf7;
+.home button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 16px;
+  font-size: 18px;
+  border-radius: 14px;
+  border: none;
+  background: #4a6cf7;
+  color: white;
+  cursor: pointer;
+}
+
+/* OVERLAY */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #74ebd5, #acb6e5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.hidden { display: none; }
+
+.overlay-header {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.overlay-header button {
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* CARD */
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 22px;
+  width: 90%;
+  max-width: 460px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
 }
 
 /* FLIP CARDS */
@@ -111,9 +97,9 @@ h1 {
 .flip-inner {
   width: 100%;
   height: 100%;
-  position: relative;
   transition: transform 0.6s;
   transform-style: preserve-3d;
+  position: relative;
 }
 
 .flip-card.flipped .flip-inner {
@@ -122,8 +108,7 @@ h1 {
 
 .flip-face {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -135,7 +120,6 @@ h1 {
 
 .front {
   background: #f1f2f6;
-  color: #636e72;
 }
 
 .back {
@@ -145,118 +129,84 @@ h1 {
 }
 
 /* BUTTON */
-button {
+.card button {
   width: 100%;
+  margin-top: 15px;
   padding: 14px;
   font-size: 16px;
-  border: none;
   border-radius: 12px;
-  cursor: pointer;
+  border: none;
   background: #4a6cf7;
   color: white;
-  margin-top: 10px;
+  cursor: pointer;
 }
 
 button:disabled {
   opacity: 0.5;
-  cursor: default;
 }
 
-.progress {
-  margin-top: 12px;
-  font-size: 14px;
-  color: #636e72;
-}
-
-  .hidden {
-  display: none;
-}
-
+/* EXERCISE */
 .option {
-  padding: 12px;
+  padding: 14px;
   margin: 10px 0;
-  border-radius: 10px;
   background: #f1f2f6;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
 }
 
-.option.correct {
-  background: #2ecc71;
-  color: white;
-}
-
-.option.wrong {
-  background: #e74c3c;
-  color: white;
-  }
-
-.home {
-  text-align: center;
-}
-
-.home button {
-  width: 100%;
-  max-width: 300px;
-  margin: 12px auto;
-  padding: 16px;
-  font-size: 18px;
-  border-radius: 14px;
-  border: none;
-  background: #4a6cf7;
-  color: white;
-  cursor: pointer;
-  }
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(135deg, #74ebd5, #acb6e5);
-  z-index: 3000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.overlay-header {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-}
-
-.overlay-header button {
-  font-size: 22px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  }
-  
+.option.correct { background: #2ecc71; color: white; }
+.option.wrong { background: #e74c3c; color: white; }
 </style>
 </head>
 
 <body>
 
+<!-- HOME -->
 <div id="homeScreen" class="home">
   <h1>🐾 Les Animaux</h1>
-
   <button onclick="openMode('learn')">📘 Învățare</button>
   <button onclick="openMode('exercise')">✏️ Exersare</button>
   <button onclick="openMode('test')">📝 Test</button>
 </div>
 
-<div id="modeOverlay" class="overlay hidden">
+<!-- OVERLAY -->
+<div id="overlay" class="overlay hidden">
   <div class="overlay-header">
     <button onclick="closeMode()">✖</button>
   </div>
 
   <!-- LERNEN -->
   <div id="learnView" class="card hidden">
-    <!-- dein Lern-Code -->
+    <h1>📘 Învățare</h1>
+
+    <div class="cards">
+      <div class="flip-card" id="cardRo">
+        <div class="flip-inner">
+          <div class="flip-face front">Română</div>
+          <div class="flip-face back" id="roText"></div>
+        </div>
+      </div>
+
+      <div class="flip-card" id="cardFr">
+        <div class="flip-inner">
+          <div class="flip-face front">Franceză</div>
+          <div class="flip-face back" id="frText"></div>
+        </div>
+      </div>
+    </div>
+
+    <button id="nextLearn" disabled>➡️ Următorul</button>
+    <div id="learnProgress"></div>
   </div>
 
   <!-- EXERSARE -->
   <div id="exerciseView" class="card hidden">
-    <!-- dein Üben-Code -->
+    <h1>✏️ Exersare</h1>
+    <div id="exerciseQuestion"></div>
+    <div id="options"></div>
+    <div id="exerciseResult"></div>
+    <button id="nextExercise" disabled>➡️ Următoarea</button>
   </div>
 
   <!-- TEST -->
@@ -266,52 +216,8 @@ button:disabled {
   </div>
 </div>
 
-    <div id="exerciseView" class="card hidden">
-  <h1>✏️ Exersare</h1>
-
-  <div id="exerciseQuestion" style="font-size:22px; margin:20px 0;"></div>
-
-  <div id="options"></div>
-
-  <div id="exerciseResult" style="margin-top:15px;font-weight:bold;"></div>
-
-  <button id="nextExerciseBtn" disabled>➡️ Următoarea</button>
-    </div>
-    <button onclick="openLearn()">📘 Învățare</button>
-    <button onclick="openExercise()">✏️ Exersare</button>
-    <button disabled>📝 Test (în curând)</button>
-  </div>
-</div>
-  
-<div class="topbar">
-  <a href="https://joshua2254225.github.io/Game/index.html">🦉 ArcadeOwl</a>
-</div>
-
-<div class="card">
-  <h1>📘 Învățare</h1>
-
-  <div class="cards">
-    <div class="flip-card" id="cardRo">
-      <div class="flip-inner">
-        <div class="flip-face front">Română</div>
-        <div class="flip-face back" id="roText"></div>
-      </div>
-    </div>
-
-    <div class="flip-card" id="cardFr">
-      <div class="flip-inner">
-        <div class="flip-face front">Franceză</div>
-        <div class="flip-face back" id="frText"></div>
-      </div>
-    </div>
-  </div>
-
-  <button id="nextBtn" disabled>➡️ Următorul</button>
-
-  <div class="progress" id="progress"></div>
-</div>
-
 <script>
+/* DATA */
 const animals = [
   { ro: "câine", fr: "chien" },
   { ro: "pisică", fr: "chat" },
@@ -322,154 +228,111 @@ const animals = [
   { ro: "urs", fr: "ours" }
 ];
 
-function shuffle(arr) {
-  return arr.sort(() => Math.random() - 0.5);
-}
+const shuffle = arr => arr.sort(() => Math.random() - 0.5);
 
-let pool = shuffle([...animals]);
-let index = 0;
-let flippedCount = 0;
-
-const cardRo = document.getElementById("cardRo");
-const cardFr = document.getElementById("cardFr");
-const roText = document.getElementById("roText");
-const frText = document.getElementById("frText");
-const nextBtn = document.getElementById("nextBtn");
-const progress = document.getElementById("progress");
-
-function loadCard() {
-  const item = pool[index];
-  roText.textContent = item.ro;
-  frText.textContent = item.fr;
-
-  cardRo.classList.remove("flipped");
-  cardFr.classList.remove("flipped");
-
-  flippedCount = 0;
-  nextBtn.disabled = true;
-
-  progress.textContent = `${index + 1} / ${pool.length}`;
-}
-
-function flip(card) {
-  if (card.classList.contains("flipped")) return;
-  card.classList.add("flipped");
-  flippedCount++;
-  if (flippedCount === 2) {
-    nextBtn.disabled = false;
-  }
-}
-
-cardRo.onclick = () => flip(cardRo);
-cardFr.onclick = () => flip(cardFr);
-
-nextBtn.onclick = () => {
-  index++;
-  if (index >= pool.length) {
-    alert("🎉 Ai terminat modul de învățare!");
-    location.reload();
-    return;
-  }
-  loadCard();
-};
-
-loadCard();
-
-  const startPopup = document.getElementById("startPopup");
-const exerciseView = document.getElementById("exerciseView");
-
-// Gemeinsame Daten (bleiben für ALLE Modi)
-const animals = [
-  { ro: "câine", fr: "chien" },
-  { ro: "pisică", fr: "chat" },
-  { ro: "cal", fr: "cheval" },
-  { ro: "vacă", fr: "vache" },
-  { ro: "oaie", fr: "mouton" },
-  { ro: "iepure", fr: "lapin" }
-];
-
-function shuffle(arr) {
-  return arr.sort(() => Math.random() - 0.5);
-}
-
-/* -------- NAVIGARE -------- */
-
-function hideAllViews() {
-  document.querySelectorAll(".card").forEach(v => v.classList.add("hidden"));
-}
-
+/* NAV */
 const home = document.getElementById("homeScreen");
-const overlay = document.getElementById("modeOverlay");
+const overlay = document.getElementById("overlay");
 
-function hideAllViews() {
+function hideViews() {
   document.querySelectorAll(".card").forEach(v => v.classList.add("hidden"));
 }
 
 function openMode(mode) {
   home.style.display = "none";
   overlay.classList.remove("hidden");
-  hideAllViews();
+  hideViews();
+  document.getElementById(mode + "View").classList.remove("hidden");
 
-  if (mode === "learn") {
-    document.getElementById("learnView").classList.remove("hidden");
-    loadCard(); // Lernstart
-  }
-
-  if (mode === "exercise") {
-    document.getElementById("exerciseView").classList.remove("hidden");
-    startExercise();
-  }
-
-  if (mode === "test") {
-    document.getElementById("testView").classList.remove("hidden");
-  }
+  if (mode === "learn") startLearn();
+  if (mode === "exercise") startExercise();
 }
 
 function closeMode() {
   overlay.classList.add("hidden");
   home.style.display = "block";
+}
+
+/* LERNEN */
+let learnPool, learnIndex, flipped;
+
+const roText = document.getElementById("roText");
+const frText = document.getElementById("frText");
+const cardRo = document.getElementById("cardRo");
+const cardFr = document.getElementById("cardFr");
+const nextLearn = document.getElementById("nextLearn");
+const progress = document.getElementById("learnProgress");
+
+function startLearn() {
+  learnPool = shuffle([...animals]);
+  learnIndex = 0;
+  loadLearn();
+}
+
+function loadLearn() {
+  flipped = 0;
+  cardRo.classList.remove("flipped");
+  cardFr.classList.remove("flipped");
+  roText.textContent = learnPool[learnIndex].ro;
+  frText.textContent = learnPool[learnIndex].fr;
+  nextLearn.disabled = true;
+  progress.textContent = `${learnIndex + 1} / ${learnPool.length}`;
+}
+
+function flip(card) {
+  if (card.classList.contains("flipped")) return;
+  card.classList.add("flipped");
+  flipped++;
+  if (flipped === 2) nextLearn.disabled = false;
+}
+
+cardRo.onclick = () => flip(cardRo);
+cardFr.onclick = () => flip(cardFr);
+
+nextLearn.onclick = () => {
+  learnIndex++;
+  if (learnIndex >= learnPool.length) {
+    alert("🎉 Învățare finalizată!");
+    closeMode();
+    return;
   }
+  loadLearn();
+};
 
-/* -------- EXERSARE -------- */
-
-let exercisePool = [];
-let exerciseIndex = 0;
-let locked = false;
+/* EXERSARE */
+let exPool, exIndex, locked;
 
 const qEl = document.getElementById("exerciseQuestion");
 const optionsEl = document.getElementById("options");
 const resultEl = document.getElementById("exerciseResult");
-const nextBtn = document.getElementById("nextExerciseBtn");
+const nextEx = document.getElementById("nextExercise");
 
 function startExercise() {
-  exercisePool = shuffle([...animals]);
-  exerciseIndex = 0;
+  exPool = shuffle([...animals]);
+  exIndex = 0;
   showExercise();
 }
 
 function showExercise() {
   locked = false;
-  resultEl.textContent = "";
-  nextBtn.disabled = true;
   optionsEl.innerHTML = "";
+  resultEl.textContent = "";
+  nextEx.disabled = true;
 
-  const item = exercisePool[exerciseIndex];
+  const item = exPool[exIndex];
+  qEl.textContent = `Traducerea pentru „${item.ro}” este:`;
 
-  qEl.textContent = `Care este traducerea în franceză pentru „${item.ro}”?`;
-
-  let answers = shuffle([
+  const answers = shuffle([
     item.fr,
-    ...shuffle(animals.filter(a => a !== item))
-      .slice(0, 3)
-      .map(a => a.fr)
+    ...shuffle(animals.filter(a => a !== item)).slice(0,3).map(a => a.fr)
   ]);
 
-  answers.forEach(ans => {
-    const div = document.createElement("div");
-    div.className = "option";
-    div.textContent = ans;
-    div.onclick = () => checkAnswer(div, ans === item.fr);
-    optionsEl.appendChild(div);
+  answers.forEach(a => {
+    const d = document.createElement("div");
+    d.className = "option";
+    d.textContent = a;
+    d.onclick = () => checkAnswer(d, a === item.fr);
+    optionsEl.appendChild(d);
   });
 }
 
@@ -484,20 +347,17 @@ function checkAnswer(el, correct) {
     el.classList.add("wrong");
     resultEl.textContent = "❌ Greșit!";
     document.querySelectorAll(".option").forEach(o => {
-      if (o.textContent === exercisePool[exerciseIndex].fr) {
-        o.classList.add("correct");
-      }
+      if (o.textContent === exPool[exIndex].fr) o.classList.add("correct");
     });
   }
-
-  nextBtn.disabled = false;
+  nextEx.disabled = false;
 }
 
-nextBtn.onclick = () => {
-  exerciseIndex++;
-  if (exerciseIndex >= exercisePool.length) {
-    alert("🎉 Ai terminat Exersarea!");
-    location.reload();
+nextEx.onclick = () => {
+  exIndex++;
+  if (exIndex >= exPool.length) {
+    alert("🎉 Exersare finalizată!");
+    closeMode();
     return;
   }
   showExercise();
@@ -505,4 +365,4 @@ nextBtn.onclick = () => {
 </script>
 
 </body>
-</html>
+  </html>
