@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="ro">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArcadeOwl – Lernen</title>
+<title>ArcadeOwl – Învățare</title>
 
 <style>
 * {
@@ -42,11 +42,11 @@ body {
   font-weight: bold;
 }
 
-/* CARD */
+/* MAIN CARD */
 .card {
   background: white;
   width: 92%;
-  max-width: 420px;
+  max-width: 460px;
   padding: 30px 25px;
   border-radius: 22px;
   text-align: center;
@@ -58,32 +58,59 @@ h1 {
   color: #4a6cf7;
 }
 
-/* LEARN CARD */
-.learn-card {
-  background: #f9f9f9;
-  border-radius: 18px;
-  padding: 30px;
-  font-size: 26px;
-  font-weight: bold;
-  margin: 25px 0;
-  box-shadow: inset 0 0 0 2px #e0e0e0;
-}
-
-.translation {
-  margin-top: 15px;
-  font-size: 22px;
-  color: #4a6cf7;
-  display: none;
-}
-
-/* BUTTONS */
-.buttons {
+/* FLIP CARDS */
+.cards {
   display: flex;
-  gap: 10px;
+  gap: 15px;
+  margin: 25px 0;
 }
 
-button {
+.flip-card {
   flex: 1;
+  height: 120px;
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.flip-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  backface-visibility: hidden;
+}
+
+.front {
+  background: #f1f2f6;
+  color: #636e72;
+}
+
+.back {
+  background: #4a6cf7;
+  color: white;
+  transform: rotateY(180deg);
+}
+
+/* BUTTON */
+button {
+  width: 100%;
   padding: 14px;
   font-size: 16px;
   border: none;
@@ -91,6 +118,7 @@ button {
   cursor: pointer;
   background: #4a6cf7;
   color: white;
+  margin-top: 10px;
 }
 
 button:disabled {
@@ -99,7 +127,7 @@ button:disabled {
 }
 
 .progress {
-  margin-top: 15px;
+  margin-top: 12px;
   font-size: 14px;
   color: #636e72;
 }
@@ -113,17 +141,25 @@ button:disabled {
 </div>
 
 <div class="card">
-  <h1>📖 Lernen</h1>
+  <h1>📘 Învățare</h1>
 
-  <div class="learn-card">
-    <div id="word"></div>
-    <div class="translation" id="translation"></div>
+  <div class="cards">
+    <div class="flip-card" id="cardRo">
+      <div class="flip-inner">
+        <div class="flip-face front">Română</div>
+        <div class="flip-face back" id="roText"></div>
+      </div>
+    </div>
+
+    <div class="flip-card" id="cardFr">
+      <div class="flip-inner">
+        <div class="flip-face front">Franceză</div>
+        <div class="flip-face back" id="frText"></div>
+      </div>
+    </div>
   </div>
 
-  <div class="buttons">
-    <button id="revealBtn">👁️ Aufdecken</button>
-    <button id="nextBtn" disabled>➡️ Weiter</button>
-  </div>
+  <button id="nextBtn" disabled>➡️ Următorul</button>
 
   <div class="progress" id="progress"></div>
 </div>
@@ -136,10 +172,7 @@ const animals = [
   { ro: "vacă", fr: "vache" },
   { ro: "oaie", fr: "mouton" },
   { ro: "iepure", fr: "lapin" },
-  { ro: "pasăre", fr: "oiseau" },
-  { ro: "urs", fr: "ours" },
-  { ro: "vulpe", fr: "renard" },
-  { ro: "panda", fr: "panda" }
+  { ro: "urs", fr: "ours" }
 ];
 
 function shuffle(arr) {
@@ -148,48 +181,52 @@ function shuffle(arr) {
 
 let pool = shuffle([...animals]);
 let index = 0;
-let revealed = false;
+let flippedCount = 0;
 
-const wordEl = document.getElementById("word");
-const translationEl = document.getElementById("translation");
-const revealBtn = document.getElementById("revealBtn");
+const cardRo = document.getElementById("cardRo");
+const cardFr = document.getElementById("cardFr");
+const roText = document.getElementById("roText");
+const frText = document.getElementById("frText");
 const nextBtn = document.getElementById("nextBtn");
-const progressEl = document.getElementById("progress");
+const progress = document.getElementById("progress");
 
-function showCard() {
+function loadCard() {
   const item = pool[index];
-  revealed = false;
+  roText.textContent = item.ro;
+  frText.textContent = item.fr;
 
-  wordEl.textContent = item.ro;
-  translationEl.textContent = item.fr;
-  translationEl.style.display = "none";
+  cardRo.classList.remove("flipped");
+  cardFr.classList.remove("flipped");
 
-  revealBtn.disabled = false;
+  flippedCount = 0;
   nextBtn.disabled = true;
 
-  progressEl.textContent = `${index + 1} / ${pool.length}`;
+  progress.textContent = `${index + 1} / ${pool.length}`;
 }
 
-revealBtn.onclick = () => {
-  if (revealed) return;
-  translationEl.style.display = "block";
-  revealed = true;
-  revealBtn.disabled = true;
-  nextBtn.disabled = false;
-};
+function flip(card) {
+  if (card.classList.contains("flipped")) return;
+  card.classList.add("flipped");
+  flippedCount++;
+  if (flippedCount === 2) {
+    nextBtn.disabled = false;
+  }
+}
+
+cardRo.onclick = () => flip(cardRo);
+cardFr.onclick = () => flip(cardFr);
 
 nextBtn.onclick = () => {
   index++;
   if (index >= pool.length) {
-    alert("🎉 Lernen abgeschlossen!");
+    alert("🎉 Ai terminat modul de învățare!");
     location.reload();
     return;
   }
-  showCard();
+  loadCard();
 };
 
-// Start
-showCard();
+loadCard();
 </script>
 
 </body>
