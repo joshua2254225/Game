@@ -1,157 +1,27 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Les Animaux – RO ⇄ FR</title>
+<title>ArcadeOwl – Lernen</title>
 
 <style>
-  * { box-sizing: border-box; transition: all 0.3s ease; }
+* {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
 
-  body {
-    background: linear-gradient(135deg, #74ebd5, #acb6e5);
-    background-attachment: fixed;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-   
-  padding-top: 70px;
-   
-    color: #2d3436;
-  }
-
-#startScreen {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
+body {
+  margin: 0;
+  background: linear-gradient(135deg, #74ebd5, #acb6e5);
+  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 999;
+  align-items: center;
+  padding-top: 70px;
 }
 
-.start-card {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  text-align: center;
-  width: 90%;
-  max-width: 350px;
-}
-
- 
-  .card {
-    background: rgba(255, 255, 255, 0.95);
-    width: 92%;
-    max-width: 420px;
-    padding: 35px 25px;
-    border-radius: 24px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    text-align: center;
-    backdrop-filter: blur(10px);
-  }
-
-  h1 { margin-top: 0; font-size: 28px; color: #4a6cf7; }
-
-  #question {
-    font-size: 22px;
-    margin: 25px 0;
-    line-height: 1.5;
-  }
-
-  #question b {
-    font-size: 28px;
-    color: #2d3436;
-    display: block;
-    margin-top: 5px;
-  }
-
-  input {
-    width: 100%;
-    padding: 15px;
-    font-size: 18px;
-    border-radius: 12px;
-    border: 2px solid #dfe6e9;
-    text-align: center;
-    background: #f9f9f9;
-  }
-
-  input:focus {
-    outline: none;
-    border-color: #4a6cf7;
-    background: #fff;
-    box-shadow: 0 0 10px rgba(74, 108, 247, 0.1);
-  }
-
-  /* Primärer Button */
-  #checkBtn, .restart-btn {
-    width: 100%;
-    margin-top: 15px;
-    padding: 15px;
-    font-size: 18px;
-    font-weight: bold;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    background: #4a6cf7;
-    color: white;
-    box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
-  }
-
-  #checkBtn:active, .restart-btn:active { transform: scale(0.98); }
-
-  #result {
-    margin-top: 20px;
-    font-size: 20px;
-    font-weight: bold;
-    min-height: 30px;
-  }
-
-  .stats-container {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    color: #636e72;
-  }
-
-  .modes {
-    margin-top: 25px;
-    display: flex;
-    gap: 10px;
-  }
-
-  .modes button {
-    flex: 1;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #dfe6e9;
-    border-radius: 8px;
-    background: #fff;
-    cursor: pointer;
-    color: #636e72;
-  }
-
-  .modes button.active {
-    background: #4a6cf7;
-    color: white;
-    border-color: #4a6cf7;
-  }
-
-  /* Animation für richtige/falsche Antwort */
-  .shake { animation: shake 0.4s; }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-8px); }
-    75% { transform: translateX(8px); }
-  }
-
-
+/* TOPBAR */
 .topbar {
   position: fixed;
   top: 0;
@@ -162,286 +32,164 @@
   display: flex;
   align-items: center;
   padding: 0 20px;
-  z-index: 1000;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-.logo {
+.topbar a {
   color: white;
+  text-decoration: none;
   font-size: 20px;
   font-weight: bold;
-  text-decoration: none;
 }
 
-.logo:hover {
-  opacity: 0.85;
-     }
- 
+/* CARD */
+.card {
+  background: white;
+  width: 92%;
+  max-width: 420px;
+  padding: 30px 25px;
+  border-radius: 22px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+h1 {
+  margin-top: 0;
+  color: #4a6cf7;
+}
+
+/* LEARN CARD */
+.learn-card {
+  background: #f9f9f9;
+  border-radius: 18px;
+  padding: 30px;
+  font-size: 26px;
+  font-weight: bold;
+  margin: 25px 0;
+  box-shadow: inset 0 0 0 2px #e0e0e0;
+}
+
+.translation {
+  margin-top: 15px;
+  font-size: 22px;
+  color: #4a6cf7;
+  display: none;
+}
+
+/* BUTTONS */
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  flex: 1;
+  padding: 14px;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #4a6cf7;
+  color: white;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.progress {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #636e72;
+}
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-  <a href="https://joshua2254225.github.io/Game/index.html" class="logo">
-    🦉 ArcadeOwl
-  </a>
+  <a href="https://joshua2254225.github.io/Game/index.html">🦉 ArcadeOwl</a>
 </div>
 
- 
- <div id="startScreen">
-  <div class="start-card">
-    <h2>🐾 Les Animaux</h2>
-    <p>Alege modul și apasă START</p>
-    <button onclick="startGame()">▶️ START</button>
-  </div>
- </div>
-
 <div class="card">
-  <h1 id="title">🐶 Les Animaux</h1>
+  <h1>📖 Lernen</h1>
 
-  <div id="game-area">
-    <div id="question"></div>
-    <input id="answer" placeholder="Scrie răspunsul" autocomplete="off">
-    <button id="checkBtn">Verifică</button>
-    <div id="result"></div>
+  <div class="learn-card">
+    <div id="word"></div>
+    <div class="translation" id="translation"></div>
   </div>
 
-  <div class="stats-container">
-    <div id="score">✔️ 0 | ❌ 0</div>
-    <div id="timer">⏱️ 0s</div>
+  <div class="buttons">
+    <button id="revealBtn">👁️ Aufdecken</button>
+    <button id="nextBtn" disabled>➡️ Weiter</button>
   </div>
- <button id="audioBtn">🔊 Ascultă</button>
 
-  <div class="modes">
-    <button id="btn-ro-fr" class="active" onclick="setMode('ro-fr')">RO → FR</button>
-    <button id="btn-fr-ro" onclick="setMode('fr-ro')">FR → RO</button>
-  </div>
+  <div class="progress" id="progress"></div>
 </div>
 
 <script>
-const animals = [    
-  { ro: "câine", fr: "chien" },    
-  { ro: "pisică", fr: "chat" },    
-  { ro: "cal", fr: "cheval" },    
-  { ro: "vacă", fr: "vache" },    
-  { ro: "oaie", fr: "mouton" },    
-  { ro: "porcușor de Guineea", fr: "cochon d'Inde" },    
-  { ro: "iepure", fr: "lapin" },    
-  { ro: "pasăre", fr: "oiseau" },    
-  { ro: "buburuză", fr: "coccinelle" },    
-  { ro: "pinguin", fr: "pingouin" },    
-  { ro: "raton", fr: "raton" },    
-  { ro: "panda", fr: "panda" },    
-  { ro: "maimuță", fr: "singe" },    
-  { ro: "gorilă", fr: "gorille" },    
-  { ro: "jirafă", fr: "girafe" },    
-  { ro: "arici", fr: "hérisson" },    
-  { ro: "bufniță", fr: "hibou" },    
-  { ro: "crab", fr: "crabe" },    
-  { ro: "rață", fr: "canard" },    
-  { ro: "hipopotam", fr: "hippopotame" },    
-  { ro: "pește", fr: "poisson" },    
-  { ro: "urs", fr: "ours" },    
-  { ro: "lup", fr: "loup" },    
-  { ro: "delfin", fr: "dauphin" },    
-  { ro: "broască țestoasă", fr: "tortue" },
+const animals = [
+  { ro: "câine", fr: "chien" },
+  { ro: "pisică", fr: "chat" },
+  { ro: "cal", fr: "cheval" },
+  { ro: "vacă", fr: "vache" },
+  { ro: "oaie", fr: "mouton" },
+  { ro: "iepure", fr: "lapin" },
+  { ro: "pasăre", fr: "oiseau" },
+  { ro: "urs", fr: "ours" },
   { ro: "vulpe", fr: "renard" },
-  { ro: "koala", fr: "koala" },
-  { ro: "pelican", fr: "pélican" },
-  { ro: "cameleon", fr: "caméléon" }, // Korrigiert
-  { ro: "veveriță", fr: "écureuil" }  // Komma davor ergänzt
+  { ro: "panda", fr: "panda" }
 ];
 
-
-let mode = "ro-fr";
-let pool = [];
-let correctCount = 0;
-let wrongCount = 0;
- let attemptPerQuestion = 0; // Zählt die Versuche für die aktuelle Frage
-
-let current;
-let time = 0;
-let timer;
-
-const answer = document.getElementById("answer");
-const question = document.getElementById("question");
-const result = document.getElementById("result");
-const scoreBox = document.getElementById("score");
-const timerBox = document.getElementById("timer");
-const gameArea = document.getElementById("game-area");
-
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
- }
-
- function normalize(text) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
- }
-
-
- function startTimer() {
-  clearInterval(timer);
-  timer = setInterval(() => {
-    time++;
-
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-
-    const formatted =
-      minutes > 0
-        ? `${minutes}:${seconds.toString().padStart(2, "0")}`
-        : `${seconds}s`;
-
-    timerBox.textContent = "⏱️ " + formatted;
-  }, 1000);
- }
-
-function newQuestion() {
-  if (pool.length === 0) {
-    showEndScreen();
-    return;
-  }
-
-  current = pool.pop();
-  answer.value = "";
-  result.textContent = "";
-  answer.style.borderColor = "#dfe6e9";
-
-  question.innerHTML = mode === "ro-fr" 
-    ? "Scrie în franceză: <b>" + current.ro + "</b>" 
-    : "Scrie în română: <b>" + current.fr + "</b>";
-
-  setTimeout(() => answer.focus(), 50);
+function shuffle(arr) {
+  return arr.sort(() => Math.random() - 0.5);
 }
- document.getElementById("audioBtn").onclick = () => {
-  if (!current) return;
-  if (mode === "ro-fr") {
-    speak(current.fr, "fr-FR");
-  } else {
-    speak(current.ro, "ro-RO");
-  }
+
+let pool = shuffle([...animals]);
+let index = 0;
+let revealed = false;
+
+const wordEl = document.getElementById("word");
+const translationEl = document.getElementById("translation");
+const revealBtn = document.getElementById("revealBtn");
+const nextBtn = document.getElementById("nextBtn");
+const progressEl = document.getElementById("progress");
+
+function showCard() {
+  const item = pool[index];
+  revealed = false;
+
+  wordEl.textContent = item.ro;
+  translationEl.textContent = item.fr;
+  translationEl.style.display = "none";
+
+  revealBtn.disabled = false;
+  nextBtn.disabled = true;
+
+  progressEl.textContent = `${index + 1} / ${pool.length}`;
+}
+
+revealBtn.onclick = () => {
+  if (revealed) return;
+  translationEl.style.display = "block";
+  revealed = true;
+  revealBtn.disabled = true;
+  nextBtn.disabled = false;
 };
 
-
-function check() {
-  if (!current) return;
-
-  const input = normalize(answer.value.trim());
-  const correct = normalize(mode === "ro-fr" ? current.fr : current.ro);
-
-  if (input === correct) {
-    // RICHTIG
-    result.style.color = "#27ae60";
-    result.textContent = "✔️ Excelent!";
-    answer.style.borderColor = "#27ae60";
-    correctCount++;
-    attemptPerQuestion = 0;
-
-    scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
-
-    const btn = document.getElementById("checkBtn");
-    btn.disabled = true;
-    setTimeout(() => {
-      btn.disabled = false;
-      newQuestion();
-    }, 1200);
-
-  } else {
-    // FALSCH
-    wrongCount++;
-    attemptPerQuestion++;
-    scoreBox.textContent = "✔️ " + correctCount + " | ❌ " + wrongCount;
-
-    document.querySelector('.card').classList.add('shake');
-    setTimeout(() => document.querySelector('.card').classList.remove('shake'), 400);
-
-    if (attemptPerQuestion === 1) {
-      result.style.color = "#f39c12";
-      result.textContent = "❌ Mai încearcă o dată!";
-      answer.value = "";
-      answer.focus();
-    } else {
-      result.style.color = "#e74c3c";
-      result.textContent = "❌ Corect era: " +
-        (mode === "ro-fr" ? current.fr : current.ro);
-
-      attemptPerQuestion = 0;
-
-      const btn = document.getElementById("checkBtn");
-      btn.disabled = true;
-      setTimeout(() => {
-        btn.disabled = false;
-        newQuestion();
-      }, 2000);
-    }
+nextBtn.onclick = () => {
+  index++;
+  if (index >= pool.length) {
+    alert("🎉 Lernen abgeschlossen!");
+    location.reload();
+    return;
   }
- }
+  showCard();
+};
 
-
-  
-
-function showEndScreen() {
-  clearInterval(timer);
-  gameArea.innerHTML = `
-    <div style="font-size: 50px; margin-bottom: 10px;">🏆</div>
-    <h2>Gata!</h2>
-    <p>Ai terminat în <b>${time} secunde</b>.</p>
-    <p style="color: #27ae60">✔️ Corecte: ${correctCount}</p>
-    <p style="color: #e74c3c">❌ Greșite: ${wrongCount}</p>
-    <button class="restart-btn" onclick="resetGame()">Joc Nou</button>
-  `;
-}
-
-function resetGame() {
-  location.reload(); // Einfachste Art für einen sauberen Neustart
-}
-
-function setMode(m) {
-  mode = m;
-  document.getElementById("btn-ro-fr").classList.toggle("active", m === 'ro-fr');
-  document.getElementById("btn-fr-ro").classList.toggle("active", m === 'fr-ro');
-  attemptPerQuestion = 0;
-
-  // Falls das Spiel schon lief, neu starten
-  correctCount = 0;
-  wrongCount = 0;
-  time = 0;
-  pool = shuffle([...animals]);
-  scoreBox.textContent = "✔️ 0 | ❌ 0";
-  startTimer();
-  newQuestion();
-}
-
-// Event Listeners
-document.getElementById("checkBtn").onclick = check;
-answer.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
-
-// Initialer Start
-
-function startGame() {
-  document.getElementById("startScreen").style.display = "none";
-  pool = shuffle([...animals]);
-  startTimer();
-  newQuestion();
- }
-
-
- function speak(text, lang) {
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang;
-  utterance.rate = 0.9;
-  utterance.pitch = 1;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utterance);
- }
+// Start
+showCard();
 </script>
 
 </body>
