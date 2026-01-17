@@ -3,25 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mein 8-Kamera Dashboard</title>
+    <title>Global Webcam Hub</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: white;
-            margin: 0;
-            padding: 20px;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #121212; color: white; margin: 0; padding: 20px; }
+        
+        header { position: sticky; top: 0; z-index: 1000; background: #121212; padding-bottom: 20px; text-align: center; }
+        h1 { color: #ff0000; margin-bottom: 15px; }
 
-        h1 {
-            text-align: center;
-            color: #ff0000;
-            margin-bottom: 30px;
+        /* Suchfeld Styling */
+        #searchBar {
+            width: 80%;
+            max-width: 600px;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 25px;
+            border: 2px solid #ff0000;
+            background: #1e1e1e;
+            color: white;
+            outline: none;
         }
 
         .grid-container {
             display: grid;
-            /* Erstellt Spalten, die mindestens 350px breit sind */
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
             max-width: 1600px;
@@ -32,143 +35,82 @@
             background: #1e1e1e;
             padding: 10px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             border: 1px solid #333;
+            transition: transform 0.2s;
         }
 
-        .cam-card p {
-            margin: 0 0 10px 5px;
-            font-weight: bold;
-            font-size: 0.9em;
-            color: #ccc;
-        }
+        /* Versteckt Karten, die nicht zum Filter passen */
+        .cam-card.hidden { display: none; }
 
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 Format */
-            height: 0;
-            overflow: hidden;
-            border-radius: 8px;
-            background: #000;
-        }
-
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-        }
-
-        /* Spezial-Style für Handys */
-        @media (max-width: 400px) {
-            .grid-container {
-                grid-template-columns: 1fr;
-            }
-        }
+        .cam-card p { margin: 5px; font-weight: bold; color: #ccc; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; background: #000; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
     </style>
 </head>
 <body>
 
-    <h1>Live Webcam Monitor (8 Cams)</h1>
+    <header>
+        <h1>Live Webcam Explorer</h1>
+        <input type="text" id="searchBar" placeholder="Suche nach Land, Stadt oder Typ (z.B. Zug, USA, Rumänien)..." onkeyup="filterCams()">
+    </header>
 
-    <div class="grid-container">
+    <div class="grid-container" id="camGrid">
 
-
-        <div class="cam-card">
-    <p>Kamera Name</p>
-    <div class="video-container">
-        <iframe 
-            src="https://www.youtube.com/embed/VIDEO_ID?autoplay=1&mute=1" 
-            loading="lazy" 
-            allow="autoplay" 
-            allowfullscreen>
-        </iframe>
-    </div>
-</div>
-
-        <div class="cam-card">
-            <p>Las Vegas Airport</p>
+        <div class="cam-card" data-tags="rumänien cluj stadt">
+            <p>Cluj-Napoca - Rumänien</p>
             <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/cn8_34TuMaM?autoplay=1&mute=1" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/f43H3pS3l50?autoplay=1&mute=1" loading="lazy"></iframe>
             </div>
         </div>
 
-        <div class="cam-card">
-            <p>Cluj-Napoca - Piața Unirii</p>
+        <div class="cam-card" data-tags="usa vegas flughafen airport flugzeug">
+            <p>Las Vegas Airport - USA</p>
             <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/f43H3pS3l50?autoplay=1&mute=1" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/cn8_34TuMaM?autoplay=1&mute=1" loading="lazy"></iframe>
             </div>
         </div>
 
-        
-
-        <div class="cam-card">
+        <div class="cam-card" data-tags="niederlande tram zug bahn pov">
             <p>Den Haag - Tram POV</p>
             <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/F_JwmmbBA6I?autoplay=1&mute=1" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/F_JwmmbBA6I?autoplay=1&mute=1" loading="lazy"></iframe>
             </div>
         </div>
 
-        <div class="cam-card">
-            <p>Mallorca - Magaluf Beach</p>
+        <div class="cam-card" data-tags="norwegen zug bahn schnee">
+            <p>Norwegen Eisenbahn - Zug</p>
             <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/4c2IB5cLLtU?autoplay=1&mute=1" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/tAWFO8_O_7M?autoplay=1&mute=1" loading="lazy"></iframe>
             </div>
         </div>
 
-        <div class="cam-card">
-            <p>Isle of Cumbrae - Millport</p>
+        <div class="cam-card" data-tags="usa new york times square stadt">
+            <p>New York - Times Square</p>
             <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/x89jHE3hL8U?autoplay=1&mute=1" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/rnXIjl_Rzy4?autoplay=1&mute=1" loading="lazy"></iframe>
             </div>
         </div>
 
-        <div class="cam-card">
-            <p>Norwegen - Eisenbahn Cabview</p>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/tAWFO8_O_7M?autoplay=1&mute=1" allowfullscreen></iframe>
-            </div>
         </div>
 
-        <div class="cam-card">
-            <p>Dublin - Temple Bar</p>
-            <div class="video-container">
-                <iframe src="https://www.youtube.com/embed/u4UZ4UvZXrg?autoplay=1&mute=1" allowfullscreen></iframe>
-            </div>
-        </div>
+    <script>
+        // Die Filter-Funktion
+        function filterCams() {
+            let input = document.getElementById('searchBar').value.toLowerCase();
+            let cards = document.getElementsByClassName('cam-card');
 
-        <div class="cam-card">
-            <p>New York - Times Square 4K</p>
-            <div class="video-container">
-                <iframe 
-                    src="https://www.youtube.com/embed/rnXIjl_Rzy4?autoplay=1&mute=1" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
-            </div>
-        </div>
-
-        
-        <div class="cam-card">
-            <p>London - Abbey Road Crossing</p>
-            <div class="video-container">
-                <iframe 
-                    src="https://www.youtube.com/embed/57w2gYXjRic?autoplay=1&mute=1" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
-            </div>
-        </div>
-
-
-        
-    </div>
-
-    <p style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #888;">
-        Hinweis: Alle Kameras sind stummgeschaltet, damit sie automatisch starten.
-    </p>
+            for (let i = 0; i < cards.length; i++) {
+                let tags = cards[i].getAttribute('data-tags').toLowerCase();
+                let title = cards[i].getElementsByTagName('p')[0].innerText.toLowerCase();
+                
+                if (tags.includes(input) || title.includes(input)) {
+                    cards[i].classList.remove('hidden');
+                } else {
+                    cards[i].classList.add('hidden');
+                }
+            }
+        }
+    </script>
 
 </body>
 </html>
