@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Live-Code-Editor</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #1e1e1e; color: white; }
+        .header { padding: 10px 20px; background: #333; font-weight: bold; }
+        
+        .editor-area { display: flex; flex: 1; border-bottom: 5px solid #444; }
+        textarea { 
+            flex: 1; padding: 15px; border: none; outline: none; 
+            background: #252526; color: #d4d4d4; font-family: 'Courier New', monospace; 
+            font-size: 14px; resize: none; border-right: 1px solid #444;
+        }
+        
+        #preview { flex: 1; background: white; border: none; }
+        
+        .labels { display: flex; background: #333; font-size: 12px; text-transform: uppercase; }
+        .labels span { flex: 1; padding: 5px 15px; border-right: 1px solid #444; }
+    </style>
+</head>
+<body>
+
+<div class="header">Live Code Editor</div>
+
+<div class="labels">
+    <span>HTML</span>
+    <span>CSS</span>
+</div>
+
+<div class="editor-area">
+    <textarea id="html-code" spellcheck="false" placeholder="<h1>Hallo Welt</h1>"><h1>Hallo Welt</h1></textarea>
+    <textarea id="css-code" spellcheck="false" placeholder="h1 { color: red; }">h1 { 
+  color: #007acc; 
+  text-align: center;
+  font-family: sans-serif;
+}</textarea>
+</div>
+
+<iframe id="preview"></iframe>
+
+<script>
+    const htmlInput = document.getElementById('html-code');
+    const cssInput = document.getElementById('css-code');
+    const preview = document.getElementById('preview');
+
+    function updatePreview() {
+        const html = htmlInput.value;
+        const css = `<style>${cssInput.value}</style>`;
+        
+        // Den Inhalt in das Iframe schreiben
+        const combinedCode = `
+            <!DOCTYPE html>
+            <html>
+                <head>${css}</head>
+                <body>${html}</body>
+            </html>
+        `;
+        
+        const doc = preview.contentWindow.document;
+        doc.open();
+        doc.write(combinedCode);
+        doc.close();
+    }
+
+    // Live-Update bei jedem Tastendruck
+    htmlInput.addEventListener('input', updatePreview);
+    cssInput.addEventListener('input', updatePreview);
+
+    // Initial beim Laden einmal ausführen
+    updatePreview();
+</script>
+
+</body>
+</html>
