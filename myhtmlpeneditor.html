@@ -2,74 +2,84 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mein Live-Code-Editor</title>
+    <title>Pro Live Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/html-hint.min.js"></script>
+
     <style>
-        body { font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #1e1e1e; color: white; }
-        .header { padding: 10px 20px; background: #333; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #282a36; color: white; display: flex; flex-direction: column; height: 100vh; }
+        .toolbar { padding: 10px; background: #44475a; display: flex; justify-content: space-between; align-items: center; }
         
-        .editor-area { display: flex; flex: 1; border-bottom: 5px solid #444; }
-        textarea { 
-            flex: 1; padding: 15px; border: none; outline: none; 
-            background: #252526; color: #d4d4d4; font-family: 'Courier New', monospace; 
-            font-size: 14px; resize: none; border-right: 1px solid #444;
+        .run-btn { 
+            background: #50fa7b; border: none; padding: 10px 25px; border-radius: 4px; 
+            cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s;
         }
+        .run-btn:hover { background: #40c060; transform: scale(1.05); }
+
+        .editor-container { display: flex; flex: 1; height: 50%; }
+        .CodeMirror { width: 50%; height: 100%; font-size: 14px; border-right: 1px solid #6272a4; }
         
-        #preview { flex: 1; background: white; border: none; }
-        
-        .labels { display: flex; background: #333; font-size: 12px; text-transform: uppercase; }
-        .labels span { flex: 1; padding: 5px 15px; border-right: 1px solid #444; }
+        #preview { width: 100%; height: 50%; background: white; border: none; }
+        .label { position: absolute; z-index: 10; background: #6272a4; padding: 2px 8px; font-size: 10px; }
     </style>
 </head>
 <body>
 
-<div class="header">Live Code Editor</div>
-
-<div class="labels">
-    <span>HTML</span>
-    <span>CSS</span>
+<div class="toolbar">
+    <span>Mein Code Editor (Strg + Leer für Vorschläge)</span>
+    <button class="run-btn" onclick="updatePreview()">▶ RUN</button>
 </div>
 
-<div class="editor-area">
-    <textarea id="html-code" spellcheck="false" placeholder="<h1>Hallo Welt</h1>"><h1>Hallo Welt</h1></textarea>
-    <textarea id="css-code" spellcheck="false" placeholder="h1 { color: red; }">h1 { 
-  color: #007acc; 
-  text-align: center;
-  font-family: sans-serif;
-}</textarea>
+<div class="editor-container">
+    <textarea id="html-code"><h1>Hallo Welt!</h1>
+<p>Tippe hier und klicke auf Run.</p></textarea>
+    <textarea id="css-code">h1 { color: purple; }</textarea>
 </div>
 
 <iframe id="preview"></iframe>
 
 <script>
-    const htmlInput = document.getElementById('html-code');
-    const cssInput = document.getElementById('css-code');
-    const preview = document.getElementById('preview');
+    // Initialisiere CodeMirror für HTML
+    const htmlEditor = CodeMirror.fromTextArea(document.getElementById("html-code"), {
+        mode: "text/html",
+        theme: "dracula",
+        lineNumbers: true,
+        extraKeys: {"Ctrl-Space": "autocomplete"} // Vorschläge mit Strg+Leer
+    });
+
+    // Initialisiere CodeMirror für CSS
+    const cssEditor = CodeMirror.fromTextArea(document.getElementById("css-code"), {
+        mode: "css",
+        theme: "dracula",
+        lineNumbers: true,
+        extraKeys: {"Ctrl-Space": "autocomplete"}
+    });
 
     function updatePreview() {
-        const html = htmlInput.value;
-        const css = `<style>${cssInput.value}</style>`;
+        const html = htmlEditor.getValue();
+        const css = `<style>${cssEditor.getValue()}</style>`;
+        const preview = document.getElementById("preview").contentWindow.document;
         
-        // Den Inhalt in das Iframe schreiben
-        const combinedCode = `
-            <!DOCTYPE html>
-            <html>
-                <head>${css}</head>
-                <body>${html}</body>
-            </html>
-        `;
-        
-        const doc = preview.contentWindow.document;
-        doc.open();
-        doc.write(combinedCode);
-        doc.close();
+        preview.open();
+        preview.write(html + css);
+        preview.close();
     }
 
-    // Live-Update bei jedem Tastendruck
-    htmlInput.addEventListener('input', updatePreview);
-    cssInput.addEventListener('input', updatePreview);
+    // Automatische Vorschläge beim Tippen (optional)
+    htmlEditor.on("inputRead", function(editor) {
+        if (!editor.state.completionActive) {
+            CodeMirror.commands.autocomplete(editor, null, {completeSingle: false});
+        }
+    });
 
-    // Initial beim Laden einmal ausführen
+    // Erstes Mal laden
     updatePreview();
 </script>
 
