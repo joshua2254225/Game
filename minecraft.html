@@ -93,6 +93,15 @@
 		}
 	</style>
 	<body>
+<div id="mobile-ui" style="position: absolute; bottom: 20px; left: 20px; z-index: 1000; display: none;">
+    <div id="m-up" style="width: 50px; height: 50px; background: rgba(255,255,255,0.3); border: 2px solid #fff; position: absolute; bottom: 110px; left: 55px; text-align: center; line-height: 50px; color: white; border-radius: 8px;">▲</div>
+    <div id="m-down" style="width: 50px; height: 50px; background: rgba(255,255,255,0.3); border: 2px solid #fff; position: absolute; bottom: 10px; left: 55px; text-align: center; line-height: 50px; color: white; border-radius: 8px;">▼</div>
+    <div id="m-left" style="width: 50px; height: 50px; background: rgba(255,255,255,0.3); border: 2px solid #fff; position: absolute; bottom: 60px; left: 0px; text-align: center; line-height: 50px; color: white; border-radius: 8px;">◀</div>
+    <div id="m-right" style="width: 50px; height: 50px; background: rgba(255,255,255,0.3); border: 2px solid #fff; position: absolute; bottom: 60px; left: 110px; text-align: center; line-height: 50px; color: white; border-radius: 8px;">▶</div>
+</div>
+<div id="m-jump" style="position: absolute; bottom: 60px; right: 40px; width: 80px; height: 80px; background: rgba(255,255,255,0.3); border: 3px solid #fff; border-radius: 50%; color: white; text-align: center; line-height: 80px; font-weight: bold; z-index: 1000; display: none;">JUMP</div>
+
+		
 	<canvas id="overlay" tabindex="0" width="600" height="600" style="position: absolute; top: 0px; left: 0px"></canvas>
 	<input type="text" id="savebox" class="hidden" spellcheck="false" style="position: absolute; top: 10px; left: 10px; z-index: 1;">
 	<input type="text" id="boxcentertop" class="hidden" spellcheck="false">
@@ -106,6 +115,58 @@
 	<script>
 		
 		var loadString = ""
+
+		// Mobile Initialisierung
+function setupMobileControls() {
+    // Prüfen ob es ein Touch-Gerät ist
+    if (!('ontouchstart' in window)) return;
+
+    // UI anzeigen
+    document.getElementById('mobile-ui').style.display = 'block';
+    document.getElementById('m-jump').style.display = 'block';
+
+    // Hilfsfunktion zum Binden der Tasten an dein Key-System
+    const bind = (id, keyName) => {
+        const el = document.getElementById(id);
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); Key[keyName] = true; });
+        el.addEventListener('touchend', (e) => { e.preventDefault(); Key[keyName] = false; });
+    };
+
+    bind('m-up', 'w');
+    bind('m-down', 's');
+    bind('m-left', 'a');
+    bind('m-right', 'd');
+    bind('m-jump', ' ');
+
+    // Touch-Kamera Steuerung (Wischen zum Umsehen)
+    let lastX, lastY;
+    window.addEventListener('touchstart', e => {
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+    }, {passive: false});
+
+    window.addEventListener('touchmove', e => {
+        let dx = e.touches[0].clientX - lastX;
+        let dy = e.touches[0].clientY - lastY;
+        
+        // p ist das Player-Objekt in deinem Code
+        if (typeof p !== 'undefined') {
+            p.ry += dx * 0.008; // Drehung links/rechts
+            p.rx -= dy * 0.008; // Drehung hoch/runter
+            
+            // Begrenzung damit man keinen Genickbruch bekommt
+            if(p.rx > 1.5) p.rx = 1.5;
+            if(p.rx < -1.5) p.rx = -1.5;
+        }
+        
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+    }, {passive: false});
+}
+
+// Starte die Mobile-Funktion
+setTimeout(setupMobileControls, 1000); 
+
 	</script>
 	<script type="x-shader/vertex" id="blockVertexShader">
 		attribute vec3  aVertex;
