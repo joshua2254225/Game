@@ -1,129 +1,127 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Harvest — Step 1 Ground</title>
-
-<style>
-body {
-  margin: 0;
-  overflow: hidden;
-  background: linear-gradient(#bfeec2, #7bd87b);
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harvest Tycoon 3D - Teil A</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
+        #overlay {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(0,0,0,0.5); color: white;
+            padding: 10px; border-radius: 5px; pointer-events: none;
+        }
+    </style>
 </head>
-
 <body>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<div id="overlay">
+    Steuerung: WASD oder Pfeiltasten<br>
+    Status: Teil A - Welt & Bewegung geladen
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
 
 <script>
-// ==========================
-// BASIC THREE SETUP
-// ==========================
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xa8e6a3);
+    // --- 1. SETUP ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87CEEB); // Schöner blauer Himmel
 
-const camera = new THREE.PerspectiveCamera(
-  55,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  500
-);
-camera.position.set(30, 28, 30);
-camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true; // Wichtig für echte Schatten
+    document.body.appendChild(renderer.domElement);
 
-const renderer = new THREE.WebGLRenderer({ antialias:true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-document.body.appendChild(renderer.domElement);
+    // --- 2. LICHT (Macht es "echt") ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
 
-// ==========================
-// LIGHTING
-// ==========================
-const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-sun.position.set(30, 50, 20);
-sun.castShadow = true;
-scene.add(sun);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    sunLight.position.set(50, 50, 20);
+    sunLight.castShadow = true;
+    // Schatten-Qualität verbessern
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    scene.add(sunLight);
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    // --- 3. BODEN (Das Feld) ---
+    const floorGeometry = new THREE.PlaneGeometry(100, 100);
+    // Ein Material mit Gitter-Struktur, damit man die Bewegung sieht
+    const floorMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x3e8e41, 
+        roughness: 0.8 
+    });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
 
-// ==========================
-// PROCEDURAL CHECKER TEXTURE
-// ==========================
-function createGrassTexture() {
-  const size = 512;
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d");
+    // Hilfsgitter zur Orientierung
+    const grid = new THREE.GridHelper(100, 20, 0x000000, 0x222222);
+    grid.position.y = 0.01;
+    scene.add(grid);
 
-  const tile = 32;
-  for (let y = 0; y < size; y += tile) {
-    for (let x = 0; x < size; x += tile) {
-      const alt = (x / tile + y / tile) % 2;
-      ctx.fillStyle = alt ? "#5fbf4f" : "#6fdc62";
-      ctx.fillRect(x, y, tile, tile);
+    // --- 4. DER PLAYER (Platzhalter für den Mähdrescher) ---
+    const playerGroup = new THREE.Group();
+    
+    // Ein einfacher roter Block als Platzhalter
+    const bodyGeo = new THREE.BoxGeometry(2, 1.5, 3);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.castShadow = true;
+    body.position.y = 0.75;
+    playerGroup.add(body);
+
+    scene.add(playerGroup);
+    playerGroup.position.set(0, 0, 10);
+
+    // --- 5. STEUERUNG ---
+    const keys = {};
+    window.addEventListener('keydown', (e) => keys[e.code] = true);
+    window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    let moveSpeed = 0;
+    const acceleration = 0.01;
+    const friction = 0.95;
+    const maxSpeed = 0.3;
+
+    // --- 6. ANIMATION LOOP ---
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Vorwärts / Rückwärts
+        if (keys['KeyW'] || keys['ArrowUp']) moveSpeed += acceleration;
+        if (keys['KeyS'] || keys['ArrowDown']) moveSpeed -= acceleration;
+
+        // Reibung (bremst langsam ab)
+        moveSpeed *= friction;
+        
+        // Lenkung
+        if (keys['KeyA'] || keys['ArrowLeft']) playerGroup.rotation.y += 0.03;
+        if (keys['KeyD'] || keys['ArrowRight']) playerGroup.rotation.y -= 0.03;
+
+        // Bewegung anwenden
+        playerGroup.translateZ(moveSpeed);
+
+        // KAMERA-FOLLOW (Die Kamera folgt dem Spieler weich)
+        const relativeCameraOffset = new THREE.Vector3(0, 10, 15);
+        const cameraOffset = relativeCameraOffset.applyMatrix4(playerGroup.matrixWorld);
+        
+        camera.position.lerp(cameraOffset, 0.1); // Sanftes Folgen (0.1 = Weichheit)
+        camera.lookAt(playerGroup.position);
+
+        renderer.render(scene, camera);
     }
-  }
 
-  // subtle noise
-  for (let i = 0; i < 12000; i++) {
-    ctx.fillStyle = "rgba(0,0,0,0.03)";
-    ctx.fillRect(Math.random() * size, Math.random() * size, 1, 1);
-  }
+    // Fenster-Größe anpassen
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(25, 25);
-
-  return texture;
-}
-
-const grassTexture = createGrassTexture();
-
-// ==========================
-// GROUND PLANE
-// ==========================
-const groundMaterial = new THREE.MeshStandardMaterial({
-  map: grassTexture,
-  roughness: 0.95,
-  metalness: 0.0
-});
-
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(120, 120),
-  groundMaterial
-);
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-scene.add(ground);
-
-// ==========================
-// OPTIONAL GRID BORDER
-// ==========================
-const border = new THREE.GridHelper(120, 40, 0x2f6f2f, 0x2f6f2f);
-border.position.y = 0.01;
-scene.add(border);
-
-// ==========================
-// RENDER LOOP
-// ==========================
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-}
-animate();
-
-// ==========================
-// RESIZE HANDLER
-// ==========================
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+    animate();
 </script>
-
 </body>
 </html>
