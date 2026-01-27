@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Harvest Traktor — Mini Game</title>
+<style>
+  :root{
+    --bg:#e6f8e8;
+    --grass:#2fa84f;
+    --grass-light:#9be69a;
+    --tractor:#e03b3b;
+    --base:#2b84d8;
+    --ui-bg: rgba(255,255,255,0.9);
+    --ui-accent:#2b84d8;
+  }
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg, #dff7dd 0%, #bdeec6 100%);
+  }
+  #gameWrap{
+    display:flex;
+    flex-direction:row;
+    gap:12px;
+    padding:12px;
+    box-sizing:border-box;
+    height:100vh;
+    align-items:stretch;
+  }
+
+  /* Canvas area */
+  #canvasWrap{
+    flex:1 1 auto;
+    background: linear-gradient(180deg, #b6e3a5, #86c26b);
+    border-radius:12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    border-radius:8px;
+    background: linear-gradient(180deg, #78c34a 0%, #5aa536 100%);
+    image-rendering: optimizeSpeed;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  /* Sidebar / UI */
+  #ui{
+    width:320px;
+    min-width:220px;
+    background:var(--ui-bg);
+    border-radius:12px;
+    padding:14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  h2{ margin:0 0 6px 0; font-size:18px; color:#0f3b2f;}
+  .stat{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px;
+    border-radius:8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
+    border:1px solid rgba(0,0,0,0.04);
+  }
+  .stat strong{ font-size:16px; color:#113; }
+  .stat span{ font-weight:700; color:#0b3b6a; }
+
+  .progress{
+    height:12px;
+    background:rgba(0,0,0,0.06);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .progress > i{
+    display:block;
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--ui-accent), #2b84d8);
+  }
+
+  .upgrades{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .upgrade{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px;
+    border-radius:10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.87), rgba(255,255,255,0.7));
+    border:1px solid rgba(0,0,0,0.04);
+  }
+  .upgrade button{
+    background:var(--ui-accent);
+    color:white;
+    border:0;
+    padding:8px 10px;
+    border-radius:8px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .upgrade button:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  .hint{
+    font-size:13px;
+    color:#234;
+    background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
+    padding:8px;
+    border-radius:8px;
+  }
+
+  footer{
+    margin-top:auto;
+    font-size:12px;
+    color:#1b3b2b;
+  }
+
+  /* small screens */
+  @media (max-width:800px){
+    #gameWrap{ flex-direction:column; padding:8px; }
+    #ui{ width:100%; min-width:0; order:2; }
+    #canvasWrap{ order:1; height:60vh; }
+  }
+</style>
+</head>
+<body>
+<div id="gameWrap">
+  <div id="canvasWrap">
+    <canvas id="gameCanvas" width="1200" height="720"></canvas>
+  </div>
+
+  <aside id="ui" role="region" aria-label="Spiel-UI">
+    <h2>Harvest Traktor</h2>
+
+    <div class="stat" title="Sammelstatus">
+      <div>
+        <div style="font-size:13px;color:#0a3b2a">Ressourcen</div>
+        <div style="font-size:12px;color:#074">(Gesammelt / Kapazität)</div>
+      </div>
+      <div>
+        <strong id="resCount">0</strong>
+        <div style="font-size:12px;color:#666">/ <span id="capacity">50</span></div>
+      </div>
+    </div>
+
+    <div class="stat">
+      <div>
+        <div style="font-size:13px;color:#0a3b2a">Geld</div>
+      </div>
+      <div><strong id="money">0</strong> $</div>
+    </div>
+
+    <div>
+      <div style="font-size:13px;margin-bottom:6px;color:#063">Fahrzeug</div>
+      <div class="stat">
+        <div style="width:70%">
+          <div style="font-size:12px;color:#234">Geschwindigkeit</div>
+          <div class="progress"><i id="speedBar"></i></div>
+        </div>
+        <div style="text-align:right; min-width:30px;"><strong id="speedVal">1.0</strong></div>
+      </div>
+      <div class="stat" style="margin-top:8px;">
+        <div style="width:70%">
+          <div style="font-size:12px;color:#234">Ernte-Breite (Radius)</div>
+          <div class="progress"><i id="radiusBar"></i></div>
+        </div>
+        <div style="text-align:right; min-width:30px;"><strong id="radiusVal">1</strong></div>
+      </div>
+    </div>
+
+    <h3 style="margin:8px 0 0 0;font-size:15px;color:#083">Upgrades</h3>
+    <div class="upgrades">
+      <div class="upgrade">
+        <div>
+          <div style="font-weight:700">Geschwindigkeit +0.3</div>
+          <div style="font-size:12px;color:#666">Fahrzeug wird schneller</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:#0b3b6a"><strong id="costSpeed">50</strong>$</div>
+          <button id="buySpeed">Kaufen</button>
+        </div>
+      </div>
+
+      <div class="upgrade">
+        <div>
+          <div style="font-weight:700">Ernte-Breite +1</div>
+          <div style="font-size:12px;color:#666">Mehr Flächen beim Überfahren</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:#0b3b6a"><strong id="costRadius">75</strong>$</div>
+          <button id="buyRadius">Kaufen</button>
+        </div>
+      </div>
+
+      <div class="upgrade">
+        <div>
+          <div style="font-weight:700">Kapazität +20</div>
+          <div style="font-size:12px;color:#666">Mehr Ressourcen tragen</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:#0b3b6a"><strong id="costCap">100</strong>$</div>
+          <button id="buyCap">Kaufen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint">
+      Steuerung: Pfeiltasten / WASD — Fahre zur blauen Base (unten links), um automatisch zu verkaufen.
+    </div>
+
+    <footer>
+      <div style="font-weight:700">Tip:</div>
+      Erzeuge dein eigenes Layout oder erweitere Features. Der Code ist modular kommentiert.
+    </footer>
+  </aside>
+</div>
+
+<script>
+/*
+  Harvest Traktor - Single File Game
+  - Canvas native implementation
+  - Features: movement, harvesting, regen, capacity, base sell, upgrades
+  - Modular and commented for easy extension
+*/
+
+/* ===========================
+   Config / Global variables
+   =========================== */
+const cfg = {
+  tileSize: 30,
+  rows: 24, // will recalc based on canvas
+  cols: 40,
+  regenSeconds: 8, // time for a harvested tile to fully regrow
+  initialCapacity: 50,
+  baseSellPrice: 2, // per resource
+  initialSpeed: 140, // px / sec
+  maxFPS: 60,
+  resourceSpawnChance: 0.55, // chance a tile has resource initially
+  treeChance: 0.15, // of resources, some are trees (higher value)
+};
+
+/* ===========================
+   Helpers
+   =========================== */
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function rand(range){ return Math.random()*range; }
+function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
+function nowMs(){ return performance.now(); }
+
+/* ===========================
+   Tile / Field implementation
+   =========================== */
+class Tile {
+  constructor(col, row, size){
+    this.col = col;
+    this.row = row;
+    this.size = size;
+    this.x = col * size;
+    this.y = row * size;
+    this.resetRandom();
+    this.growth = 1; // 0..1 (1=full)
+    this.harvestedAt = null;
+  }
+
+  resetRandom(){
+    // decide if tile has a resource initially
+    if(Math.random() < cfg.resourceSpawnChance){
+      // Some are trees (worth 2)
+      this.type = (Math.random() < cfg.treeChance) ? 'tree' : 'grass';
+      this.value = (this.type === 'tree') ? 2 : 1;
+      this.full = true;
+    } else {
+      this.type = null; this.value = 0; this.full = false;
+    }
+    this.growth = this.full ? 1 : 0;
+    this.harvestedAt = null;
+  }
+
+  harvest(){
+    if(!this.full) return false;
+    this.full = false;
+    this.harvestedAt = nowMs();
+    this.growth = 0;
+    return true;
+  }
+
+  update(dt){
+    if(!this.full && this.harvestedAt !== null){
+      const elapsed = (nowMs() - this.harvestedAt) / 1000;
+      this.growth = clamp(elapsed / cfg.regenSeconds, 0, 1);
+      if(this.growth >= 1){
+        this.full = true;
+        this.harvestedAt = null;
+      }
+    }
+  }
+
+  draw(ctx){
+    // background subtle
+    ctx.save();
+    const pad = 1;
+    const gx = this.x + pad, gy = this.y + pad, gw = this.size - pad*2, gh = this.size - pad*2;
+
+    // Draw planted resource if existing/growing
+    if(this.type){
+      if(this.full){
+        // full color
+        if(this.type === 'grass'){
+          // draw patch
+          ctx.fillStyle = '#2fa84f';
+          ctx.fillRect(gx, gy, gw, gh);
+          ctx.fillStyle = '#1f6f37';
+          // small stripes
+          ctx.fillRect(gx+3, gy+3, gw-6, gh/6);
+        } else { // tree
+          // trunk
+          ctx.fillStyle = '#6b4428';
+          ctx.fillRect(gx + gw/2 - 4, gy + gh - 10, 8, 10);
+          // leaves
+          ctx.fillStyle = '#2b8a3f';
+          ctx.beginPath();
+          ctx.ellipse(gx + gw/2, gy + gh/2 - 4, gw/2 - 4, gh/2 - 6, 0, 0, Math.PI*2);
+          ctx.fill();
+        }
+      } else {
+        // regrowing: draw faint resource scaled by growth
+        ctx.globalAlpha = 0.35 + 0.65 * this.growth;
+        const s = 0.4 + 0.6 * this.growth;
+        ctx.translate(gx + gw/2, gy + gh/2);
+        ctx.scale(s, s);
+        ctx.translate(- (gx + gw/2), - (gy + gh/2));
+        if(this.type === 'grass'){
+          ctx.fillStyle = '#9be69a';
+          ctx.fillRect(gx, gy, gw, gh);
+        } else {
+          ctx.fillStyle = '#9bd6a3';
+          ctx.beginPath();
+          ctx.ellipse(gx + gw/2, gy + gh/2 - 4, gw/2 - 4, gh/2 - 6, 0, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.globalAlpha = 1;
+      }
+    } else {
+      // empty dirt patch or full grass background (always some green)
+      ctx.fillStyle = '#66b256';
+      ctx.fillRect(gx, gy, gw, gh);
+    }
+
+    ctx.restore();
+  }
+}
+
+class Field {
+  constructor(cols, rows, tileSize){
+    this.tileSize = tileSize;
+    this.cols = cols;
+    this.rows = rows;
+    this.tiles = [];
+    this.initTiles();
+  }
+  initTiles(){
+    this.tiles = [];
+    for(let r=0;r<this.rows;r++){
+      for(let c=0;c<this.cols;c++){
+        this.tiles.push(new Tile(c,r,this.tileSize));
+      }
+    }
+  }
+
+  tileAtColRow(c,r){
+    if(c < 0 || c >= this.cols || r < 0 || r >= this.rows) return null;
+    return this.tiles[r*this.cols + c];
+  }
+
+  update(dt){
+    for(const t of this.tiles) t.update(dt);
+  }
+
+  draw(ctx){
+    for(const t of this.tiles) t.draw(ctx);
+  }
+
+  // Iterate over tiles in a square bounding area for performance
+  forTilesInRadius(x, y, radiusPx, callback){
+    const left = Math.floor((x - radiusPx) / this.tileSize);
+    const right = Math.floor((x + radiusPx) / this.tileSize);
+    const top = Math.floor((y - radiusPx) / this.tileSize);
+    const bottom = Math.floor((y + radiusPx) / this.tileSize);
+    for(let r=top; r<=bottom; r++){
+      for(let c=left; c<=right; c++){
+        const tile = this.tileAtColRow(c,r);
+        if(tile) callback(tile, c, r);
+      }
+    }
+  }
+}
+
+/* ===========================
+   Player
+   =========================== */
+class Player {
+  constructor(x,y){
+    this.x = x; this.y = y;
+    this.width = 26; this.height = 26;
+    this.speed = cfg.initialSpeed; // px/sec
+    this.vx = 0; this.vy = 0;
+    this.accel = 900; // px/s^2
+    this.friction = 10; // damping
+    this.harvestRadiusTiles = 1; // radius in tiles
+    this.capacity = cfg.initialCapacity;
+    this.resources = 0;
+  }
+
+  update(dt, input){
+    // dt in seconds
+    let ax = 0, ay = 0;
+    if(input.up) ay -= 1;
+    if(input.down) ay += 1;
+    if(input.left) ax -= 1;
+    if(input.right) ax += 1;
+
+    // normalize diagonal
+    if(ax !== 0 && ay !== 0){
+      const inv = 1/Math.sqrt(2);
+      ax *= inv; ay *= inv;
+    }
+
+    // Simple acceleration to target velocity
+    const targetVx = ax * this.speed;
+    const targetVy = ay * this.speed;
+    // Smoothly approach
+    const smoothing = Math.min(1, dt * 10);
+    this.vx += (targetVx - this.vx) * smoothing;
+    this.vy += (targetVy - this.vy) * smoothing;
+
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+  }
+
+  draw(ctx){
+    ctx.save();
+    // draw tractor body
+    ctx.translate(this.x, this.y);
+    ctx.fillStyle = cfg ? '#e03b3b' : '#e03b3b';
+    ctx.strokeStyle = '#861b1b';
+    ctx.beginPath();
+    ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
+    ctx.fill();
+    ctx.stroke();
+    // cabin
+    ctx.fillStyle = '#fff9';
+    ctx.fillRect(-this.width/2 + 3, -this.height/2 + 3, this.width - 6, this.height/2 - 2);
+    // wheels
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.ellipse(-this.width/3, this.height/2 - 2, 4, 6, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(this.width/3, this.height/2 - 2, 4, 6, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ===========================
+   Game class (main)
+   =========================== */
+class Game {
+  constructor(canvas){
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.last = nowMs();
+    this.accum = 0;
+    this.fpsLimit = 1000/cfg.maxFPS;
+
+    // keyboard input
+    this.input = { up:false, down:false, left:false, right:false };
+
+    this.setup();
+    this.addEventListeners();
+    this.loop = this.loop.bind(this);
+    requestAnimationFrame(this.loop);
+  }
+
+  setup(){
+    // handle resizing & grid
+    this.resizeCanvas();
+
+    // create field
+    this.field = new Field(this.cols, this.rows, cfg.tileSize);
+
+    // place base (sell station) at bottom-left area
+    this.base = {
+      x: 10,
+      y: this.canvas.height - 10 - cfg.tileSize*2,
+      w: cfg.tileSize*3,
+      h: cfg.tileSize*2,
+      color: '#2b84d8'
+    };
+
+    // spawn player near base
+    this.player = new Player(this.base.x + this.base.w + 50, this.base.y + this.base.h/2);
+    this.money = 0;
+
+    // UI references update
+    this.updateUI();
+
+    // upgrade costs
+    this.costSpeed = 50;
+    this.costRadius = 75;
+    this.costCap = 100;
+
+    // Hook UI buttons
+    this.hookUIButtons();
+  }
+
+  resizeCanvas(){
+    // keep canvas resolution relative to container element
+    const pixelRatio = window.devicePixelRatio || 1;
+    const wrap = document.getElementById('canvasWrap');
+    const style = getComputedStyle(wrap);
+    const pad = 24; // internal padding approx
+    const width = Math.max(400, Math.floor(wrap.clientWidth - pad));
+    const height = Math.max(300, Math.floor(window.innerHeight - 48));
+    this.canvas.width = width * pixelRatio;
+    this.canvas.height = (height - 30) * pixelRatio;
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = (height - 30) + 'px';
+    this.ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);
+
+    // recompute grid size based on tile size
+    this.cols = Math.ceil((this.canvas.width / pixelRatio) / cfg.tileSize);
+    this.rows = Math.ceil((this.canvas.height / pixelRatio) / cfg.tileSize);
+    // If field exists, recreate so grid fits new size
+    // We'll recreate field during setup or when resizing manually
+  }
+
+  addEventListeners(){
+    window.addEventListener('resize', ()=>{
+      this.resizeCanvas();
+      // recreate field to match new size
+      this.field = new Field(this.cols, this.rows, cfg.tileSize);
+      // reposition base near bottom-left
+      this.base.x = 10;
+      this.base.y = this.canvas.height/ (window.devicePixelRatio || 1) - 10 - cfg.tileSize*2;
+    });
+
+    window.addEventListener('keydown', (e)=>{
+      if(e.code === 'ArrowUp' || e.code === 'KeyW') this.input.up = true;
+      if(e.code === 'ArrowDown' || e.code === 'KeyS') this.input.down = true;
+      if(e.code === 'ArrowLeft' || e.code === 'KeyA') this.input.left = true;
+      if(e.code === 'ArrowRight' || e.code === 'KeyD') this.input.right = true;
+    });
+    window.addEventListener('keyup', (e)=>{
+      if(e.code === 'ArrowUp' || e.code === 'KeyW') this.input.up = false;
+      if(e.code === 'ArrowDown' || e.code === 'KeyS') this.input.down = false;
+      if(e.code === 'ArrowLeft' || e.code === 'KeyA') this.input.left = false;
+      if(e.code === 'ArrowRight' || e.code === 'KeyD') this.input.right = false;
+    });
+
+    // optional: click/touch to move toward pointer (not required)
+    this.canvas.addEventListener('pointerdown', (e)=>{
+      // convert to canvas coords
+      const rect = this.canvas.getBoundingClientRect();
+      const px = (e.clientX - rect.left);
+      const py = (e.clientY - rect.top);
+      // small tap near base sells as well if inside base: we'll let base overlap handle automatic selling
+      // For interactivity, teleport player? we'll not teleport, to preserve gameplay.
+    });
+  }
+
+  hookUIButtons(){
+    // Buttons
+    document.getElementById('buySpeed').onclick = ()=>{
+      if(this.money >= this.costSpeed){
+        this.money -= this.costSpeed;
+        this.player.speed = +(this.player.speed + 40).toFixed(2); // px/sec
+        // update cost (increase)
+        this.costSpeed = Math.ceil(this.costSpeed * 1.7);
+        this.updateUI();
+      }
+    };
+    document.getElementById('buyRadius').onclick = ()=>{
+      if(this.money >= this.costRadius){
+        this.money -= this.costRadius;
+        this.player.harvestRadiusTiles += 1;
+        this.costRadius = Math.ceil(this.costRadius * 1.9);
+        this.updateUI();
+      }
+    };
+    document.getElementById('buyCap').onclick = ()=>{
+      if(this.money >= this.costCap){
+        this.money -= this.costCap;
+        this.player.capacity += 20;
+        this.costCap = Math.ceil(this.costCap * 1.8);
+        this.updateUI();
+      }
+    };
+  }
+
+  updateUI(){
+    document.getElementById('resCount').innerText = this.player.resources;
+    document.getElementById('capacity').innerText = this.player.capacity;
+    document.getElementById('money').innerText = this.money;
+    document.getElementById('speedVal').innerText = (this.player.speed/140).toFixed(2);
+    document.getElementById('radiusVal').innerText = this.player.harvestRadiusTiles;
+    document.getElementById('costSpeed').innerText = this.costSpeed;
+    document.getElementById('costRadius').innerText = this.costRadius;
+    document.getElementById('costCap').innerText = this.costCap;
+    // progress bars (normalized)
+    const speedPct = clamp((this.player.speed - cfg.initialSpeed) / (600 - cfg.initialSpeed), 0, 1) * 100;
+    document.getElementById('speedBar').style.width = (10 + speedPct) + '%';
+    const radPct = clamp((this.player.harvestRadiusTiles) / 10, 0, 1) * 100;
+    document.getElementById('radiusBar').style.width = (radPct) + '%';
+  }
+
+  sellAtBaseIfNeeded(){
+    // Check if player overlaps base
+    const p = this.player;
+    const base = this.base;
+    if(p.x > base.x && p.x < base.x + base.w && p.y > base.y && p.y < base.y + base.h){
+      if(p.resources > 0){
+        const earned = p.resources * cfg.baseSellPrice;
+        this.money += earned;
+        p.resources = 0;
+        // update UI
+        this.updateUI();
+      }
+    }
+  }
+
+  harvestAroundPlayer(){
+    const p = this.player;
+    const radiusPx = (p.harvestRadiusTiles + 0.5) * cfg.tileSize;
+    // Allow harvesting until capacity reached (stop early)
+    const remainingCap = p.capacity - p.resources;
+    if(remainingCap <= 0) return;
+
+    // We'll collect tiles in the radius. For fairness, store matches then process.
+    const toHarvest = [];
+    this.field.forTilesInRadius(p.x, p.y, radiusPx, (tile) => {
+      if(tile && tile.full && tile.type){
+        // precise circle check
+        const cx = tile.x + tile.size/2;
+        const cy = tile.y + tile.size/2;
+        const dist = Math.hypot(cx - p.x, cy - p.y);
+        if(dist <= radiusPx + tile.size * 0.6){
+          toHarvest.push(tile);
+        }
+      }
+    });
+
+    // Sort by proximity so nearest tiles harvested first
+    toHarvest.sort((a,b)=>{
+      const da = Math.hypot(a.x + a.size/2 - p.x, a.y + a.size/2 - p.y);
+      const db = Math.hypot(b.x + b.size/2 - p.x, b.y + b.size/2 - p.y);
+      return da - db;
+    });
+
+    for(const t of toHarvest){
+      if(p.resources >= p.capacity) break;
+      const taken = Math.min(remainingCap - (p.resources - (p.resources)), t.value);
+      // harvest returns true once; we add its value but ensure not to exceed capacity
+      if(t.harvest()){
+        // add value but clamp to capacity
+        const add = Math.min(t.value, p.capacity - p.resources);
+        p.resources += add;
+      }
+    }
+  }
+
+  loop(){
+    const now = nowMs();
+    const dtMs = now - this.last;
+    this.last = now;
+    this.accum += dtMs;
+
+    // frame limiting
+    if(this.accum >= this.fpsLimit){
+      const dt = Math.min(this.accum / 1000, 0.05); // seconds
+      this.update(dt);
+      this.render();
+      this.accum = 0;
+    }
+    requestAnimationFrame(this.loop);
+  }
+
+  update(dt){
+    // Recreate field if undefined (initial)
+    if(!this.field) this.field = new Field(this.cols, this.rows, cfg.tileSize);
+
+    this.player.update(dt, this.input);
+    // clamp player inside bounds (leave some margin)
+    const halfW = this.player.width/2, halfH = this.player.height/2;
+    this.player.x = clamp(this.player.x, halfW, (this.canvas.width / (window.devicePixelRatio||1)) - halfW);
+    this.player.y = clamp(this.player.y, halfH, (this.canvas.height / (window.devicePixelRatio||1)) - halfH);
+
+    // Update tiles growth
+    this.field.update(dt);
+
+    // Harvest when overlapping (automatic while driving)
+    this.harvestAroundPlayer();
+
+    // Auto-sell when in base
+    this.sellAtBaseIfNeeded();
+
+    // Swap UI values
+    this.updateUI();
+  }
+
+  render(){
+    const ctx = this.ctx;
+    const w = this.canvas.width / (window.devicePixelRatio || 1);
+    const h = this.canvas.height / (window.devicePixelRatio || 1);
+    // clear
+    ctx.clearRect(0,0,w,h);
+
+    // Draw tiles
+    this.field.draw(ctx);
+
+    // Draw base area
+    ctx.save();
+    ctx.fillStyle = this.base.color;
+    ctx.globalAlpha = 0.95;
+    ctx.fillRect(this.base.x, this.base.y, this.base.w, this.base.h);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '14px system-ui, Arial';
+    ctx.fillText('BASE', this.base.x + 10, this.base.y + 18);
+    ctx.restore();
+
+    // Draw player (tractor)
+    this.player.draw(ctx);
+
+    // Draw harvest radius (visual aid)
+    ctx.save();
+    const radiusPx = this.player.harvestRadiusTiles * cfg.tileSize;
+    ctx.beginPath();
+    ctx.arc(this.player.x, this.player.y, radiusPx + 8, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 20;
+    ctx.stroke();
+    ctx.restore();
+
+    // HUD: small resource widget above player
+    ctx.save();
+    ctx.fillStyle = '#0008';
+    ctx.fillRect(this.player.x - 36, this.player.y - 48, 72, 22);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px system-ui, Arial';
+    ctx.fillText('R:' + this.player.resources + ' / ' + this.player.capacity, this.player.x - 30, this.player.y - 33);
+    ctx.restore();
+  }
+}
+
+/* ===========================
+   Boot the game
+   =========================== */
+const canvas = document.getElementById('gameCanvas');
+const game = new Game(canvas);
+
+// fill field right away with appropriate dimensions using initial resize
+game.field = new Field(game.cols || 40, game.rows || 24, cfg.tileSize);
+
+// center player
+game.player.x = (game.base.x + game.base.w + 80);
+game.player.y = (game.base.y + game.base.h/2);
+
+/* ===========================
+   Tips to extend:
+   - Add animations or sprite images for the tractor
+   - Add separate resource types, inventory, crafting
+   - Save/load upgrades into localStorage
+   - Add sound effects (harvest, sell)
+   =========================== */
+
+</script>
+</body>
+  </html>
