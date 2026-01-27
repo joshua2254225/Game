@@ -64,6 +64,77 @@
 
     // --- 4. DER PLAYER (Platzhalter für den Mähdrescher) ---
     const playerGroup = new THREE.Group();
+
+    // --- 4. DER MÄHDRESCHER (Detailliertes Modell) ---
+    const playerGroup = new THREE.Group();
+
+    // Materialien
+    const redMat = new THREE.MeshStandardMaterial({ color: 0xe03b3b });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    const glassMat = new THREE.MeshStandardMaterial({ 
+        color: 0x88ccff, 
+        transparent: true, 
+        opacity: 0.6 
+    });
+    const silverMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.5, roughness: 0.3 });
+
+    // 4.1 Hauptkörper
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 3.5), redMat);
+    body.position.y = 1.0;
+    body.castShadow = true;
+    playerGroup.add(body);
+
+    // 4.2 Fahrerkabine (Cockpit)
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 1.4), glassMat);
+    cabin.position.set(0, 1.8, 0.8); // Etwas weiter vorne und oben
+    cabin.castShadow = true;
+    playerGroup.add(cabin);
+    
+    // Kabinen-Dach
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.1, 1.5), redMat);
+    roof.position.set(0, 2.4, 0.8);
+    playerGroup.add(roof);
+
+    // 4.3 Das Schneidwerk (Die Walze vorne)
+    const cutterGroup = new THREE.Group();
+    cutterGroup.position.set(0, 0.5, 2.2); // Ganz vorne am Fahrzeug
+    
+    const cutterBar = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.4, 0.8), silverMat);
+    cutterBar.castShadow = true;
+    cutterGroup.add(cutterBar);
+
+    // Die rotierende Walze (Zylinder)
+    const roller = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.4, 0.4, 4.2, 12), 
+        silverMat
+    );
+    roller.rotation.z = Math.PI / 2;
+    roller.name = "roller"; // Name für die Animation später
+    cutterGroup.add(roller);
+    
+    playerGroup.add(cutterGroup);
+
+    // 4.4 Räder
+    function createWheel(x, y, z, size) {
+        const wheelGeo = new THREE.CylinderGeometry(size, size, 0.6, 16);
+        const wheel = new THREE.Mesh(wheelGeo, darkMat);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(x, y, z);
+        wheel.castShadow = true;
+        playerGroup.add(wheel);
+    }
+
+    // Hinterräder (groß)
+    createWheel(1.2, 0.7, -1.0, 0.7);
+    createWheel(-1.2, 0.7, -1.0, 0.7);
+    // Vorderräder (etwas kleiner)
+    createWheel(1.1, 0.5, 1.2, 0.5);
+    createWheel(-1.1, 0.5, 1.2, 0.5);
+
+    scene.add(playerGroup);
+    playerGroup.position.set(0, 0, 10);
+
+
     
     // Ein einfacher roter Block als Platzhalter
     const bodyGeo = new THREE.BoxGeometry(2, 1.5, 3);
