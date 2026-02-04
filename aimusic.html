@@ -2,60 +2,75 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Meine Logik-KI Musik</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Logic Music Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #1a1a1a; color: white; }
-        button { padding: 20px 40px; font-size: 1.2rem; cursor: pointer; border-radius: 10px; border: none; background: #00ff88; color: #1a1a1a; font-weight: bold; }
-        #status { margin-top: 20px; color: #888; }
+        body { margin: 0; background: #0f0f0f; color: #00ff88; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        #visualizer { width: 100px; height: 100px; border: 4px solid #00ff88; margin-bottom: 20px; transition: transform 0.1s; border-radius: 50%; }
+        button { background: transparent; border: 2px solid #00ff88; color: #00ff88; padding: 15px 30px; font-size: 18px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
+        button:active { background: #00ff88; color: #0f0f0f; }
+        #info { margin-top: 15px; font-size: 12px; color: #555; }
     </style>
 </head>
 <body>
 
-    <h1>Generative Musik-Logik</h1>
-    <button id="playBtn">Musik Starten / Stoppen</button>
-    <div id="status">Bereit. Drücke Start!</div>
+    <div id="visualizer"></div>
+    <button id="startBtn">Initialisiere Audio</button>
+    <div id="info">Log: Warte auf User-Interaktion...</div>
 
     <script>
-        // 1. Setup: Ein einfacher Synthesizer mit etwas Hall (Reverb)
-        const reverb = new Tone.Reverb(2).toDestination();
-        const synth = new Tone.Synth({
-            oscillator: { type: "triangle" },
-            envelope: { sustain: 0.1, release: 1 }
-        }).connect(reverb);
+        let isStarted = false;
+        const info = document.getElementById('info');
+        const viz = document.getElementById('visualizer');
 
-        // 2. Die Logik: Unsere "Skala" (Töne, die gut zusammenpassen)
-        // Wir nehmen die C-Dur Pentatonik (C, D, E, G, A)
-        const scale = ["C4", "D4", "E4", "G4", "A4", "C5", "E5"];
+        // 1. Klangeinstellungen (Ein weicher Synth mit Echo)
+        const delay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
+        const synth = new Tone.PolySynth(Tone.Synth).connect(delay);
         
-        let isPlaying = false;
+        // Pentatonische Skala - klingt immer harmonisch
+        const scale = ["C3", "D3", "E3", "G3", "A3", "C4", "D4", "E4", "G4", "A4"];
 
-        // Das ist die "Loop"-Logik
+        // 2. Die Musik-Logik (Loop)
         const loop = new Tone.Loop(time => {
-            // "Zufalls-Logik": Wähle einen Ton aus der Liste
-            const randomNote = scale[Math.floor(Math.random() * scale.length)];
+            // Zufällige Note wählen
+            const note = scale[Math.floor(Math.random() * scale.length)];
             
-            // Spiele den Ton für die Dauer einer Achtelnote
-            synth.triggerAttackRelease(randomNote, "8n", time);
+            // Note spielen
+            synth.triggerAttackRelease(note, "8n", time);
             
-            // Ein bisschen visueller Status
-            document.getElementById('status').innerText = "Spiele gerade: " + randomNote;
-        }, "4n"); // Intervall: Jede Viertelnote
+            // Visueller Effekt im Takt
+            Tone.Draw.schedule(() => {
+                viz.style.transform = "scale(1.2)";
+                viz.style.backgroundColor = "#00ff88";
+                info.innerText = "Log: Spiele " + note;
+                setTimeout(() => { 
+                    viz.style.transform = "scale(1.0)"; 
+                    viz.style.backgroundColor = "transparent";
+                }, 100);
+            }, time);
 
-        // 3. Button-Funktion (Browser erlauben Sound erst nach Klick)
-        document.getElementById("playBtn").addEventListener("click", async () => {
-            if (!isPlaying) {
-                await Tone.start(); // Audio-Engine aktivieren
+        }, "4n");
+
+        // 3. Der "RICHTIGE" Start-Mechanismus
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            if (!isStarted) {
+                // WICHTIG: Audio Kontext starten
+                await Tone.start();
+                await Tone.context.resume(); // Explizites Aufwecken für Mobilgeräte
+                
+                Tone.Transport.bpm.value = 120;
                 Tone.Transport.start();
                 loop.start(0);
-                isPlaying = true;
-                document.getElementById("playBtn").innerText = "Stoppen";
+                
+                document.getElementById('startBtn').innerText = "STOP";
+                isStarted = true;
+                info.innerText = "Log: Audio läuft!";
             } else {
                 Tone.Transport.stop();
-                loop.stop();
-                isPlaying = false;
-                document.getElementById("playBtn").innerText = "Musik Starten";
-                document.getElementById('status').innerText = "Gestoppt.";
+                isStarted = false;
+                document.getElementById('startBtn').innerText = "START";
+                info.innerText = "Log: Pausiert.";
             }
         });
     </script>
