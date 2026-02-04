@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Ambient AI Sound Core</title>
+<title>Ambient AI Engine • Randomized</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -55,7 +55,7 @@
 
 <div class="panel">
     <h1>Ambient AI Engine</h1>
-    <p>Spring + Bass • No Silence</p>
+    <p>Spring + Bass • Randomized 50%</p>
     <button id="startBtn">START SOUND</button>
     <div class="hint">(Kopfhörer empfohlen)</div>
 </div>
@@ -64,7 +64,6 @@
 let ctx;
 let running = false;
 
-/* ---------- START ---------- */
 document.getElementById("startBtn").onclick = () => {
     if (running) return;
     running = true;
@@ -87,7 +86,6 @@ document.getElementById("startBtn").onclick = () => {
     bassOsc.connect(bassGain).connect(master);
     bassOsc.start();
 
-    // langsame Bassbewegung
     setInterval(() => {
         const next = 40 + Math.random() * 30;
         bassOsc.frequency.linearRampToValueAtTime(
@@ -112,17 +110,20 @@ document.getElementById("startBtn").onclick = () => {
     function playSpring() {
         const now = ctx.currentTime;
 
+        // 50% Chance auf neuen Ton
+        if (Math.random() < 0.5) {
+            index = Math.floor(Math.random() * notes.length);
+        }
+
         springOsc.frequency.setValueAtTime(notes[index], now);
         springGain.gain.cancelScheduledValues(now);
 
         springGain.gain.setValueAtTime(0, now);
         springGain.gain.linearRampToValueAtTime(0.25, now + 0.05);
         springGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-
-        index = (index + 1) % notes.length;
     }
 
-    // keine Pausen
+    // kontinuierlich, kein Pausen
     setInterval(playSpring, 600);
 
     document.getElementById("startBtn").innerText = "RUNNING...";
