@@ -1,163 +1,217 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Composer Pro v2</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    <style>
-        :root { --neon: #00ff88; --bg: #0a0a0c; }
-        body { margin: 0; background: var(--bg); color: var(--neon); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-        #canvas { position: absolute; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; opacity: 0.3; }
-        .container { background: rgba(20, 20, 25, 0.9); padding: 30px; border: 2px solid var(--neon); border-radius: 20px; box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); z-index: 1; }
-        h1 { text-transform: uppercase; letter-spacing: 5px; margin-bottom: 5px; font-size: 1.5rem; }
-        .controls { margin: 20px 0; }
-        button { background: var(--neon); color: var(--bg); border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.3s; }
-        button:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--neon); }
-        .stats { font-family: monospace; font-size: 0.9rem; margin-top: 20px; color: #666; }
-        .indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #333; margin-left: 10px; }
-        .active { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Composer Pro v3</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+<style>
+:root{
+    --neon:#00ff88;
+    --bg:#0a0a0c;
+    --panel:#141419;
+}
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--neon);
+    font-family:Segoe UI, sans-serif;
+    height:100vh;
+    overflow:hidden;
+}
+canvas{
+    position:absolute;
+    inset:0;
+    z-index:-1;
+}
+.container{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:rgba(20,20,25,.9);
+    border:2px solid var(--neon);
+    border-radius:20px;
+    padding:30px;
+    width:340px;
+    box-shadow:0 0 30px rgba(0,255,136,.25);
+}
+h1{
+    margin:0;
+    letter-spacing:4px;
+    font-size:1.4rem;
+}
+p{opacity:.7;font-size:.85rem;margin-bottom:20px}
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:40px;
+    background:var(--neon);
+    color:#000;
+    font-weight:700;
+    font-size:1.1rem;
+    cursor:pointer;
+}
+button:hover{box-shadow:0 0 20px var(--neon)}
+.control{
+    margin-top:15px;
+    font-size:.8rem;
+}
+input[type=range]{
+    width:100%;
+}
+.stat{
+    font-family:monospace;
+    margin-top:10px;
+    font-size:.75rem;
+    opacity:.7;
+}
+</style>
 </head>
+
 <body>
+<canvas id="bg"></canvas>
 
-    <canvas id="canvas"></canvas>
+<div class="container">
+    <h1>AI SOUND LOGIC</h1>
+    <p>Generative Music Engine</p>
 
-    <div class="container">
-        <h1>AI Sound Logic</h1>
-        <p>Generative Instrumental Engine</p>
-        
-        <div class="controls">
-            <button id="masterBtn">SYSTEM START</button>
-        </div>
+    <button id="toggle">SYSTEM START</button>
 
-        <div class="stats">
-            <div>Melodie: <span id="noteOut">-</span> <div id="ind1" class="indicator"></div></div>
-            <div>Harmonie: <span id="chordOut">-</span> <div id="ind2" class="indicator"></div></div>
-            <div>Beat: <span id="beatOut">-</span> <div id="ind3" class="indicator"></div></div>
-        </div>
+    <div class="control">
+        Tempo
+        <input id="tempo" type="range" min="60" max="150" value="110">
     </div>
 
-    <script>
-        // --- 1. AUDIO SETUP ---
-        const reverb = new Tone.Freeverb({ roomSize: 0.8, dampening: 3000 }).toDestination();
-        const delay = new Tone.FeedbackDelay("4n", 0.4).connect(reverb);
-        
-        // Lead Synth (Melodie)
-        const leadSynth = new Tone.MonoSynth({
-            oscillator: { type: "sawtooth" },
-            envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1 }
-        }).connect(delay);
+    <div class="control">
+        Mood (Dark ↔ Bright)
+        <input id="mood" type="range" min="0" max="100" value="50">
+    </div>
 
-        // Pad Synth (Fläche)
-        const padSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "sine" },
-            envelope: { attack: 2, release: 2 }
-        }).connect(reverb);
-        padSynth.volume.value = -15;
+    <div class="control">
+        Energy
+        <input id="energy" type="range" min="0" max="100" value="60">
+    </div>
 
-        // Drum Synth
-        const kick = new Tone.MembraneSynth().toDestination();
-        const hihat = new Tone.NoiseSynth({ volume: -20 }).toDestination();
+    <div class="stat">Note: <span id="note">-</span></div>
+    <div class="stat">Chord: <span id="chord">-</span></div>
+    <div class="stat">Beat: <span id="beat">-</span></div>
+</div>
 
-        // --- 2. MUSIK LOGIK ---
-        // Große Auswahl an Noten (C-Dur Pentatonik über 3 Oktaven)
-        const scale = ["C3", "D3", "E3", "G3", "A3", "C4", "D4", "E4", "G4", "A4", "C5", "D5", "E5", "G5", "A5"];
-        const chords = [
-            ["C3", "E3", "G3"], ["A2", "C3", "E3"], ["F2", "A2", "C3"], ["G2", "B2", "D3"]
-        ];
+<script>
+// ---------------- AUDIO ----------------
+const reverb = new Tone.Reverb(4).toDestination();
+const delay  = new Tone.FeedbackDelay("8n",.35).connect(reverb);
 
-        let lastNoteIndex = 5; 
-        let isPlaying = false;
+const lead = new Tone.MonoSynth({
+    oscillator:{type:"sawtooth"},
+    envelope:{attack:.02,decay:.1,sustain:.4,release:1}
+}).connect(delay);
 
-        // Visualisierung vorbereiten
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.onresize = resize; resize();
+const pad = new Tone.PolySynth(Tone.Synth,{
+    oscillator:{type:"triangle"},
+    envelope:{attack:2,release:3}
+}).connect(reverb);
+pad.volume.value=-14;
 
-        // --- 3. DIE GENERATIVE ENGINE ---
-        
-        // Loop 1: Die Melodie (Achtel-Noten)
-        const melodyLoop = new Tone.Loop(time => {
-            // "Smart Random": Wir gehen maximal 2 Schritte in der Tonleiter hoch oder runter
-            const change = Math.floor(Math.random() * 5) - 2;
-            lastNoteIndex = Math.max(0, Math.min(scale.length - 1, lastNoteIndex + change));
-            const note = scale[lastNoteIndex];
+const kick  = new Tone.MembraneSynth().toDestination();
+const snare = new Tone.NoiseSynth({volume:-10}).toDestination();
+const hat   = new Tone.NoiseSynth({volume:-25}).toDestination();
 
-            // Nur bei 70% der Schläge eine Note spielen (Rhythmus-Gefühl)
-            if (Math.random() > 0.3) {
-                leadSynth.triggerAttackRelease(note, "8n", time);
-                document.getElementById('noteOut').innerText = note;
-                flashIndicator('ind1');
-            }
-        }, "8n");
+// ---------------- AI DATA ----------------
+const scales = {
+    dark:["C3","Eb3","F3","G3","Bb3","C4","Eb4","F4","G4"],
+    bright:["C3","D3","E3","G3","A3","C4","D4","E4","G4"]
+};
 
-        // Loop 2: Akkorde (Jeder 2. Takt)
-        const chordLoop = new Tone.Loop(time => {
-            const chord = chords[Math.floor(Math.random() * chords.length)];
-            padSynth.triggerAttackRelease(chord, "2n", time);
-            document.getElementById('chordOut').innerText = chord.join("-");
-            flashIndicator('ind2');
-        }, "2n");
+const chords = {
+    dark:[
+        ["C3","Eb3","G3"],
+        ["Ab2","C3","Eb3"],
+        ["Bb2","D3","F3"]
+    ],
+    bright:[
+        ["C3","E3","G3"],
+        ["A2","C3","E3"],
+        ["F2","A2","C3"]
+    ]
+};
 
-        // Loop 3: Drums
-        const drumLoop = new Tone.Loop(time => {
-            // Kick auf 1 und 3
-            kick.triggerAttackRelease("C1", "8n", time);
-            
-            // Zufällige Hi-Hats
-            if (Math.random() > 0.5) hihat.triggerAttackRelease("16n", time + Tone.Time("8n"));
-            
-            document.getElementById('beatOut').innerText = "BOOM-TSCHAK";
-            flashIndicator('ind3');
-        }, "4n");
+let index=4, playing=false;
 
-        // Hilfsfunktionen
-        function flashIndicator(id) {
-            const el = document.getElementById(id);
-            el.classList.add('active');
-            setTimeout(() => el.classList.remove('active'), 100);
-        }
+// ---------------- CONTROLS ----------------
+const tempo=document.getElementById("tempo");
+tempo.oninput=()=>Tone.Transport.bpm.value=tempo.value;
 
-        // --- 4. START TRIGGER ---
-        document.getElementById('masterBtn').addEventListener('click', async () => {
-            if (!isPlaying) {
-                await Tone.start();
-                await Tone.context.resume();
-                
-                Tone.Transport.bpm.value = 110;
-                Tone.Transport.start();
-                
-                melodyLoop.start(0);
-                chordLoop.start(0);
-                drumLoop.start(0);
+function moodType(){
+    return mood.value<50?"dark":"bright";
+}
 
-                document.getElementById('masterBtn').innerText = "SYSTEM STOP";
-                isPlaying = true;
-            } else {
-                Tone.Transport.stop();
-                isPlaying = false;
-                document.getElementById('masterBtn').innerText = "SYSTEM START";
-            }
-        });
+// ---------------- LOOPS ----------------
+const melody=new Tone.Loop(time=>{
+    const scale=scales[moodType()];
+    index+=Math.floor(Math.random()*3)-1;
+    index=Math.max(0,Math.min(scale.length-1,index));
+    if(Math.random()<energy.value/100){
+        lead.triggerAttackRelease(scale[index],"8n",time);
+        note.innerText=scale[index];
+    }
+},"8n");
 
-        // Hintergrund-Animation
-        function draw() {
-            ctx.fillStyle = 'rgba(10, 10, 12, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            if (isPlaying) {
-                for(let i=0; i<3; i++) {
-                    ctx.strokeStyle = '#00ff88';
-                    ctx.beginPath();
-                    ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*50, 0, Math.PI*2);
-                    ctx.stroke();
-                }
-            }
-            requestAnimationFrame(draw);
-        }
-        draw();
+const harmony=new Tone.Loop(time=>{
+    const c=chords[moodType()];
+    const chord=c[Math.floor(Math.random()*c.length)];
+    pad.triggerAttackRelease(chord,"2n",time);
+    chordOut=chord.join("-");
+    chord.innerText=chordOut;
+},"2n");
 
-    </script>
+const drums=new Tone.Loop(time=>{
+    kick.triggerAttackRelease("C1","8n",time);
+    if(Math.random()>.5) snare.triggerAttackRelease("16n",time+"8n");
+    if(Math.random()>.3) hat.triggerAttackRelease("16n",time+"16n");
+    beat.innerText="K-S-H";
+},"4n");
+
+// ---------------- START ----------------
+toggle.onclick=async()=>{
+    if(!playing){
+        await Tone.start();
+        Tone.Transport.start();
+        melody.start(0);
+        harmony.start(0);
+        drums.start(0);
+        toggle.innerText="SYSTEM STOP";
+        playing=true;
+    }else{
+        Tone.Transport.stop();
+        toggle.innerText="SYSTEM START";
+        playing=false;
+    }
+};
+
+// ---------------- VISUALS ----------------
+const c=document.getElementById("bg");
+const x=c.getContext("2d");
+function resize(){c.width=innerWidth;c.height=innerHeight}
+window.onresize=resize;resize();
+
+function draw(){
+    x.fillStyle="rgba(10,10,12,.15)";
+    x.fillRect(0,0,c.width,c.height);
+    if(playing){
+        const r=energy.value;
+        x.strokeStyle=`rgba(0,255,136,.6)`;
+        x.beginPath();
+        x.arc(Math.random()*c.width,Math.random()*c.height,r,0,Math.PI*2);
+        x.stroke();
+    }
+    requestAnimationFrame(draw);
+}
+draw();
+</script>
 </body>
 </html>
