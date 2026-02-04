@@ -3,15 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Music Engine — Stable</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<title>AI Music Engine – Pure WebAudio</title>
 
 <style>
-:root {
-  --neon:#00ff88;
-  --bg:#0a0a0c;
-}
+:root { --neon:#00ff88; --bg:#0a0a0c; }
 body{
   margin:0;
   background:var(--bg);
@@ -31,11 +26,7 @@ body{
   text-align:center;
   box-shadow:0 0 30px rgba(0,255,136,.3);
 }
-h1{
-  margin:0;
-  letter-spacing:4px;
-  font-size:1.3rem;
-}
+h1{margin:0;letter-spacing:4px;font-size:1.3rem}
 p{opacity:.7;font-size:.8rem}
 button{
   width:100%;
@@ -50,7 +41,7 @@ button{
   cursor:pointer;
 }
 .stat{
-  margin-top:12px;
+  margin-top:10px;
   font-family:monospace;
   font-size:.75rem;
   opacity:.8;
@@ -59,126 +50,98 @@ button{
 </head>
 
 <body>
-
 <div class="panel">
   <h1>AI MUSIC ENGINE</h1>
-  <p>Compute → Compose → Play</p>
-  <button id="startBtn">SYSTEM START</button>
-  <div class="stat">Status: <span id="status">IDLE</span></div>
+  <p>Pure Web Audio • No Libraries</p>
+  <button id="btn">SYSTEM START</button>
   <div class="stat">Note: <span id="note">-</span></div>
-  <div class="stat">Chord: <span id="chord">-</span></div>
 </div>
 
 <script>
-/* ==================================================
-   GLOBAL STATE
-================================================== */
-let started = false;
+/* =====================================================
+   AUDIO CONTEXT (PURE WEB AUDIO)
+===================================================== */
+let ctx, master;
+let playing = false;
+let timer;
 
-/* ==================================================
-   AUDIO ENGINE (ABSOLUT STABIL)
-================================================== */
-let master, lead, pad, kick, hat;
-let melodyLoop, chordLoop, drumLoop;
-
-/* ==================================================
+/* =====================================================
    MUSIKDATEN
-================================================== */
-const scale = ["C4","D4","E4","G4","A4","C5","D5"];
-const chords = [
-  ["C3","E3","G3"],
-  ["A2","C3","E3"],
-  ["F2","A2","C3"],
-  ["G2","B2","D3"]
-];
-let noteIndex = 3;
+===================================================== */
+const scale = [261.63,293.66,329.63,392.00,440.00,523.25]; // C-Dur
+let idx = 2;
 
-/* ==================================================
-   INIT AUDIO (KEIN ASYNC BUG)
-================================================== */
-async function initAudio(){
+/* =====================================================
+   NOTE SPIELEN (GARANTIERT HÖRBAR)
+===================================================== */
+function playNote(freq, duration=0.2){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
 
-  await Tone.start();
-  await Tone.context.resume();
+  osc.type = "sawtooth";
+  osc.frequency.value = freq;
 
-  // 🔊 TEST BEEP (WENN DAS KOMMT → AUDIO FREI)
-  const test = new Tone.Oscillator(440,"sine").toDestination();
-  test.start();
-  test.stop("+0.15");
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
 
-  // MASTER
-  master = new Tone.Gain(1).toDestination();
-  const limiter = new Tone.Limiter(-1).connect(master);
-
-  // SYNTHS
-  lead = new Tone.MonoSynth({
-    oscillator:{type:"sawtooth"},
-    envelope:{attack:0.01,decay:0.1,sustain:0.4,release:0.6}
-  }).connect(limiter);
-
-  pad = new Tone.PolySynth(Tone.Synth,{
-    oscillator:{type:"triangle"},
-    envelope:{attack:1.5,release:2.5}
-  }).connect(limiter);
-  pad.volume.value = -10;
-
-  kick = new Tone.MembraneSynth({
-    pitchDecay:0.05,
-    octaves:10
-  }).connect(limiter);
-
-  hat = new Tone.MetalSynth({
-    frequency:400,
-    envelope:{attack:0.001,decay:0.08,release:0.01},
-    harmonicity:5
-  }).connect(limiter);
-  hat.volume.value = -14;
-
-  // BPM
-  Tone.Transport.bpm.value = 110;
-
-  // LOOPS
-  melodyLoop = new Tone.Loop(time=>{
-    noteIndex += Math.floor(Math.random()*3)-1;
-    noteIndex = Math.max(0,Math.min(scale.length-1,noteIndex));
-    const n = scale[noteIndex];
-    lead.triggerAttackRelease(n,"8n",time);
-    note.textContent = n;
-  },"8n");
-
-  chordLoop = new Tone.Loop(time=>{
-    const c = chords[Math.floor(Math.random()*chords.length)];
-    pad.triggerAttackRelease(c,"2n",time);
-    chord.textContent = c.join("-");
-  },"2n");
-
-  drumLoop = new Tone.Loop(time=>{
-    kick.triggerAttackRelease("C1","8n",time);
-    hat.triggerAttackRelease("C6","32n",time + Tone.Time("8n"));
-  },"4n");
+  osc.connect(gain).connect(master);
+  osc.start();
+  osc.stop(ctx.currentTime + duration);
 }
 
-/* ==================================================
-   START BUTTON
-================================================== */
-startBtn.onclick = async ()=>{
-  if(started) return;
-  started = true;
+/* =====================================================
+   BEAT (KICK)
+===================================================== */
+function playKick(){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
 
-  status.textContent = "INITIALIZING…";
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(120, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.15);
 
-  await initAudio();
+  gain.gain.setValueAtTime(0.8, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
 
-  // ⏱ 1 SEKUNDE „AI BERECHNUNG“
-  setTimeout(()=>{
-    status.textContent = "PLAYING";
-    melodyLoop.start(0);
-    chordLoop.start(0);
-    drumLoop.start(0);
-    Tone.Transport.start("+0.1");
-  },1000);
+  osc.connect(gain).connect(master);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.16);
+}
+
+/* =====================================================
+   LOOP ENGINE
+===================================================== */
+function startEngine(){
+  timer = setInterval(()=>{
+    // Melodie
+    idx += Math.floor(Math.random()*3)-1;
+    idx = Math.max(0,Math.min(scale.length-1,idx));
+    playNote(scale[idx]);
+    note.textContent = scale[idx].toFixed(1)+" Hz";
+
+    // Beat
+    playKick();
+  }, 400);
+}
+
+/* =====================================================
+   START BUTTON (USER GESTE → AUDIO FREI)
+===================================================== */
+btn.onclick = ()=>{
+  if(playing) return;
+  playing = true;
+
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  master = ctx.createGain();
+  master.gain.value = 0.8;
+  master.connect(ctx.destination);
+
+  // 🔊 TESTTON (WENN DER KOMMT → ALLES OK)
+  playNote(440,0.15);
+
+  startEngine();
 };
 </script>
-
 </body>
 </html>
