@@ -3,164 +3,719 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Composer Pro — Stable Engine</title>
-
+<title>AI Composer Pro — Neural Engine v2.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-
 <style>
-:root{--neon:#00ff88;--bg:#0a0a0c}
-body{
-    margin:0;
-    background:var(--bg);
-    color:var(--neon);
-    font-family:Segoe UI,sans-serif;
-    height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+:root {
+    --neon-primary: #00ff88;
+    --neon-secondary: #00d4ff;
+    --neon-accent: #ff006e;
+    --bg-dark: #0a0a0c;
+    --bg-panel: rgba(20, 20, 25, 0.95);
+    --border-glow: rgba(0, 255, 136, 0.4);
 }
-canvas{position:fixed;inset:0;z-index:-1}
-.panel{
-    background:rgba(20,20,25,.92);
-    border:2px solid var(--neon);
-    border-radius:18px;
-    padding:28px;
-    width:330px;
-    box-shadow:0 0 30px rgba(0,255,136,.25);
-    text-align:center;
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
-h1{font-size:1.3rem;letter-spacing:4px;margin:0}
-p{font-size:.8rem;opacity:.7}
-button{
-    width:100%;
-    margin-top:18px;
-    padding:14px;
-    border:none;
-    border-radius:40px;
-    background:var(--neon);
-    color:#000;
-    font-weight:700;
-    font-size:1.1rem;
-    cursor:pointer;
+
+body {
+    background: var(--bg-dark);
+    color: var(--neon-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.stat{
-    font-family:monospace;
-    font-size:.75rem;
-    margin-top:10px;
-    opacity:.7;
+
+canvas {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+}
+
+.container {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+    max-width: 1200px;
+}
+
+.panel {
+    background: var(--bg-panel);
+    border: 2px solid var(--neon-primary);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 0 40px var(--border-glow);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.panel:hover {
+    box-shadow: 0 0 60px var(--border-glow);
+    transform: translateY(-2px);
+}
+
+.main-panel {
+    width: 380px;
+    text-align: center;
+}
+
+.control-panel {
+    width: 340px;
+}
+
+h1 {
+    font-size: 1.5rem;
+    letter-spacing: 5px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+    color: #000;
+    font-weight: 700;
+    font-size: 1.15rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(0, 255, 136, 0.5);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-stop {
+    background: linear-gradient(135deg, var(--neon-accent), #ff4081);
+    margin-top: 12px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--neon-primary);
+}
+
+.mode-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.mode-btn {
+    padding: 12px;
+    border: 2px solid rgba(0, 255, 136, 0.3);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--neon-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mode-btn:hover {
+    border-color: var(--neon-primary);
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.mode-btn.active {
+    border-color: var(--neon-primary);
+    background: var(--neon-primary);
+    color: #000;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.slider-group {
+    margin-bottom: 20px;
+}
+
+.slider-label {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slider-value {
+    font-family: 'Courier New', monospace;
+    color: var(--neon-secondary);
+    font-weight: 700;
+}
+
+input[type="range"] {
+    width: 100%;
+    height: 6px;
+    border-radius: 5px;
+    background: rgba(0, 255, 136, 0.2);
+    outline: none;
+    -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--neon-primary);
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--neon-primary);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--neon-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px var(--neon-primary);
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #666;
+    margin-right: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.status-indicator.active {
+    background: var(--neon-primary);
+    box-shadow: 0 0 15px var(--neon-primary);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.waveform {
+    width: 100%;
+    height: 80px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 12px;
+    margin-top: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.section-title {
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    opacity: 0.8;
+    text-transform: uppercase;
 }
 </style>
 </head>
 
 <body>
-<canvas id="cv"></canvas>
+<canvas id="visualizer"></canvas>
 
-<div class="panel">
-    <h1>AI SOUND LOGIC</h1>
-    <p>Analyzing → Composing → Playing</p>
-    <button id="btn">SYSTEM START</button>
-    <div class="stat">Status: <span id="state">IDLE</span></div>
-    <div class="stat">Note: <span id="note">-</span></div>
-    <div class="stat">Chord: <span id="chord">-</span></div>
+<div class="container">
+    <!-- Main Control Panel -->
+    <div class="panel main-panel">
+        <h1>Neural Engine</h1>
+        <p class="subtitle">AI Music Composer v2.0</p>
+        
+        <button class="btn-primary" id="startBtn">
+            <span class="status-indicator" id="statusLight"></span>
+            System Start
+        </button>
+        <button class="btn-primary btn-stop" id="stopBtn" disabled>Stop Playback</button>
+        
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" id="statusText">IDLE</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">BPM</div>
+                <div class="stat-value" id="bpmDisplay">120</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Note</div>
+                <div class="stat-value" id="noteDisplay">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Chord</div>
+                <div class="stat-value" id="chordDisplay">-</div>
+            </div>
+        </div>
+        
+        <div class="waveform" id="waveform"></div>
+    </div>
+    
+    <!-- Parameter Control Panel -->
+    <div class="panel control-panel">
+        <h2 class="section-title">AI Mode Selection</h2>
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="ambient">Ambient</button>
+            <button class="mode-btn" data-mode="electronic">Electronic</button>
+            <button class="mode-btn" data-mode="jazz">Jazz</button>
+            <button class="mode-btn" data-mode="cinematic">Cinematic</button>
+        </div>
+        
+        <h2 class="section-title">Parameters</h2>
+        
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>Tempo (BPM)</span>
+                <span class="slider-value" id="tempoValue">120</span>
+            </div>
+            <input type="range" id="tempoSlider" min="60" max="180" value="120">
+        </div>
+        
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>Complexity</span>
+                <span class="slider-value" id="complexityValue">50%</span>
+            </div>
+            <input type="range" id="complexitySlider" min="0" max="100" value="50">
+        </div>
+        
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>Reverb</span>
+                <span class="slider-value" id="reverbValue">40%</span>
+            </div>
+            <input type="range" id="reverbSlider" min="0" max="100" value="40">
+        </div>
+        
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>Master Volume</span>
+                <span class="slider-value" id="volumeValue">80%</span>
+            </div>
+            <input type="range" id="volumeSlider" min="0" max="100" value="80">
+        </div>
+    </div>
 </div>
 
 <script>
-/* ================= MASTER BUS ================= */
-const master = new Tone.Gain(0.9).toDestination();
-const limiter = new Tone.Limiter(-1).connect(master);
-const reverb = new Tone.Reverb({decay:4,wet:0.4}).connect(limiter);
-const delay = new Tone.FeedbackDelay("8n",0.35).connect(reverb);
+// =====================================================
+// AI MUSIC COMPOSER ENGINE v2.0
+// =====================================================
 
-/* ================= SYNTHS ================= */
-const lead = new Tone.MonoSynth({
-    oscillator:{type:"sawtooth"},
-    filter:{Q:1,type:"lowpass",rolloff:-24},
-    envelope:{attack:0.02,decay:0.1,sustain:0.4,release:0.8}
-}).connect(delay);
-
-const pad = new Tone.PolySynth(Tone.Synth,{
-    oscillator:{type:"triangle"},
-    envelope:{attack:1.8,release:2.8}
-}).connect(reverb);
-pad.volume.value = -12;
-
-const kick = new Tone.MembraneSynth({
-    pitchDecay:0.05,
-    octaves:10,
-    envelope:{attack:0.001,decay:0.4,sustain:0}
-}).connect(limiter);
-
-const hat = new Tone.NoiseSynth({
-    noise:{type:"white"},
-    envelope:{attack:0.001,decay:0.08,sustain:0}
-}).connect(limiter);
-
-/* ================= AI DATA ================= */
-const scale = ["C3","D3","E3","G3","A3","C4","D4","E4","G4"];
-const chords = [
-    ["C3","E3","G3"],
-    ["A2","C3","E3"],
-    ["F2","A2","C3"],
-    ["G2","B2","D3"]
-];
-
-let idx=4, playing=false;
-
-/* ================= LOOPS ================= */
-const melody = new Tone.Loop(time=>{
-    idx += Math.floor(Math.random()*3)-1;
-    idx=Math.max(0,Math.min(scale.length-1,idx));
-    lead.triggerAttackRelease(scale[idx],"8n",time);
-    note.textContent=scale[idx];
-},"8n");
-
-const harmony = new Tone.Loop(time=>{
-    const c=chords[Math.floor(Math.random()*chords.length)];
-    pad.triggerAttackRelease(c,"2n",time);
-    chord.textContent=c.join("-");
-},"2n");
-
-const drums = new Tone.Loop(time=>{
-    kick.triggerAttackRelease("C1","8n",time);
-    if(Math.random()>0.5) hat.triggerAttackRelease("16n",time+Tone.Time("8n"));
-},"4n");
-
-/* ================= START LOGIC ================= */
-btn.onclick = async ()=>{
-    if(playing) return;
-
-    state.textContent="INITIALIZING...";
-    await Tone.start();
-    Tone.Transport.bpm.value=110;
-
-    /* 🔹 1 SEKUNDE PRE-COMPUTE */
-    setTimeout(()=>{
-        state.textContent="PLAYING";
-        melody.start(0);
-        harmony.start(0);
-        drums.start(0);
-        Tone.Transport.start("+0.1");
-        playing=true;
-    },1000);
-};
-
-/* ================= VISUAL ================= */
-const c=document.getElementById("cv"),x=c.getContext("2d");
-function resize(){c.width=innerWidth;c.height=innerHeight}
-window.onresize=resize;resize();
-
-function draw(){
-    x.fillStyle="rgba(10,10,12,.15)";
-    x.fillRect(0,0,c.width,c.height);
-    if(playing){
-        x.strokeStyle="rgba(0,255,136,.5)";
-        x.beginPath();
-        x.arc(Math.random()*c.width,Math.random()*c.height,40,0,Math.PI*2);
-        x.stroke();
+class AIComposer {
+    constructor() {
+        this.playing = false;
+        this.currentMode = 'ambient';
+        this.complexity = 0.5;
+        this.initialized = false;
+        
+        // Musical data structures
+        this.modes = {
+            ambient: {
+                scale: ['C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4'],
+                chords: [['C3', 'E3', 'G3'], ['A2', 'C3', 'E3'], ['F2', 'A2', 'C3'], ['G2', 'B2', 'D3']],
+                bpm: 85,
+                melodySpeed: '4n',
+                harmonySpeed: '1m'
+            },
+            electronic: {
+                scale: ['C3', 'D3', 'Eb3', 'F3', 'G3', 'Ab3', 'Bb3', 'C4'],
+                chords: [['C3', 'Eb3', 'G3'], ['F3', 'Ab3', 'C4'], ['G3', 'Bb3', 'D4'], ['Ab3', 'C4', 'Eb4']],
+                bpm: 128,
+                melodySpeed: '8n',
+                harmonySpeed: '2n'
+            },
+            jazz: {
+                scale: ['C3', 'D3', 'Eb3', 'E3', 'F3', 'G3', 'A3', 'Bb3', 'B3', 'C4'],
+                chords: [['C3', 'E3', 'G3', 'B3'], ['D3', 'F3', 'A3', 'C4'], ['G3', 'B3', 'D4', 'F4'], ['A3', 'C4', 'E4', 'G4']],
+                bpm: 110,
+                melodySpeed: '8n',
+                harmonySpeed: '2n'
+            },
+            cinematic: {
+                scale: ['C2', 'D2', 'F2', 'G2', 'A2', 'C3', 'D3', 'F3', 'G3'],
+                chords: [['C2', 'G2', 'C3', 'E3'], ['F2', 'A2', 'C3', 'F3'], ['G2', 'B2', 'D3', 'G3'], ['A2', 'C3', 'E3', 'A3']],
+                bpm: 75,
+                melodySpeed: '4n',
+                harmonySpeed: '1m'
+            }
+        };
+        
+        this.noteIndex = 0;
+        this.initAudio();
     }
-    requestAnimationFrame(draw);
+    
+    initAudio() {
+        try {
+            // Master chain
+            this.masterGain = new Tone.Gain(0.8).toDestination();
+            this.limiter = new Tone.Limiter(-1).connect(this.masterGain);
+            this.reverb = new Tone.Reverb({decay: 4, wet: 0.4}).connect(this.limiter);
+            this.delay = new Tone.FeedbackDelay('8n', 0.35).connect(this.reverb);
+            
+            // Lead synth
+            this.lead = new Tone.MonoSynth({
+                oscillator: {type: 'sawtooth'},
+                filter: {Q: 2, type: 'lowpass', rolloff: -24},
+                envelope: {attack: 0.02, decay: 0.15, sustain: 0.4, release: 0.9}
+            }).connect(this.delay);
+            
+            // Pad synth
+            this.pad = new Tone.PolySynth(Tone.Synth, {
+                oscillator: {type: 'triangle'},
+                envelope: {attack: 2, release: 3}
+            }).connect(this.reverb);
+            this.pad.volume.value = -14;
+            
+            // Bass synth
+            this.bass = new Tone.MonoSynth({
+                oscillator: {type: 'sine'},
+                filter: {Q: 2, type: 'lowpass'},
+                envelope: {attack: 0.01, decay: 0.2, sustain: 0.4, release: 0.6}
+            }).connect(this.limiter);
+            this.bass.volume.value = -8;
+            
+            // Drums
+            this.kick = new Tone.MembraneSynth({
+                pitchDecay: 0.05,
+                octaves: 10,
+                envelope: {attack: 0.001, decay: 0.4, sustain: 0}
+            }).connect(this.limiter);
+            
+            this.snare = new Tone.NoiseSynth({
+                noise: {type: 'white'},
+                envelope: {attack: 0.001, decay: 0.15, sustain: 0}
+            }).connect(this.limiter);
+            this.snare.volume.value = -10;
+            
+            this.hat = new Tone.MetalSynth({
+                frequency: 200,
+                envelope: {attack: 0.001, decay: 0.1, release: 0.01},
+                harmonicity: 5.1,
+                modulationIndex: 32,
+                resonance: 4000,
+                octaves: 1.5
+            }).connect(this.limiter);
+            this.hat.volume.value = -18;
+            
+            // Loops
+            this.melodyLoop = new Tone.Loop(time => this.playMelody(time), '8n');
+            this.harmonyLoop = new Tone.Loop(time => this.playHarmony(time), '2n');
+            this.bassLoop = new Tone.Loop(time => this.playBass(time), '4n');
+            this.drumLoop = new Tone.Loop(time => this.playDrums(time), '4n');
+            
+        } catch (error) {
+            console.error('Audio initialization error:', error);
+            this.showError('Audio system initialization failed');
+        }
+    }
+    
+    playMelody(time) {
+        const mode = this.modes[this.currentMode];
+        const changeProb = 0.3 + (this.complexity * 0.5);
+        
+        if (Math.random() < changeProb) {
+            const jump = Math.floor(Math.random() * 5) - 2;
+            this.noteIndex = Math.max(0, Math.min(mode.scale.length - 1, this.noteIndex + jump));
+        }
+        
+        const note = mode.scale[this.noteIndex];
+        this.lead.triggerAttackRelease(note, '8n', time);
+        
+        // Update UI
+        setTimeout(() => {
+            document.getElementById('noteDisplay').textContent = note;
+        }, 0);
+    }
+    
+    playHarmony(time) {
+        const mode = this.modes[this.currentMode];
+        const chord = mode.chords[Math.floor(Math.random() * mode.chords.length)];
+        this.pad.triggerAttackRelease(chord, '2n', time);
+        
+        setTimeout(() => {
+            document.getElementById('chordDisplay').textContent = chord.join('-');
+        }, 0);
+    }
+    
+    playBass(time) {
+        const mode = this.modes[this.currentMode];
+        const scale = mode.scale;
+        const bassNote = scale[Math.floor(Math.random() * Math.min(4, scale.length))];
+        
+        if (Math.random() < 0.7) {
+            this.bass.triggerAttackRelease(bassNote, '8n', time);
+        }
+    }
+    
+    playDrums(time) {
+        // Kick on every beat
+        this.kick.triggerAttackRelease('C1', '8n', time);
+        
+        // Snare on offbeats
+        if (Math.random() < 0.5 + (this.complexity * 0.3)) {
+            this.snare.triggerAttackRelease('16n', time + Tone.Time('8n'));
+        }
+        
+        // Hi-hat patterns
+        if (Math.random() < 0.7 + (this.complexity * 0.2)) {
+            this.hat.triggerAttackRelease('32n', time);
+            if (Math.random() < 0.6) {
+                this.hat.triggerAttackRelease('32n', time + Tone.Time('16n'));
+            }
+        }
+    }
+    
+    async start() {
+        if (this.playing) return;
+        
+        try {
+            document.getElementById('statusText').textContent = 'INIT...';
+            document.getElementById('statusLight').classList.remove('active');
+            
+            await Tone.start();
+            this.initialized = true;
+            
+            const mode = this.modes[this.currentMode];
+            Tone.Transport.bpm.value = mode.bpm;
+            
+            // Pre-compute delay
+            setTimeout(() => {
+                this.melodyLoop.start(0);
+                this.harmonyLoop.start(0);
+                this.bassLoop.start(0);
+                this.drumLoop.start(0);
+                
+                Tone.Transport.start('+0.1');
+                this.playing = true;
+                
+                document.getElementById('statusText').textContent = 'PLAYING';
+                document.getElementById('statusLight').classList.add('active');
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Start error:', error);
+            this.showError('Failed to start playback');
+        }
+    }
+    
+    stop() {
+        if (!this.playing) return;
+        
+        try {
+            this.melodyLoop.stop();
+            this.harmonyLoop.stop();
+            this.bassLoop.stop();
+            this.drumLoop.stop();
+            Tone.Transport.stop();
+            
+            this.playing = false;
+            
+            document.getElementById('statusText').textContent = 'STOPPED';
+            document.getElementById('statusLight').classList.remove('active');
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('noteDisplay').textContent = '-';
+            document.getElementById('chordDisplay').textContent = '-';
+            
+        } catch (error) {
+            console.error('Stop error:', error);
+        }
+    }
+    
+    changeMode(mode) {
+        this.currentMode = mode;
+        if (this.playing) {
+            const modeData = this.modes[mode];
+            Tone.Transport.bpm.rampTo(modeData.bpm, 2);
+        }
+    }
+    
+    setTempo(bpm) {
+        if (this.initialized) {
+            Tone.Transport.bpm.rampTo(bpm, 1);
+        }
+    }
+    
+    setComplexity(value) {
+        this.complexity = value;
+    }
+    
+    setReverb(value) {
+        if (this.reverb) {
+            this.reverb.wet.value = value;
+        }
+    }
+    
+    setVolume(value) {
+        if (this.masterGain) {
+            this.masterGain.gain.rampTo(value, 0.1);
+        }
+    }
+    
+    showError(message) {
+        document.getElementById('statusText').textContent = 'ERROR';
+        console.error(message);
+    }
 }
-draw();
+
+// =====================================================
+// VISUALIZER
+// =====================================================
+
+class Visualizer {
+    constructor() {
+        this.canvas = document.getElementById('visualizer');
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.animate();
+    }
+    
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    }
+    
+    animate() {
+        this.ctx.fillStyle = 'rgba(10, 10, 12, 0.15)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Create particles
+        if (composer.playing && Math.random() < 0.3) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                size: Math.random() * 60 + 20,
+                alpha: 1,
+                decay: 0.02
+            });
+        }
+        
+        // Draw and update particles
+        this.particles = this.particles.filter(p => {
+            this.ctx.strokeStyle = `rgba(0, 255, 136, ${p.alpha * 0.5})`;
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.stroke();
+            
+            p.size += 1;
+            p.alpha -= p.decay;
+            return p.alpha > 0;
+        });
+        
+        requestAnimationFrame(() => this.animate());
+    }
+}
+
+// =====================================================
+// INITIALIZATION
+// =====================================================
+
+const composer = new AIComposer();
+const visualizer = new Visualizer();
+
+// Event listeners
+document.getElementById('startBtn').addEventListener('click', () => composer.start());
+document.getElementById('stopBtn').addEventListener('click', () => composer.stop());
+
+// Mode selection
+document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        composer.changeMode(btn.dataset.mode);
+    });
+});
+
+// Sliders
+document.getElementById('tempoSlider').addEventListener('input', (e) => {
+    const value = e.target.value;
+    document.getElementById('tempoValue').textContent = value;
+    document.getElementById('bpmDisplay').textContent = value;
+    composer.setTempo(parseInt(value));
+});
+
+document.getElementById('complexitySlider').addEventListener('input', (e) => {
+    const value = e.target.value;
+    document.getElementById('complexityValue').textContent = value + '%';
+    composer.setComplexity(value / 100);
+});
+
+document.getElementById('reverbSlider').addEventListener('input', (e) => {
+    const value = e.target.value;
+    document.getElementById('reverbValue').textContent = value + '%';
+    composer.setReverb(value / 100);
+});
+
+document.getElementById('volumeSlider').addEventListener('input', (e) => {
+    const value = e.target.value;
+    document.getElementById('volumeValue').textContent = value + '%';
+    composer.setVolume(value / 100);
+});
 </script>
 </body>
 </html>
