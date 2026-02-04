@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Music Engine – Pure WebAudio</title>
+<title>AI Music Engine – v2</title>
 
 <style>
 :root { --neon:#00ff88; --bg:#0a0a0c; }
@@ -11,32 +11,32 @@ body{
   margin:0;
   background:var(--bg);
   color:var(--neon);
-  font-family:Segoe UI, sans-serif;
+  font-family:Segoe UI,sans-serif;
   height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 .panel{
+  width:360px;
   background:rgba(20,20,25,.95);
   border:2px solid var(--neon);
-  border-radius:20px;
+  border-radius:22px;
   padding:30px;
-  width:340px;
   text-align:center;
-  box-shadow:0 0 30px rgba(0,255,136,.3);
+  box-shadow:0 0 35px rgba(0,255,136,.35);
 }
-h1{margin:0;letter-spacing:4px;font-size:1.3rem}
-p{opacity:.7;font-size:.8rem}
+h1{margin:0;font-size:1.3rem;letter-spacing:4px}
+p{font-size:.8rem;opacity:.7}
 button{
   width:100%;
-  margin-top:20px;
-  padding:14px;
+  margin-top:22px;
+  padding:15px;
   border:none;
-  border-radius:40px;
+  border-radius:50px;
   background:var(--neon);
   color:#000;
-  font-weight:700;
+  font-weight:800;
   font-size:1.1rem;
   cursor:pointer;
 }
@@ -44,7 +44,6 @@ button{
   margin-top:10px;
   font-family:monospace;
   font-size:.75rem;
-  opacity:.8;
 }
 </style>
 </head>
@@ -52,94 +51,141 @@ button{
 <body>
 <div class="panel">
   <h1>AI MUSIC ENGINE</h1>
-  <p>Pure Web Audio • No Libraries</p>
-  <button id="btn">SYSTEM START</button>
-  <div class="stat">Note: <span id="note">-</span></div>
+  <p>Dual Lead • Bass • Groove</p>
+  <button id="btn">START ENGINE</button>
+  <div class="stat">Lead: <span id="leadNote">-</span></div>
+  <div class="stat">Bass: <span id="bassNote">-</span></div>
 </div>
 
 <script>
-/* =====================================================
-   AUDIO CONTEXT (PURE WEB AUDIO)
-===================================================== */
 let ctx, master;
-let playing = false;
+let running = false;
 let timer;
 
-/* =====================================================
+/* =======================
    MUSIKDATEN
-===================================================== */
-const scale = [261.63,293.66,329.63,392.00,440.00,523.25]; // C-Dur
-let idx = 2;
+======================= */
+// C-Moll → klingt direkt musikalischer
+const scale = [
+  261.63, // C
+  311.13, // Eb
+  349.23, // F
+  392.00, // G
+  466.16, // Bb
+  523.25  // C
+];
 
-/* =====================================================
-   NOTE SPIELEN (GARANTIERT HÖRBAR)
-===================================================== */
-function playNote(freq, duration=0.2){
+let leadIndex = 3;
+
+/* =======================
+   LEAD NOTE
+======================= */
+function playLead(freq, detune=0){
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
   osc.type = "sawtooth";
   osc.frequency.value = freq;
+  osc.detune.value = detune;
 
   gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+  gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime+0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.35);
 
   osc.connect(gain).connect(master);
   osc.start();
-  osc.stop(ctx.currentTime + duration);
+  osc.stop(ctx.currentTime+0.36);
 }
 
-/* =====================================================
-   BEAT (KICK)
-===================================================== */
+/* =======================
+   BASS NOTE
+======================= */
+function playBass(freq){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+
+  osc.type = "sine";
+  osc.frequency.value = freq/2;
+
+  filter.type = "lowpass";
+  filter.frequency.value = 120;
+
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.45, ctx.currentTime+0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5);
+
+  osc.connect(filter).connect(gain).connect(master);
+  osc.start();
+  osc.stop(ctx.currentTime+0.52);
+}
+
+/* =======================
+   KICK
+======================= */
 function playKick(){
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
   osc.type = "sine";
-  osc.frequency.setValueAtTime(120, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.15);
+  osc.frequency.setValueAtTime(130, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime+0.15);
 
-  gain.gain.setValueAtTime(0.8, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+  gain.gain.setValueAtTime(0.9, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.15);
 
   osc.connect(gain).connect(master);
   osc.start();
-  osc.stop(ctx.currentTime + 0.16);
+  osc.stop(ctx.currentTime+0.16);
 }
 
-/* =====================================================
-   LOOP ENGINE
-===================================================== */
+/* =======================
+   ENGINE LOOP
+======================= */
 function startEngine(){
-  timer = setInterval(()=>{
-    // Melodie
-    idx += Math.floor(Math.random()*3)-1;
-    idx = Math.max(0,Math.min(scale.length-1,idx));
-    playNote(scale[idx]);
-    note.textContent = scale[idx].toFixed(1)+" Hz";
+  let step = 0;
 
-    // Beat
+  timer = setInterval(()=>{
+    // MELODY MOVE
+    if(Math.random() < 0.7){
+      leadIndex += Math.random()<0.5 ? -1 : 1;
+      leadIndex = Math.max(0,Math.min(scale.length-1,leadIndex));
+    }
+
+    const leadFreq = scale[leadIndex];
+
+    // DUAL LEAD (2 Töne)
+    playLead(leadFreq, -6);
+    playLead(leadFreq, +6);
+
+    // BASS auf Zählzeit
+    if(step % 2 === 0){
+      playBass(leadFreq);
+      bassNote.textContent = (leadFreq/2).toFixed(1)+" Hz";
+    }
+
+    // KICK
     playKick();
-  }, 400);
+
+    leadNote.textContent = leadFreq.toFixed(1)+" Hz";
+    step++;
+  }, 420);
 }
 
-/* =====================================================
-   START BUTTON (USER GESTE → AUDIO FREI)
-===================================================== */
+/* =======================
+   START
+======================= */
 btn.onclick = ()=>{
-  if(playing) return;
-  playing = true;
+  if(running) return;
+  running = true;
 
-  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  ctx = new (window.AudioContext||window.webkitAudioContext)();
   master = ctx.createGain();
   master.gain.value = 0.8;
   master.connect(ctx.destination);
 
-  // 🔊 TESTTON (WENN DER KOMMT → ALLES OK)
-  playNote(440,0.15);
-
+  // TEST
+  playLead(440);
   startEngine();
 };
 </script>
