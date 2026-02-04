@@ -1,193 +1,357 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Music Engine – v2</title>
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AI Ambient Engine — Continuous</title>
 <style>
-:root { --neon:#00ff88; --bg:#0a0a0c; }
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--neon);
-  font-family:Segoe UI,sans-serif;
-  height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.panel{
-  width:360px;
-  background:rgba(20,20,25,.95);
-  border:2px solid var(--neon);
-  border-radius:22px;
-  padding:30px;
-  text-align:center;
-  box-shadow:0 0 35px rgba(0,255,136,.35);
-}
-h1{margin:0;font-size:1.3rem;letter-spacing:4px}
-p{font-size:.8rem;opacity:.7}
-button{
-  width:100%;
-  margin-top:22px;
-  padding:15px;
-  border:none;
-  border-radius:50px;
-  background:var(--neon);
-  color:#000;
-  font-weight:800;
-  font-size:1.1rem;
-  cursor:pointer;
-}
-.stat{
-  margin-top:10px;
-  font-family:monospace;
-  font-size:.75rem;
-}
+  :root { --neon: #00ff88; --bg:#08080a; }
+  body { margin:0; background:var(--bg); color:var(--neon); font-family:Inter, "Segoe UI", sans-serif; height:100vh; display:flex; align-items:center; justify-content:center; }
+  .card { width:420px; padding:28px; background:rgba(10,10,12,.9); border-radius:14px; border:1px solid rgba(0,255,136,.06); box-shadow:0 8px 40px rgba(0,0,0,.6); }
+  h1{ margin:0 0 6px 0; font-size:1.2rem; letter-spacing:3px }
+  p{ margin:0 0 14px 0; opacity:.7; font-size:.9rem }
+  button{ width:100%; padding:14px; border-radius:40px; border:none; background:var(--neon); color:#000; font-weight:700; cursor:pointer; font-size:1rem }
+  .row{ display:flex; gap:8px; margin-top:12px }
+  .small{ flex:1; padding:8px; border-radius:10px; background:rgba(0,0,0,.2); text-align:center; font-family:monospace }
+  label{ font-size:.8rem; display:block; margin-top:10px; opacity:.8 }
+  input[type="range"]{ width:100% }
 </style>
 </head>
-
 <body>
-<div class="panel">
-  <h1>AI MUSIC ENGINE</h1>
-  <p>Dual Lead • Bass • Groove</p>
-  <button id="btn">START ENGINE</button>
-  <div class="stat">Lead: <span id="leadNote">-</span></div>
-  <div class="stat">Bass: <span id="bassNote">-</span></div>
-</div>
+  <div class="card">
+    <h1>AI AMBIENT ENGINE</h1>
+    <p>Continuous ambient — bass, pads, arps, bells. Pure WebAudio.</p>
+    <button id="startBtn">START (NO LIBRARIES)</button>
+    <div class="row">
+      <div class="small">Status: <span id="st">idle</span></div>
+      <div class="small">BPM: <span id="bpmLabel">90</span></div>
+    </div>
+
+    <label>Master Volume</label>
+    <input id="vol" type="range" min="0" max="100" value="80">
+
+    <label>Reverb Size</label>
+    <input id="reverbSize" type="range" min="0.2" max="3.0" step="0.1" value="1.6">
+
+    <label>Ambience (pad level)</label>
+    <input id="padLevel" type="range" min="0" max="100" value="60">
+  </div>
 
 <script>
-let ctx, master;
-let running = false;
-let timer;
+/* =========================
+   Ambient Engine - WebAudio
+   - continuous textures
+   - bassline, 2-voice arps, pad, bells
+   - convolver reverb, stereo delay
+   ========================= */
 
-/* =======================
-   MUSIKDATEN
-======================= */
-// C-Moll → klingt direkt musikalischer
-const scale = [
-  261.63, // C
-  311.13, // Eb
-  349.23, // F
-  392.00, // G
-  466.16, // Bb
-  523.25  // C
+let ctx, masterGain, wetGain, dryGain, convolver, delayL, delayR, delayGain;
+let running = false;
+let loops = []; // store intervals/timeouts for cleanup
+let bpm = 90;
+document.getElementById('bpmLabel').textContent = bpm;
+
+const scaleFreqs = [261.63, 293.66, 311.13, 349.23, 392.00, 440.00, 466.16, 523.25]; // C minor-ish palette
+// a simple chord progression (root notes)
+const progression = [0, 4, 2, 5]; // indices into scaleFreqs
+
+// Utility: make impulse response for convolver
+function makeReverbBuffer(duration=1.6, decay=2.0) {
+  const rate = ctx.sampleRate;
+  const length = Math.floor(rate * duration);
+  const buffer = ctx.createBuffer(2, length, rate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buffer.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      // noise envelope with exponential decay, stereo offset
+      const n = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+      // small stereo difference
+      data[i] = n * (ch === 0 ? 1.0 : 0.9);
+    }
+  }
+  return buffer;
+}
+
+// Create a gentle lowpass filter + gain envelope for pad voices
+function playPad(chordRootFreq, duration = 8, level = 0.5, pan = 0) {
+  // chord: root + 3r + 5th (simple)
+  const freqs = [chordRootFreq, chordRootFreq * 1.2599, chordRootFreq * 1.4983]; // approx m3 and P5
+  const voices = [];
+  const now = ctx.currentTime;
+  freqs.forEach((f, i) => {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    // slight detune for richness
+    osc.frequency.value = f * (1 + (i - 1) * 0.0025);
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.value = 900 - i * 120; // lower partials slightly lower
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(level * 0.8, now + 1.2);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    const panner = new StereoPannerNode(ctx, { pan });
+    osc.connect(filt).connect(g).connect(panner).connect(wetGain);
+    osc.start(now);
+    osc.stop(now + duration + 0.1);
+    voices.push({osc, filt, g, panner});
+  });
+  return voices;
+}
+
+// simple pluck (ARPEGGIO) - two voices with slight detune
+function playPluck(freq, when = 0, duration = 0.35, amp = 0.2, pan = 0) {
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.value = freq;
+  osc.detune.value = (Math.random() - 0.5) * 8;
+  const g = ctx.createGain();
+  const env = g.gain;
+  env.setValueAtTime(0.0001, now);
+  env.exponentialRampToValueAtTime(amp, now + 0.005);
+  env.exponentialRampToValueAtTime(0.0001, now + duration);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 220;
+  const panNode = new StereoPannerNode(ctx, { pan });
+  osc.connect(hp).connect(g).connect(panNode).connect(wetGain);
+  osc.start(now);
+  osc.stop(now + duration + 0.05);
+}
+
+// FM-like bell
+function playBell(freq, when = 0, amp = 0.18) {
+  const now = ctx.currentTime + when;
+  // carrier
+  const car = ctx.createOscillator();
+  car.type = 'sine';
+  car.frequency.value = freq;
+  // modulator
+  const mod = ctx.createOscillator();
+  mod.type = 'sine';
+  mod.frequency.value = freq * 2.5;
+  // mod gain
+  const modGain = ctx.createGain();
+  modGain.gain.value = freq * 0.01 * (0.5 + Math.random() * 1.0);
+  mod.connect(modGain);
+  modGain.connect(car.frequency);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(amp, now + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+  const pan = new StereoPannerNode(ctx, { pan: (Math.random() - 0.5) * 0.6 });
+  car.connect(g).connect(pan).connect(wetGain);
+  mod.start(now);
+  car.start(now);
+  car.stop(now + 2.2);
+  mod.stop(now + 2.2);
+}
+
+// Bass with filter-sweep, continuous, no gaps
+function playBassNote(freq, length = 0.6) {
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.value = freq * 0.5; // lower octave
+  const filt = ctx.createBiquadFilter();
+  filt.type = 'lowpass';
+  filt.frequency.setValueAtTime(120, now);
+  // open filter a bit then close
+  filt.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+  filt.frequency.exponentialRampToValueAtTime(120, now + length * 0.9);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.linearRampToValueAtTime(0.7, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + length + 0.02);
+  // mild saturation emulation via waveshaper
+  const waveshaper = makeWarmSaturator(0.9);
+  osc.connect(filt).connect(waveshaper).connect(g).connect(masterGain);
+  osc.start(now);
+  osc.stop(now + length + 0.05);
+}
+
+// small waveshaper for warmth
+function makeWarmSaturator(amount = 0.7) {
+  const shaper = ctx.createWaveShaper();
+  const k = typeof amount === 'number' ? amount * 20 : 50;
+  const n = 1024;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; ++i) {
+    const x = (i * 2) / n - 1;
+    curve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
+  }
+  shaper.curve = curve;
+  shaper.oversample = '2x';
+  return shaper;
+}
+
+// Short stereo delay for spatial movement
+function pingPongDelay() {
+  const delayTime = 0.28;
+  const feedback = 0.4;
+  const gain = ctx.createGain();
+  gain.gain.value = 0.4;
+  const delayLeft = ctx.createDelay();
+  const delayRight = ctx.createDelay();
+  delayLeft.delayTime.value = delayTime;
+  delayRight.delayTime.value = delayTime * 0.66;
+  const fbL = ctx.createGain();
+  const fbR = ctx.createGain();
+  fbL.gain.value = feedback;
+  fbR.gain.value = feedback;
+  const splitter = ctx.createChannelSplitter(2);
+  const merger = ctx.createChannelMerger(2);
+
+  // simple ping-pong network
+  wetGain.connect(delayLeft).connect(fbL).connect(delayRight).connect(fbR).connect(delayLeft);
+  delayLeft.connect(delayRight);
+  delayRight.connect(gain).connect(masterGain);
+  return { delayLeft, delayRight, fbL, fbR, gain };
+}
+
+// SCHEDULER: continuous event scheduling with small step resolution
+let beatCounter = 0;
+function startScheduler() {
+  // pattern lengths in beats (quarter notes)
+  const stepMs = (60 / bpm) * 250; // quarter / 4 = 16th-ish resolution, scaled to have dense events
+  // we'll use setInterval but schedule with AudioContext times for precise placement
+  const iv = setInterval(() => {
+    const now = ctx.currentTime + 0.02; // small lookahead
+    // bass plays on every 2 steps (steady)
+    if (beatCounter % 2 === 0) {
+      const chordRoot = progression[(Math.floor(beatCounter / 8) % progression.length)];
+      const rootFreq = scaleFreqFor(progression[(Math.floor(beatCounter / 8) % progression.length)]);
+      // bass note (no pauses) tail overlaps with next
+      playBassNote(rootFreq, 0.9);
+    }
+
+    // arpeggio / pluck: semi-constant, two voices offset
+    const arpBaseIdx = (beatCounter % 8);
+    const freqA = scaleFreqFor((arpBaseIdx) % scaleFreqs.length);
+    const freqB = scaleFreqFor((arpBaseIdx + 2) % scaleFreqs.length);
+    playPluck(freqA, 0, 0.28, 0.12, -0.25);
+    playPluck(freqB, 0.06, 0.28, 0.10, +0.25);
+
+    // bells lightly, rare probabilities to avoid clutter
+    if (Math.random() < 0.12) {
+      const bellFreq = scaleFreqs[(Math.floor(Math.random() * scaleFreqs.length))];
+      playBell(bellFreq * (1 + (Math.random() - 0.5) * 0.1), 0, 0.12 + Math.random() * 0.18);
+    }
+
+    // pads: long sustaining chords triggered every 8 steps with overlap (no silence)
+    if (beatCounter % 8 === 0) {
+      // choose chord root from progression but with small randomness
+      const seqIndex = (Math.floor(beatCounter / 8) % progression.length);
+      const rootIdx = progression[seqIndex];
+      const rootFreq = scaleFreqs[rootIdx % scaleFreqs.length];
+      // pad voices span long durations and overlap so there are never pauses
+      const padLevel = Number(document.getElementById('padLevel').value) / 100;
+      // create 2 pad voices with opposite pans
+      playPad(rootFreq * 0.5, 12, 0.6 * padLevel, -0.45);
+      playPad(rootFreq * 1.0, 10, 0.5 * padLevel, +0.45);
+    }
+
+    beatCounter++;
+  }, stepMs);
+  loops.push(iv);
+}
+
+/* helpers */
+function scaleFreqFor(idx) {
+  // wrap into palette
+  const i = idx % scaleFreqs.length;
+  return scaleFreqs[i];
+}
+
+/* cleanup */
+function stopAll() {
+  loops.forEach(x => clearInterval(x));
+  loops = [];
+}
+
+/* MAIN START */
+document.getElementById('startBtn').addEventListener('click', async () => {
+  if (running) return;
+  running = true;
+  document.getElementById('st').textContent = 'starting';
+
+  // create audio context
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  await ctx.resume();
+
+  // master + routing
+  masterGain = ctx.createGain();
+  masterGain.gain.value = Number(document.getElementById('vol').value) / 100;
+  masterGain.connect(ctx.destination);
+
+  // wet/dry
+  wetGain = ctx.createGain();
+  dryGain = ctx.createGain();
+  wetGain.gain.value = 0.9;
+  dryGain.gain.value = 0.9;
+
+  // convolver reverb
+  convolver = ctx.createConvolver();
+  const size = Number(document.getElementById('reverbSize').value);
+  convolver.buffer = makeReverbBuffer(size, 2.2);
+  convolver.normalize = true;
+
+  // simple early reflections via delay network
+  const dp = pingPongDelay(); // attaches wetGain -> masterGain internally
+  // route wet chain: wetGain -> convolver -> masterGain
+  wetGain.connect(convolver).connect(masterGain);
+
+  // small feedback from ping-pong to wetGain to feed spatial tails
+  dp.gain.connect(wetGain);
+
+  // also route some dry directly to master for clarity
+  dryGain.connect(masterGain);
+
+  // start an initial test tone so user gesture unlocks audio and we confirm audible
+  // short sine click
+  const t = ctx.createOscillator();
+  const g = ctx.createGain();
+  t.frequency.value = 220;
+  g.gain.value = 0.001;
+  t.connect(g).connect(masterGain);
+  t.start();
+  g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+  t.stop(ctx.currentTime + 0.13);
+
+  // keep wetGain used by instruments
+  // start scheduler
+  startScheduler();
+
+  document.getElementById('st').textContent = 'playing';
+});
+
+/* Controls live-binding */
+document.getElementById('vol').addEventListener('input', (e) => {
+  if (masterGain) masterGain.gain.setTargetAtTime(Number(e.target.value) / 100, ctx.currentTime, 0.05);
+});
+document.getElementById('reverbSize').addEventListener('input', (e) => {
+  if (!ctx) return;
+  // regenerate impulse with new size
+  convolver.buffer = makeReverbBuffer(Number(e.target.value), 2.2);
+});
+document.getElementById('padLevel').addEventListener('input', (e) => {
+  // no direct action; new pads use the value at creation time
+});
+
+/* ======== small poly palette for scales (C minor-ish) ======== */
+const scaleFreqs = [
+  261.63, // C4
+  293.66, // D4
+  311.13, // Eb4
+  349.23, // F4
+  392.00, // G4
+  440.00, // A4
+  466.16, // Bb4
+  523.25  // C5
 ];
 
-let leadIndex = 3;
-
-/* =======================
-   LEAD NOTE
-======================= */
-function playLead(freq, detune=0){
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = "sawtooth";
-  osc.frequency.value = freq;
-  osc.detune.value = detune;
-
-  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime+0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.35);
-
-  osc.connect(gain).connect(master);
-  osc.start();
-  osc.stop(ctx.currentTime+0.36);
-}
-
-/* =======================
-   BASS NOTE
-======================= */
-function playBass(freq){
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const filter = ctx.createBiquadFilter();
-
-  osc.type = "sine";
-  osc.frequency.value = freq/2;
-
-  filter.type = "lowpass";
-  filter.frequency.value = 120;
-
-  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.45, ctx.currentTime+0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5);
-
-  osc.connect(filter).connect(gain).connect(master);
-  osc.start();
-  osc.stop(ctx.currentTime+0.52);
-}
-
-/* =======================
-   KICK
-======================= */
-function playKick(){
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(130, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime+0.15);
-
-  gain.gain.setValueAtTime(0.9, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.15);
-
-  osc.connect(gain).connect(master);
-  osc.start();
-  osc.stop(ctx.currentTime+0.16);
-}
-
-/* =======================
-   ENGINE LOOP
-======================= */
-function startEngine(){
-  let step = 0;
-
-  timer = setInterval(()=>{
-    // MELODY MOVE
-    if(Math.random() < 0.7){
-      leadIndex += Math.random()<0.5 ? -1 : 1;
-      leadIndex = Math.max(0,Math.min(scale.length-1,leadIndex));
-    }
-
-    const leadFreq = scale[leadIndex];
-
-    // DUAL LEAD (2 Töne)
-    playLead(leadFreq, -6);
-    playLead(leadFreq, +6);
-
-    // BASS auf Zählzeit
-    if(step % 2 === 0){
-      playBass(leadFreq);
-      bassNote.textContent = (leadFreq/2).toFixed(1)+" Hz";
-    }
-
-    // KICK
-    playKick();
-
-    leadNote.textContent = leadFreq.toFixed(1)+" Hz";
-    step++;
-  }, 420);
-}
-
-/* =======================
-   START
-======================= */
-btn.onclick = ()=>{
-  if(running) return;
-  running = true;
-
-  ctx = new (window.AudioContext||window.webkitAudioContext)();
-  master = ctx.createGain();
-  master.gain.value = 0.8;
-  master.connect(ctx.destination);
-
-  // TEST
-  playLead(440);
-  startEngine();
-};
 </script>
 </body>
-</html>
+  </html>
