@@ -3,83 +3,330 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Finde den $SWEAT Coin!</title>
+  <title>Mini Sweat App – Grow & Earn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, background: #f0f8ff; text-align: center; }
-    h1 { color: #2e8b57; }
-    .board { display: flex; justify-content: center; margin: 40px 0; }
-    .card {
-      width: 80px; height: 120px; margin: 10px;
-      background: #fff; border: 2px solid #2e8b57; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2em; cursor: pointer; transition: background 0.3s;
+    :root {
+      --primary: #2e8b57;
+      --secondary: #ffe066;
+      --bg: #f0f8ff;
+      --accent: #90ee90;
+      --danger: #ff6347;
     }
-    .card.flipped { background: #ffe066; }
-    .card.found { background: #90ee90; color: #fff; }
-    #message { font-size: 1.2em; margin: 20px; color: #2e8b57; }
-    #reset { padding: 10px 20px; font-size: 1em; background: #2e8b57; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-    #tries { color: #ff6347; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      color: #222;
+    }
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 24px 0 12px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px #b2dfdb;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.2em;
+      letter-spacing: 1px;
+    }
+    main {
+      max-width: 420px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px #b2dfdb;
+      padding: 32px 18px 24px 18px;
+    }
+    .balance-section {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .balance-label {
+      font-size: 1.1em;
+      color: #555;
+    }
+    .balance-value {
+      font-size: 2.6em;
+      color: var(--primary);
+      font-weight: bold;
+      margin: 10px 0 0 0;
+      letter-spacing: 1px;
+    }
+    .grow-section {
+      margin: 36px 0 18px 0;
+      padding: 18px 0;
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+      text-align: center;
+    }
+    .grow-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 40px;
+      font-size: 1.2em;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    .grow-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .grow-status {
+      margin: 18px 0 0 0;
+      color: var(--primary);
+      font-size: 1.1em;
+    }
+    .grow-timer {
+      font-size: 1em;
+      color: #555;
+      margin-top: 6px;
+    }
+    .history-section {
+      margin-top: 32px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 14px 10px;
+    }
+    .history-title {
+      font-size: 1.1em;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .history-list {
+      font-size: 0.98em;
+      color: #444;
+      max-height: 120px;
+      overflow-y: auto;
+      padding-left: 12px;
+      margin: 0;
+    }
+    .reset-btn {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 18px;
+      float: right;
+    }
+    @media (max-width: 600px) {
+      main { padding: 18px 4px 18px 4px; }
+      .balance-value { font-size: 2em; }
+      .grow-btn { font-size: 1em; padding: 10px 18px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Finde den $SWEAT Coin! 🪙</h1>
-  <div id="message">Drehe eine Karte um und finde den Coin! Du hast <span id="tries">3</span> Versuche.</div>
-  <div class="board" id="board"></div>
-  <button id="reset" onclick="startGame()">Neues Spiel</button>
+  <header>
+    <h1>Mini Sweat App 💪</h1>
+    <div style="font-size:1.1em;">Grow & Earn – Testversion</div>
+  </header>
+  <main>
+    <div class="balance-section">
+      <div class="balance-label">Dein Kontostand (£):</div>
+      <div class="balance-value" id="balance">0.00</div>
+    </div>
+    <div class="grow-section">
+      <button class="grow-btn" id="growBtn">Grow starten</button>
+      <div class="grow-status" id="growStatus"></div>
+      <div class="grow-timer" id="growTimer"></div>
+    </div>
+    <div class="history-section">
+      <div class="history-title">Grow-Verlauf</div>
+      <ul class="history-list" id="historyList"></ul>
+      <button class="reset-btn" id="resetBtn">Alles zurücksetzen</button>
+    </div>
+  </main>
   <script>
-    const totalCards = 6;
-    const maxTries = 3;
-    let coinIndex, tries, found, board;
+    // --- Einstellungen ---
+    const START_BALANCE = 2.00; // £ Startguthaben
+    const GROW_RATE = 0.00001123; // £ pro Sekunde (simuliert "Yield")
+    const GROW_INTERVAL = 1000; // ms
 
-    function startGame() {
-      tries = maxTries;
-      found = false;
-      document.getElementById('tries').textContent = tries;
-      document.getElementById('message').textContent = 'Drehe eine Karte um und finde den Coin! Du hast ' + tries + ' Versuche.';
-      board = document.getElementById('board');
-      board.innerHTML = '';
-      coinIndex = Math.floor(Math.random() * totalCards);
-      for (let i = 0; i < totalCards; i++) {
-        let card = document.createElement('div');
-        card.className = 'card';
-        card.dataset.index = i;
-        card.onclick = flipCard;
-        card.textContent = '❓';
-        board.appendChild(card);
-      }
+    // --- Lokale Storage Keys ---
+    const STORAGE_KEYS = {
+      BALANCE: 'miniSweat_balance',
+      GROWING: 'miniSweat_growing',
+      GROW_START: 'miniSweat_growStart',
+      GROW_ACCUM: 'miniSweat_growAccum',
+      HISTORY: 'miniSweat_history'
+    };
+
+    // --- State Variablen ---
+    let balance = START_BALANCE;
+    let growing = false;
+    let growStart = null;
+    let growAccum = 0;
+    let growTimer = null;
+    let history = ;
+
+    // --- DOM Elemente ---
+    const balanceEl = document.getElementById('balance');
+    const growBtn = document.getElementById('growBtn');
+    const growStatusEl = document.getElementById('growStatus');
+    const growTimerEl = document.getElementById('growTimer');
+    const historyListEl = document.getElementById('historyList');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // --- Initialisierung ---
+    function init() {
+      loadState();
+      updateBalance();
+      updateGrowUI();
+      updateHistory();
+      if (growing) startGrowInterval();
     }
 
-    function flipCard(e) {
-      if (found || tries === 0) return;
-      const card = e.currentTarget;
-      const idx = parseInt(card.dataset.index);
-      if (card.classList.contains('flipped')) return;
-      card.classList.add('flipped');
-      if (idx === coinIndex) {
-        card.textContent = '🪙';
-        card.classList.add('found');
-        found = true;
-        document.getElementById('message').textContent = 'Glückwunsch! Du hast den $SWEAT Coin gefunden! 🎉';
+    // --- State laden ---
+    function loadState() {
+      balance = parseFloat(localStorage.getItem(STORAGE_KEYS.BALANCE)) || START_BALANCE;
+      growing = localStorage.getItem(STORAGE_KEYS.GROWING) === 'true';
+      growStart = localStorage.getItem(STORAGE_KEYS.GROW_START);
+      growAccum = parseFloat(localStorage.getItem(STORAGE_KEYS.GROW_ACCUM)) || 0;
+      try {
+        history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY)) || ;
+      } catch { history = ; }
+    }
+
+    // --- State speichern ---
+    function saveState() {
+      localStorage.setItem(STORAGE_KEYS.BALANCE, balance.toFixed(8));
+      localStorage.setItem(STORAGE_KEYS.GROWING, growing);
+      if (growStart) localStorage.setItem(STORAGE_KEYS.GROW_START, growStart);
+      localStorage.setItem(STORAGE_KEYS.GROW_ACCUM, growAccum.toFixed(8));
+      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+    }
+
+    // --- Balance anzeigen ---
+    function updateBalance() {
+      balanceEl.textContent = balance.toFixed(8);
+    }
+
+    // --- Grow UI aktualisieren ---
+    function updateGrowUI() {
+      if (growing) {
+        growBtn.textContent = "Grow stoppen & Ertrag einsammeln";
+        growStatusEl.textContent = "Grow läuft seit: " + formatDateTime(growStart);
+        growBtn.disabled = false;
       } else {
-        card.textContent = '❌';
-        tries--;
-        document.getElementById('tries').textContent = tries;
-        if (tries === 0) {
-          document.getElementById('message').textContent = 'Leider verloren! Der Coin war unter Karte ' + (coinIndex + 1) + '.';
-          revealCoin();
-        } else {
-          document.getElementById('message').textContent = 'Falsch! Noch ' + tries + ' Versuch(e).';
-        }
+        growBtn.textContent = "Grow starten";
+        growStatusEl.textContent = growAccum > 0 ? 
+          "Letzter Ertrag: +" + growAccum.toFixed(8) + " £" : "Kein aktiver Grow";
+        growBtn.disabled = false;
+        growTimerEl.textContent = "";
       }
     }
 
-    function revealCoin() {
-      const cards = document.querySelectorAll('.card');
-      cards.textContent = '🪙';
-      cards.classList.add('found');
+    // --- Grow starten/stoppen ---
+    growBtn.onclick = function() {
+      if (!growing) {
+        startGrow();
+      } else {
+        stopGrow();
+      }
+    };
+
+    function startGrow() {
+      if (growing) return;
+      growing = true;
+      growStart = new Date().toISOString();
+      growAccum = 0;
+      saveState();
+      updateGrowUI();
+      startGrowInterval();
     }
 
-    startGame();
+    function stopGrow() {
+      if (!growing) return;
+      const now = new Date();
+      const start = new Date(growStart);
+      const seconds = Math.floor((now - start) / 1000);
+      const earned = seconds * GROW_RATE;
+      balance += earned;
+      growAccum = earned;
+      growing = false;
+      addHistoryEntry(start, now, earned);
+      saveState();
+      updateBalance();
+      updateGrowUI();
+      updateHistory();
+      clearInterval(growTimer);
+    }
+
+    // --- Grow-Timer ---
+    function startGrowInterval() {
+      updateGrowTimer();
+      growTimer = setInterval(updateGrowTimer, GROW_INTERVAL);
+    }
+
+    function updateGrowTimer() {
+      if (!growing || !growStart) return;
+      const now = new Date();
+      const start = new Date(growStart);
+      const seconds = Math.floor((now - start) / 1000);
+      const earned = seconds * GROW_RATE;
+      growTimerEl.textContent = "Ertrag: +" + earned.toFixed(8) + " £ (" + seconds + " Sek)";
+    }
+
+    // --- Grow-Verlauf ---
+    function addHistoryEntry(start, end, earned) {
+      history.unshift({
+        start: start.toISOString ? start.toISOString() : start,
+        end: end.toISOString ? end.toISOString() : end,
+        earned: earned
+      });
+      if (history.length > 10) history = history.slice(0, 10);
+    }
+
+    function updateHistory() {
+      historyListEl.innerHTML = "";
+      if (history.length === 0) {
+        historyListEl.innerHTML = "<li>Kein Grow-Verlauf vorhanden.</li>";
+        return;
+      }
+      history.forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = "Start: " + formatDateTime(entry.start) +
+          " | Ende: " + formatDateTime(entry.end) +
+          " | Ertrag: +" + parseFloat(entry.earned).toFixed(8) + " £";
+        historyListEl.appendChild(li);
+      });
+    }
+
+    // --- Datum/Uhrzeit formatieren ---
+    function formatDateTime(dt) {
+      const d = new Date(dt);
+      return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+    }
+
+    // --- Alles zurücksetzen ---
+    resetBtn.onclick = function() {
+      if (confirm("Willst du wirklich alles zurücksetzen?")) {
+        localStorage.clear();
+        balance = START_BALANCE;
+        growing = false;
+        growStart = null;
+        growAccum = 0;
+        history = ;
+        updateBalance();
+        updateGrowUI();
+        updateHistory();
+        clearInterval(growTimer);
+      }
+    };
+
+    // --- App starten ---
+    window.onload = init;
+    window.onbeforeunload = saveState;
   </script>
 </body>
 </html>
