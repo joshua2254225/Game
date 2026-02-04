@@ -3,76 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Logic Music Pro</title>
+    <title>AI Composer Pro v2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
-        body { margin: 0; background: #0f0f0f; color: #00ff88; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        #visualizer { width: 100px; height: 100px; border: 4px solid #00ff88; margin-bottom: 20px; transition: transform 0.1s; border-radius: 50%; }
-        button { background: transparent; border: 2px solid #00ff88; color: #00ff88; padding: 15px 30px; font-size: 18px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
-        button:active { background: #00ff88; color: #0f0f0f; }
-        #info { margin-top: 15px; font-size: 12px; color: #555; }
+        :root { --neon: #00ff88; --bg: #0a0a0c; }
+        body { margin: 0; background: var(--bg); color: var(--neon); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        #canvas { position: absolute; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; opacity: 0.3; }
+        .container { background: rgba(20, 20, 25, 0.9); padding: 30px; border: 2px solid var(--neon); border-radius: 20px; box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); z-index: 1; }
+        h1 { text-transform: uppercase; letter-spacing: 5px; margin-bottom: 5px; font-size: 1.5rem; }
+        .controls { margin: 20px 0; }
+        button { background: var(--neon); color: var(--bg); border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.3s; }
+        button:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--neon); }
+        .stats { font-family: monospace; font-size: 0.9rem; margin-top: 20px; color: #666; }
+        .indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #333; margin-left: 10px; }
+        .active { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
     </style>
 </head>
 <body>
 
-    <div id="visualizer"></div>
-    <button id="startBtn">Initialisiere Audio</button>
-    <div id="info">Log: Warte auf User-Interaktion...</div>
+    <canvas id="canvas"></canvas>
+
+    <div class="container">
+        <h1>AI Sound Logic</h1>
+        <p>Generative Instrumental Engine</p>
+        
+        <div class="controls">
+            <button id="masterBtn">SYSTEM START</button>
+        </div>
+
+        <div class="stats">
+            <div>Melodie: <span id="noteOut">-</span> <div id="ind1" class="indicator"></div></div>
+            <div>Harmonie: <span id="chordOut">-</span> <div id="ind2" class="indicator"></div></div>
+            <div>Beat: <span id="beatOut">-</span> <div id="ind3" class="indicator"></div></div>
+        </div>
+    </div>
 
     <script>
-        let isStarted = false;
-        const info = document.getElementById('info');
-        const viz = document.getElementById('visualizer');
-
-        // 1. Klangeinstellungen (Ein weicher Synth mit Echo)
-        const delay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
-        const synth = new Tone.PolySynth(Tone.Synth).connect(delay);
+        // --- 1. AUDIO SETUP ---
+        const reverb = new Tone.Freeverb({ roomSize: 0.8, dampening: 3000 }).toDestination();
+        const delay = new Tone.FeedbackDelay("4n", 0.4).connect(reverb);
         
-        // Pentatonische Skala - klingt immer harmonisch
-        const scale = ["C3", "D3", "E3", "G3", "A3", "C4", "D4", "E4", "G4", "A4"];
+        // Lead Synth (Melodie)
+        const leadSynth = new Tone.MonoSynth({
+            oscillator: { type: "sawtooth" },
+            envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1 }
+        }).connect(delay);
 
-        // 2. Die Musik-Logik (Loop)
-        const loop = new Tone.Loop(time => {
-            // Zufällige Note wählen
-            const note = scale[Math.floor(Math.random() * scale.length)];
-            
-            // Note spielen
-            synth.triggerAttackRelease(note, "8n", time);
-            
-            // Visueller Effekt im Takt
-            Tone.Draw.schedule(() => {
-                viz.style.transform = "scale(1.2)";
-                viz.style.backgroundColor = "#00ff88";
-                info.innerText = "Log: Spiele " + note;
-                setTimeout(() => { 
-                    viz.style.transform = "scale(1.0)"; 
-                    viz.style.backgroundColor = "transparent";
-                }, 100);
-            }, time);
+        // Pad Synth (Fläche)
+        const padSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "sine" },
+            envelope: { attack: 2, release: 2 }
+        }).connect(reverb);
+        padSynth.volume.value = -15;
 
+        // Drum Synth
+        const kick = new Tone.MembraneSynth().toDestination();
+        const hihat = new Tone.NoiseSynth({ volume: -20 }).toDestination();
+
+        // --- 2. MUSIK LOGIK ---
+        // Große Auswahl an Noten (C-Dur Pentatonik über 3 Oktaven)
+        const scale = ["C3", "D3", "E3", "G3", "A3", "C4", "D4", "E4", "G4", "A4", "C5", "D5", "E5", "G5", "A5"];
+        const chords = [
+            ["C3", "E3", "G3"], ["A2", "C3", "E3"], ["F2", "A2", "C3"], ["G2", "B2", "D3"]
+        ];
+
+        let lastNoteIndex = 5; 
+        let isPlaying = false;
+
+        // Visualisierung vorbereiten
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+
+        // --- 3. DIE GENERATIVE ENGINE ---
+        
+        // Loop 1: Die Melodie (Achtel-Noten)
+        const melodyLoop = new Tone.Loop(time => {
+            // "Smart Random": Wir gehen maximal 2 Schritte in der Tonleiter hoch oder runter
+            const change = Math.floor(Math.random() * 5) - 2;
+            lastNoteIndex = Math.max(0, Math.min(scale.length - 1, lastNoteIndex + change));
+            const note = scale[lastNoteIndex];
+
+            // Nur bei 70% der Schläge eine Note spielen (Rhythmus-Gefühl)
+            if (Math.random() > 0.3) {
+                leadSynth.triggerAttackRelease(note, "8n", time);
+                document.getElementById('noteOut').innerText = note;
+                flashIndicator('ind1');
+            }
+        }, "8n");
+
+        // Loop 2: Akkorde (Jeder 2. Takt)
+        const chordLoop = new Tone.Loop(time => {
+            const chord = chords[Math.floor(Math.random() * chords.length)];
+            padSynth.triggerAttackRelease(chord, "2n", time);
+            document.getElementById('chordOut').innerText = chord.join("-");
+            flashIndicator('ind2');
+        }, "2n");
+
+        // Loop 3: Drums
+        const drumLoop = new Tone.Loop(time => {
+            // Kick auf 1 und 3
+            kick.triggerAttackRelease("C1", "8n", time);
+            
+            // Zufällige Hi-Hats
+            if (Math.random() > 0.5) hihat.triggerAttackRelease("16n", time + Tone.Time("8n"));
+            
+            document.getElementById('beatOut').innerText = "BOOM-TSCHAK";
+            flashIndicator('ind3');
         }, "4n");
 
-        // 3. Der "RICHTIGE" Start-Mechanismus
-        document.getElementById('startBtn').addEventListener('click', async () => {
-            if (!isStarted) {
-                // WICHTIG: Audio Kontext starten
+        // Hilfsfunktionen
+        function flashIndicator(id) {
+            const el = document.getElementById(id);
+            el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), 100);
+        }
+
+        // --- 4. START TRIGGER ---
+        document.getElementById('masterBtn').addEventListener('click', async () => {
+            if (!isPlaying) {
                 await Tone.start();
-                await Tone.context.resume(); // Explizites Aufwecken für Mobilgeräte
+                await Tone.context.resume();
                 
-                Tone.Transport.bpm.value = 120;
+                Tone.Transport.bpm.value = 110;
                 Tone.Transport.start();
-                loop.start(0);
                 
-                document.getElementById('startBtn').innerText = "STOP";
-                isStarted = true;
-                info.innerText = "Log: Audio läuft!";
+                melodyLoop.start(0);
+                chordLoop.start(0);
+                drumLoop.start(0);
+
+                document.getElementById('masterBtn').innerText = "SYSTEM STOP";
+                isPlaying = true;
             } else {
                 Tone.Transport.stop();
-                isStarted = false;
-                document.getElementById('startBtn').innerText = "START";
-                info.innerText = "Log: Pausiert.";
+                isPlaying = false;
+                document.getElementById('masterBtn').innerText = "SYSTEM START";
             }
         });
+
+        // Hintergrund-Animation
+        function draw() {
+            ctx.fillStyle = 'rgba(10, 10, 12, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (isPlaying) {
+                for(let i=0; i<3; i++) {
+                    ctx.strokeStyle = '#00ff88';
+                    ctx.beginPath();
+                    ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*50, 0, Math.PI*2);
+                    ctx.stroke();
+                }
+            }
+            requestAnimationFrame(draw);
+        }
+        draw();
+
     </script>
 </body>
 </html>
