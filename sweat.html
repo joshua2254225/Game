@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Finde den $SWEAT Coin!</title>
+  <style>
+    body { font-family: Arial, background: #f0f8ff; text-align: center; }
+    h1 { color: #2e8b57; }
+    .board { display: flex; justify-content: center; margin: 40px 0; }
+    .card {
+      width: 80px; height: 120px; margin: 10px;
+      background: #fff; border: 2px solid #2e8b57; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2em; cursor: pointer; transition: background 0.3s;
+    }
+    .card.flipped { background: #ffe066; }
+    .card.found { background: #90ee90; color: #fff; }
+    #message { font-size: 1.2em; margin: 20px; color: #2e8b57; }
+    #reset { padding: 10px 20px; font-size: 1em; background: #2e8b57; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    #tries { color: #ff6347; }
+  </style>
+</head>
+<body>
+  <h1>Finde den $SWEAT Coin! 🪙</h1>
+  <div id="message">Drehe eine Karte um und finde den Coin! Du hast <span id="tries">3</span> Versuche.</div>
+  <div class="board" id="board"></div>
+  <button id="reset" onclick="startGame()">Neues Spiel</button>
+  <script>
+    const totalCards = 6;
+    const maxTries = 3;
+    let coinIndex, tries, found, board;
+
+    function startGame() {
+      tries = maxTries;
+      found = false;
+      document.getElementById('tries').textContent = tries;
+      document.getElementById('message').textContent = 'Drehe eine Karte um und finde den Coin! Du hast ' + tries + ' Versuche.';
+      board = document.getElementById('board');
+      board.innerHTML = '';
+      coinIndex = Math.floor(Math.random() * totalCards);
+      for (let i = 0; i < totalCards; i++) {
+        let card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.index = i;
+        card.onclick = flipCard;
+        card.textContent = '❓';
+        board.appendChild(card);
+      }
+    }
+
+    function flipCard(e) {
+      if (found || tries === 0) return;
+      const card = e.currentTarget;
+      const idx = parseInt(card.dataset.index);
+      if (card.classList.contains('flipped')) return;
+      card.classList.add('flipped');
+      if (idx === coinIndex) {
+        card.textContent = '🪙';
+        card.classList.add('found');
+        found = true;
+        document.getElementById('message').textContent = 'Glückwunsch! Du hast den $SWEAT Coin gefunden! 🎉';
+      } else {
+        card.textContent = '❌';
+        tries--;
+        document.getElementById('tries').textContent = tries;
+        if (tries === 0) {
+          document.getElementById('message').textContent = 'Leider verloren! Der Coin war unter Karte ' + (coinIndex + 1) + '.';
+          revealCoin();
+        } else {
+          document.getElementById('message').textContent = 'Falsch! Noch ' + tries + ' Versuch(e).';
+        }
+      }
+    }
+
+    function revealCoin() {
+      const cards = document.querySelectorAll('.card');
+      cards.textContent = '🪙';
+      cards.classList.add('found');
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
