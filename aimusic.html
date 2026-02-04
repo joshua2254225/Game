@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Meine Logik-KI Musik</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #1a1a1a; color: white; }
+        button { padding: 20px 40px; font-size: 1.2rem; cursor: pointer; border-radius: 10px; border: none; background: #00ff88; color: #1a1a1a; font-weight: bold; }
+        #status { margin-top: 20px; color: #888; }
+    </style>
+</head>
+<body>
+
+    <h1>Generative Musik-Logik</h1>
+    <button id="playBtn">Musik Starten / Stoppen</button>
+    <div id="status">Bereit. Drücke Start!</div>
+
+    <script>
+        // 1. Setup: Ein einfacher Synthesizer mit etwas Hall (Reverb)
+        const reverb = new Tone.Reverb(2).toDestination();
+        const synth = new Tone.Synth({
+            oscillator: { type: "triangle" },
+            envelope: { sustain: 0.1, release: 1 }
+        }).connect(reverb);
+
+        // 2. Die Logik: Unsere "Skala" (Töne, die gut zusammenpassen)
+        // Wir nehmen die C-Dur Pentatonik (C, D, E, G, A)
+        const scale = ["C4", "D4", "E4", "G4", "A4", "C5", "E5"];
+        
+        let isPlaying = false;
+
+        // Das ist die "Loop"-Logik
+        const loop = new Tone.Loop(time => {
+            // "Zufalls-Logik": Wähle einen Ton aus der Liste
+            const randomNote = scale[Math.floor(Math.random() * scale.length)];
+            
+            // Spiele den Ton für die Dauer einer Achtelnote
+            synth.triggerAttackRelease(randomNote, "8n", time);
+            
+            // Ein bisschen visueller Status
+            document.getElementById('status').innerText = "Spiele gerade: " + randomNote;
+        }, "4n"); // Intervall: Jede Viertelnote
+
+        // 3. Button-Funktion (Browser erlauben Sound erst nach Klick)
+        document.getElementById("playBtn").addEventListener("click", async () => {
+            if (!isPlaying) {
+                await Tone.start(); // Audio-Engine aktivieren
+                Tone.Transport.start();
+                loop.start(0);
+                isPlaying = true;
+                document.getElementById("playBtn").innerText = "Stoppen";
+            } else {
+                Tone.Transport.stop();
+                loop.stop();
+                isPlaying = false;
+                document.getElementById("playBtn").innerText = "Musik Starten";
+                document.getElementById('status').innerText = "Gestoppt.";
+            }
+        });
+    </script>
+</body>
+</html>
