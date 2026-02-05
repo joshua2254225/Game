@@ -1,332 +1,276 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Mini Sweat App – Grow & Earn</title>
+  <title>SweatGrow Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
-      --primary: #2e8b57;
-      --secondary: #ffe066;
-      --bg: #f0f8ff;
-      --accent: #90ee90;
-      --danger: #ff6347;
+      --primary: #00d2ff;
+      --secondary: #3a7bd5;
+      --bg: #0f2027;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --text: #f0f0f0;
+      --accent: #00ff88;
     }
+
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: var(--bg);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #000000);
+      color: var(--text);
       margin: 0;
-      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       min-height: 100vh;
-      color: #222;
     }
-    header {
-      background: var(--primary);
-      color: #fff;
-      padding: 24px 0 12px 0;
+
+    .app-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       text-align: center;
-      box-shadow: 0 2px 8px #b2dfdb;
     }
-    header h1 {
-      margin: 0;
-      font-size: 2.2em;
-      letter-spacing: 1px;
-    }
-    main {
-      max-width: 420px;
-      margin: 32px auto;
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 4px 24px #b2dfdb;
-      padding: 32px 18px 24px 18px;
-    }
-    .balance-section {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .balance-label {
-      font-size: 1.1em;
-      color: #555;
-    }
+
+    .balance-label { font-size: 0.9em; opacity: 0.7; letter-spacing: 1px; }
+    
     .balance-value {
-      font-size: 2.6em;
-      color: var(--primary);
-      font-weight: bold;
-      margin: 10px 0 0 0;
-      letter-spacing: 1px;
+      font-size: 3em;
+      font-weight: 800;
+      margin: 10px 0;
+      background: linear-gradient(to right, #00d2ff, #92fe9d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .grow-section {
-      margin: 36px 0 18px 0;
-      padding: 18px 0;
-      border-top: 1px solid #eee;
-      border-bottom: 1px solid #eee;
-      text-align: center;
-    }
+
     .grow-btn {
-      background: var(--primary);
-      color: #fff;
+      width: 100%;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
       border: none;
-      border-radius: 8px;
-      padding: 14px 40px;
-      font-size: 1.2em;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: background 0.2s;
-    }
-    .grow-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .grow-status {
-      margin: 18px 0 0 0;
-      color: var(--primary);
+      border-radius: 12px;
+      padding: 16px;
+      color: white;
       font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 20px;
     }
-    .grow-timer {
-      font-size: 1em;
-      color: #555;
-      margin-top: 6px;
-    }
-    .history-section {
-      margin-top: 32px;
-      background: #f9f9f9;
+
+    .grow-btn:active { transform: scale(0.98); }
+    .grow-btn.active { background: linear-gradient(45deg, #f85032, #e73827); }
+
+    .progress-container {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
       border-radius: 10px;
-      padding: 14px 10px;
+      margin: 25px 0;
+      overflow: hidden;
+      display: none;
     }
-    .history-title {
-      font-size: 1.1em;
-      color: var(--primary);
-      margin-bottom: 8px;
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      box-shadow: 0 0 15px var(--accent);
     }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+      font-size: 0.85em;
+    }
+
+    .stat-box {
+      background: rgba(255,255,255,0.03);
+      padding: 10px;
+      border-radius: 12px;
+    }
+
+    .history-section {
+      margin-top: 25px;
+      text-align: left;
+    }
+
     .history-list {
-      font-size: 0.98em;
-      color: #444;
-      max-height: 120px;
+      list-style: none;
+      padding: 0;
+      max-height: 150px;
       overflow-y: auto;
-      padding-left: 12px;
-      margin: 0;
+      font-size: 0.8em;
     }
-    .reset-btn {
-      background: var(--danger);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 18px;
-      font-size: 1em;
+
+    .history-item {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .reset-link {
+      display: inline-block;
+      margin-top: 20px;
+      font-size: 0.7em;
+      color: #ff6b6b;
       cursor: pointer;
-      margin-top: 18px;
-      float: right;
-    }
-    @media (max-width: 600px) {
-      main { padding: 18px 4px 18px 4px; }
-      .balance-value { font-size: 2em; }
-      .grow-btn { font-size: 1em; padding: 10px 18px; }
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Mini Sweat App 💪</h1>
-    <div style="font-size:1.1em;">Grow & Earn – Testversion</div>
-  </header>
-  <main>
-    <div class="balance-section">
-      <div class="balance-label">Dein Kontostand (£):</div>
-      <div class="balance-value" id="balance">0.00</div>
+
+<div class="app-container">
+  <div class="glass-card">
+    <div class="balance-label">TOTAL BALANCE</div>
+    <div class="balance-value" id="balance">0.00000000</div>
+    
+    <div class="progress-container" id="progCont">
+      <div class="progress-bar" id="progBar"></div>
     </div>
-    <div class="grow-section">
-      <button class="grow-btn" id="growBtn">Grow starten</button>
-      <div class="grow-status" id="growStatus"></div>
-      <div class="grow-timer" id="growTimer"></div>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div style="opacity: 0.6">Earned</div>
+        <div id="earned" style="color: var(--accent)">+0.00 £</div>
+      </div>
+      <div class="stat-box">
+        <div style="opacity: 0.6">Time</div>
+        <div id="timer">00:00</div>
+      </div>
     </div>
+
+    <button class="grow-btn" id="growBtn">Start Grow Jar</button>
+    
     <div class="history-section">
-      <div class="history-title">Grow-Verlauf</div>
+      <div style="font-weight: bold; margin-bottom: 10px; font-size: 0.9em;">Recent Jars</div>
       <ul class="history-list" id="historyList"></ul>
-      <button class="reset-btn" id="resetBtn">Alles zurücksetzen</button>
     </div>
-  </main>
-  <script>
-    // --- Einstellungen ---
-    const START_BALANCE = 2.00; // £ Startguthaben
-    const GROW_RATE = 0.00001123; // £ pro Sekunde (simuliert "Yield")
-    const GROW_INTERVAL = 1000; // ms
 
-    // --- Lokale Storage Keys ---
-    const STORAGE_KEYS = {
-      BALANCE: 'miniSweat_balance',
-      GROWING: 'miniSweat_growing',
-      GROW_START: 'miniSweat_growStart',
-      GROW_ACCUM: 'miniSweat_growAccum',
-      HISTORY: 'miniSweat_history'
-    };
+    <span class="reset-link" id="resetBtn">Reset Data</span>
+  </div>
+</div>
 
-    // --- State Variablen ---
-    let balance = START_BALANCE;
-    let growing = false;
-    let growStart = null;
-    let growAccum = 0;
-    let growTimer = null;
-    let history = ;
+<script>
+  const START_BALANCE = 2.00;
+  const GROW_RATE = 0.00001123; 
 
-    // --- DOM Elemente ---
-    const balanceEl = document.getElementById('balance');
-    const growBtn = document.getElementById('growBtn');
-    const growStatusEl = document.getElementById('growStatus');
-    const growTimerEl = document.getElementById('growTimer');
-    const historyListEl = document.getElementById('historyList');
-    const resetBtn = document.getElementById('resetBtn');
+  let state = {
+    balance: START_BALANCE,
+    isGrowing: false,
+    startTime: null,
+    history: []
+  };
 
-    // --- Initialisierung ---
-    function init() {
-      loadState();
-      updateBalance();
-      updateGrowUI();
-      updateHistory();
-      if (growing) startGrowInterval();
+  const el = {
+    balance: document.getElementById('balance'),
+    growBtn: document.getElementById('growBtn'),
+    earned: document.getElementById('earned'),
+    timer: document.getElementById('timer'),
+    progCont: document.getElementById('progCont'),
+    progBar: document.getElementById('progBar'),
+    historyList: document.getElementById('historyList'),
+    resetBtn: document.getElementById('resetBtn')
+  };
+
+  function init() {
+    const saved = localStorage.getItem('sweat_pro_data');
+    if (saved) state = JSON.parse(saved);
+    
+    updateUI();
+    if (state.isGrowing) startInterval();
+    renderHistory();
+  }
+
+  function save() {
+    localStorage.setItem('sweat_pro_data', JSON.stringify(state));
+  }
+
+  function updateUI() {
+    el.balance.textContent = state.balance.toFixed(8);
+    if (state.isGrowing) {
+      el.growBtn.textContent = "Claim Yield";
+      el.growBtn.classList.add('active');
+      el.progCont.style.display = 'block';
+    } else {
+      el.growBtn.textContent = "Start Grow Jar";
+      el.growBtn.classList.remove('active');
+      el.progCont.style.display = 'none';
+      el.earned.textContent = "+0.00 £";
+      el.timer.textContent = "00:00";
     }
+  }
 
-    // --- State laden ---
-    function loadState() {
-      balance = parseFloat(localStorage.getItem(STORAGE_KEYS.BALANCE)) || START_BALANCE;
-      growing = localStorage.getItem(STORAGE_KEYS.GROWING) === 'true';
-      growStart = localStorage.getItem(STORAGE_KEYS.GROW_START);
-      growAccum = parseFloat(localStorage.getItem(STORAGE_KEYS.GROW_ACCUM)) || 0;
-      try {
-        history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY)) || ;
-      } catch { history = ; }
-    }
-
-    // --- State speichern ---
-    function saveState() {
-      localStorage.setItem(STORAGE_KEYS.BALANCE, balance.toFixed(8));
-      localStorage.setItem(STORAGE_KEYS.GROWING, growing);
-      if (growStart) localStorage.setItem(STORAGE_KEYS.GROW_START, growStart);
-      localStorage.setItem(STORAGE_KEYS.GROW_ACCUM, growAccum.toFixed(8));
-      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
-    }
-
-    // --- Balance anzeigen ---
-    function updateBalance() {
-      balanceEl.textContent = balance.toFixed(8);
-    }
-
-    // --- Grow UI aktualisieren ---
-    function updateGrowUI() {
-      if (growing) {
-        growBtn.textContent = "Grow stoppen & Ertrag einsammeln";
-        growStatusEl.textContent = "Grow läuft seit: " + formatDateTime(growStart);
-        growBtn.disabled = false;
-      } else {
-        growBtn.textContent = "Grow starten";
-        growStatusEl.textContent = growAccum > 0 ? 
-          "Letzter Ertrag: +" + growAccum.toFixed(8) + " £" : "Kein aktiver Grow";
-        growBtn.disabled = false;
-        growTimerEl.textContent = "";
-      }
-    }
-
-    // --- Grow starten/stoppen ---
-    growBtn.onclick = function() {
-      if (!growing) {
-        startGrow();
-      } else {
-        stopGrow();
-      }
-    };
-
-    function startGrow() {
-      if (growing) return;
-      growing = true;
-      growStart = new Date().toISOString();
-      growAccum = 0;
-      saveState();
-      updateGrowUI();
-      startGrowInterval();
-    }
-
-    function stopGrow() {
-      if (!growing) return;
-      const now = new Date();
-      const start = new Date(growStart);
-      const seconds = Math.floor((now - start) / 1000);
-      const earned = seconds * GROW_RATE;
-      balance += earned;
-      growAccum = earned;
-      growing = false;
-      addHistoryEntry(start, now, earned);
-      saveState();
-      updateBalance();
-      updateGrowUI();
-      updateHistory();
-      clearInterval(growTimer);
-    }
-
-    // --- Grow-Timer ---
-    function startGrowInterval() {
-      updateGrowTimer();
-      growTimer = setInterval(updateGrowTimer, GROW_INTERVAL);
-    }
-
-    function updateGrowTimer() {
-      if (!growing || !growStart) return;
-      const now = new Date();
-      const start = new Date(growStart);
-      const seconds = Math.floor((now - start) / 1000);
-      const earned = seconds * GROW_RATE;
-      growTimerEl.textContent = "Ertrag: +" + earned.toFixed(8) + " £ (" + seconds + " Sek)";
-    }
-
-    // --- Grow-Verlauf ---
-    function addHistoryEntry(start, end, earned) {
-      history.unshift({
-        start: start.toISOString ? start.toISOString() : start,
-        end: end.toISOString ? end.toISOString() : end,
-        earned: earned
-      });
-      if (history.length > 10) history = history.slice(0, 10);
-    }
-
-    function updateHistory() {
-      historyListEl.innerHTML = "";
-      if (history.length === 0) {
-        historyListEl.innerHTML = "<li>Kein Grow-Verlauf vorhanden.</li>";
+  function startInterval() {
+    const interval = setInterval(() => {
+      if (!state.isGrowing) {
+        clearInterval(interval);
         return;
       }
-      history.forEach(entry => {
-        const li = document.createElement('li');
-        li.textContent = "Start: " + formatDateTime(entry.start) +
-          " | Ende: " + formatDateTime(entry.end) +
-          " | Ertrag: +" + parseFloat(entry.earned).toFixed(8) + " £";
-        historyListEl.appendChild(li);
+      
+      const seconds = Math.floor((Date.now() - state.startTime) / 1000);
+      const earned = seconds * GROW_RATE;
+      
+      el.earned.textContent = "+" + earned.toFixed(6) + " £";
+      el.timer.textContent = formatTime(seconds);
+      el.progBar.style.width = (seconds % 60) * 1.66 + "%"; // Simulierter Fortschritt
+    }, 1000);
+  }
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }
+
+  el.growBtn.onclick = () => {
+    if (!state.isGrowing) {
+      state.isGrowing = true;
+      state.startTime = Date.now();
+      startInterval();
+    } else {
+      const seconds = Math.floor((Date.now() - state.startTime) / 1000);
+      const earned = seconds * GROW_RATE;
+      
+      state.balance += earned;
+      state.history.unshift({
+        date: new Date().toLocaleTimeString(),
+        amount: earned.toFixed(6)
       });
+      state.history = state.history.slice(0, 5);
+      state.isGrowing = false;
+      state.startTime = null;
+      renderHistory();
     }
+    save();
+    updateUI();
+  };
 
-    // --- Datum/Uhrzeit formatieren ---
-    function formatDateTime(dt) {
-      const d = new Date(dt);
-      return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+  function renderHistory() {
+    el.historyList.innerHTML = state.history.length ? '' : '<li>No recent activity</li>';
+    state.history.forEach(item => {
+      el.historyList.innerHTML += `<li class="history-item"><span>${item.date}</span><span style="color:var(--accent)">+${item.amount} £</span></li>`;
+    });
+  }
+
+  el.resetBtn.onclick = () => {
+    if(confirm("Clear all data?")) {
+      localStorage.clear();
+      location.reload();
     }
+  };
 
-    // --- Alles zurücksetzen ---
-    resetBtn.onclick = function() {
-      if (confirm("Willst du wirklich alles zurücksetzen?")) {
-        localStorage.clear();
-        balance = START_BALANCE;
-        growing = false;
-        growStart = null;
-        growAccum = 0;
-        history = ;
-        updateBalance();
-        updateGrowUI();
-        updateHistory();
-        clearInterval(growTimer);
-      }
-    };
-
-    // --- App starten ---
-    window.onload = init;
-    window.onbeforeunload = saveState;
-  </script>
+  init();
+</script>
 </body>
 </html>
