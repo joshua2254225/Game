@@ -1,198 +1,72 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harvest Tycoon 3D - Teil A</title>
+    <title>3D Farming Simulator</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
-        #overlay {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(0,0,0,0.5); color: white;
-            padding: 10px; border-radius: 5px; pointer-events: none;
+        #game-container {
+            width: 800px;
+            height: 600px;
+            perspective: 800px;
+            position: relative;
+        }
+        #world {
+            width: 800px;
+            height: 600px;
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+        #harvester {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            background-color: yellow;
+            transform-style: preserve-3d;
         }
     </style>
 </head>
 <body>
+    <div id="game-container">
+        <div id="world">
+            <!-- 3D world elements will be dynamically generated here -->
+        </div>
+        <div id="harvester"></div>
+    </div>
 
-<div id="overlay">
-    Steuerung: WASD oder Pfeiltasten<br>
-    Status: Teil A - Welt & Bewegung geladen
-</div>
+    <script>
+        const world = document.getElementById('world');
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+        // Generate a 3D world with cereals
+        for (let i = 0; i < 20; i++) {
+            const cereal = document.createElement('div');
+            cereal.classList.add('cereal');
+            cereal.style.width = '20px';
+            cereal.style.height = '20px';
+            cereal.style.position = 'absolute';
+            cereal.style.backgroundColor = 'green';
+            cereal.style.top = `${Math.floor(Math.random() * 500)}px`;
+            cereal.style.left = `${Math.floor(Math.random() * 750)}px`;
 
-<script>
-    // --- 1. SETUP ---
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB); // Schöner blauer Himmel
+            world.appendChild(cereal);
+        }
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true; // Wichtig für echte Schatten
-    document.body.appendChild(renderer.domElement);
+        // Move the harvester using arrow keys
+        const harvester = document.getElementById('harvester');
+        let harvesterX = 400;
+        let harvesterY = 300;
 
-    // --- 2. LICHT (Macht es "echt") ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowUp') {
+                harvesterY -= 10;
+            } else if (event.key === 'ArrowDown') {
+                harvesterY += 10;
+            } else if (event.key === 'ArrowLeft') {
+                harvesterX -= 10;
+            } else if (event.key === 'ArrowRight') {
+                harvesterX += 10;
+            }
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    sunLight.position.set(50, 50, 20);
-    sunLight.castShadow = true;
-    // Schatten-Qualität verbessern
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
-    scene.add(sunLight);
-
-    // --- 3. BODEN (Das Feld) ---
-    const floorGeometry = new THREE.PlaneGeometry(100, 100);
-    // Ein Material mit Gitter-Struktur, damit man die Bewegung sieht
-    const floorMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x3e8e41, 
-        roughness: 0.8 
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    scene.add(floor);
-
-    // Hilfsgitter zur Orientierung
-    const grid = new THREE.GridHelper(100, 20, 0x000000, 0x222222);
-    grid.position.y = 0.01;
-    scene.add(grid);
-
-    // --- 4. DER PLAYER (Platzhalter für den Mähdrescher) ---
-    const playerGroup = new THREE.Group();
-
-    // --- 4. DER MÄHDRESCHER (Detailliertes Modell) ---
-    const playerGroup = new THREE.Group();
-
-    // Materialien
-    const redMat = new THREE.MeshStandardMaterial({ color: 0xe03b3b });
-    const darkMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-    const glassMat = new THREE.MeshStandardMaterial({ 
-        color: 0x88ccff, 
-        transparent: true, 
-        opacity: 0.6 
-    });
-    const silverMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.5, roughness: 0.3 });
-
-    // 4.1 Hauptkörper
-    const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 3.5), redMat);
-    body.position.y = 1.0;
-    body.castShadow = true;
-    playerGroup.add(body);
-
-    // 4.2 Fahrerkabine (Cockpit)
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 1.4), glassMat);
-    cabin.position.set(0, 1.8, 0.8); // Etwas weiter vorne und oben
-    cabin.castShadow = true;
-    playerGroup.add(cabin);
-    
-    // Kabinen-Dach
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.1, 1.5), redMat);
-    roof.position.set(0, 2.4, 0.8);
-    playerGroup.add(roof);
-
-    // 4.3 Das Schneidwerk (Die Walze vorne)
-    const cutterGroup = new THREE.Group();
-    cutterGroup.position.set(0, 0.5, 2.2); // Ganz vorne am Fahrzeug
-    
-    const cutterBar = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.4, 0.8), silverMat);
-    cutterBar.castShadow = true;
-    cutterGroup.add(cutterBar);
-
-    // Die rotierende Walze (Zylinder)
-    const roller = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.4, 0.4, 4.2, 12), 
-        silverMat
-    );
-    roller.rotation.z = Math.PI / 2;
-    roller.name = "roller"; // Name für die Animation später
-    cutterGroup.add(roller);
-    
-    playerGroup.add(cutterGroup);
-
-    // 4.4 Räder
-    function createWheel(x, y, z, size) {
-        const wheelGeo = new THREE.CylinderGeometry(size, size, 0.6, 16);
-        const wheel = new THREE.Mesh(wheelGeo, darkMat);
-        wheel.rotation.z = Math.PI / 2;
-        wheel.position.set(x, y, z);
-        wheel.castShadow = true;
-        playerGroup.add(wheel);
-    }
-
-    // Hinterräder (groß)
-    createWheel(1.2, 0.7, -1.0, 0.7);
-    createWheel(-1.2, 0.7, -1.0, 0.7);
-    // Vorderräder (etwas kleiner)
-    createWheel(1.1, 0.5, 1.2, 0.5);
-    createWheel(-1.1, 0.5, 1.2, 0.5);
-
-    scene.add(playerGroup);
-    playerGroup.position.set(0, 0, 10);
-
-
-    
-    // Ein einfacher roter Block als Platzhalter
-    const bodyGeo = new THREE.BoxGeometry(2, 1.5, 3);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.castShadow = true;
-    body.position.y = 0.75;
-    playerGroup.add(body);
-
-    scene.add(playerGroup);
-    playerGroup.position.set(0, 0, 10);
-
-    // --- 5. STEUERUNG ---
-    const keys = {};
-    window.addEventListener('keydown', (e) => keys[e.code] = true);
-    window.addEventListener('keyup', (e) => keys[e.code] = false);
-
-    let moveSpeed = 0;
-    const acceleration = 0.01;
-    const friction = 0.95;
-    const maxSpeed = 0.3;
-
-    // --- 6. ANIMATION LOOP ---
-    function animate() {
-        requestAnimationFrame(animate);
-
-        // Vorwärts / Rückwärts
-        if (keys['KeyW'] || keys['ArrowUp']) moveSpeed += acceleration;
-        if (keys['KeyS'] || keys['ArrowDown']) moveSpeed -= acceleration;
-
-        // Reibung (bremst langsam ab)
-        moveSpeed *= friction;
-        
-        // Lenkung
-        if (keys['KeyA'] || keys['ArrowLeft']) playerGroup.rotation.y += 0.03;
-        if (keys['KeyD'] || keys['ArrowRight']) playerGroup.rotation.y -= 0.03;
-
-        // Bewegung anwenden
-        playerGroup.translateZ(moveSpeed);
-
-        // KAMERA-FOLLOW (Die Kamera folgt dem Spieler weich)
-        const relativeCameraOffset = new THREE.Vector3(0, 10, 15);
-        const cameraOffset = relativeCameraOffset.applyMatrix4(playerGroup.matrixWorld);
-        
-        camera.position.lerp(cameraOffset, 0.1); // Sanftes Folgen (0.1 = Weichheit)
-        camera.lookAt(playerGroup.position);
-
-        renderer.render(scene, camera);
-    }
-
-    // Fenster-Größe anpassen
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    animate();
-</script>
+            harvester.style.transform = `translate3d(${harvesterX}px, ${harvesterY}px, 0)`;
+        });
+    </script>
 </body>
 </html>
