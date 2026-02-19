@@ -1,72 +1,620 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+
+<html lang="en">
 <head>
-    <title>3D Farming Simulator</title>
-    <style>
-        #game-container {
-            width: 800px;
-            height: 600px;
-            perspective: 800px;
-            position: relative;
-        }
-        #world {
-            width: 800px;
-            height: 600px;
-            position: absolute;
-            transform-style: preserve-3d;
-        }
-        #harvester {
-            width: 50px;
-            height: 50px;
-            position: absolute;
-            background-color: yellow;
-            transform-style: preserve-3d;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Farming Simulator — HTML + Three.js (single file)</title>
+  <meta name="description" content="A compact but feature-rich 3D farming simulator implemented as a single HTML file using Three.js. Includes cereals field, a simple harvester vehicle, player controls, harvesting logic, HUD, and basic audio/particle effects.">
+  <style>
+    /* =========================================================
+       Styles for HUD, fullscreen canvas and overlay panels
+       ========================================================= */
+    html,body{height:100%;margin:0;font-family:Inter, Roboto, Arial, sans-serif;background:#82c1ff;}
+    #container{position:fixed;inset:0;display:flex;flex-direction:column;}
+    canvas{display:block; width:100%; height:100%;}
+    .hud{position:fixed;left:12px;top:12px;background:rgba(0,0,0,0.35);color:#fff;padding:10px;border-radius:8px;backdrop-filter: blur(4px);min-width:220px}
+    .hud h1{margin:0;font-size:16px}
+    .hud .stats{margin-top:8px;font-size:14px}
+    .controls{position:fixed;right:12px;top:12px;background:rgba(255,255,255,0.9);color:#111;padding:12px;border-radius:8px;min-width:220px}
+    .controls h2{margin:0 0 8px 0;font-size:14px}
+    .controls p{margin:6px 0;font-size:13px}
+    .footer{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;background:rgba(0,0,0,0.35);color:#fff;padding:8px 12px;border-radius:8px}
+    .button{display:inline-block;background:#2ecc71;border-radius:6px;padding:6px 10px;color:white;cursor:pointer;margin-top:8px}
+    .small{font-size:12px;opacity:0.85}
+    input[type=range]{width:100%}
+    /* make debug panel resizable if needed */
+    .debug{position:fixed;left:12px;bottom:80px;background:rgba(0,0,0,0.45);color:#fff;padding:8px;border-radius:8px;max-width:320px}
+    /* Responsive tweaks */
+    @media(max-width:520px){.hud,.controls{min-width:160px;font-size:12px}}
+  </style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="world">
-            <!-- 3D world elements will be dynamically generated here -->
-        </div>
-        <div id="harvester"></div>
+  <div id="container">
+    <canvas id="c"></canvas>
+  </div>  <div class="hud" id="hud">
+    <h1>3D Farming Simulator</h1>
+    <div class="stats">
+      <div>Harvested: <span id="harvested">0</span></div>
+      <div>Field Remaining: <span id="remaining">0</span></div>
+      <div>Speed: <span id="speedDisplay">0</span> m/s</div>
+      <div>Seeds: <span id="seeds">0</span></div>
     </div>
+  </div>  <div class="controls" id="controls">
+    <h2>Controls</h2>
+    <p>W/A/S/D — move forward/left/back/right</p>
+    <p>Shift — accelerate</p>
+    <p>Space — toggle harvester blade</p>
+    <p>C — toggle camera mode</p>
+    <p class="small">Tip: Drive slowly through the field to harvest cleanly.</p>
+    <div style="margin-top:8px">
+      <div style="font-size:12px;margin-bottom:6px">Harvest width</div>
+      <input id="harvWidth" type="range" min="1" max="6" step="0.1" value="2">
+    </div>
+  </div>  <div class="footer" id="footer">Build: single-file demo • Move the harvester and mow through the crops</div>  <div class="debug" id="debug" style="display:none">
+    <div><strong>DEBUG</strong></div>
+    <div id="debugText"></div>
+  </div>  <script type="module">
+    // ==========================================================
+    // 3D Farming Simulator — Single-file HTML using three.js
+    // - Uses WebGL renderer (three.js via CDN import)
+    // - InstancedMesh for cereals (performance-friendly)
+    // - A simple harvester built from primitive geometry
+    // - Keyboard controls, harvesting logic, HUD
+    // - Camera follow and alternative orbit camera
+    // ==========================================================
 
-    <script>
-        const world = document.getElementById('world');
+    // ---------------------- Imports (three.js from CDN) ----------------------
+    import * as THREE from 'https://unpkg.com/three@0.152.2/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.152.2/examples/jsm/controls/OrbitControls.js';
 
-        // Generate a 3D world with cereals
-        for (let i = 0; i < 20; i++) {
-            const cereal = document.createElement('div');
-            cereal.classList.add('cereal');
-            cereal.style.width = '20px';
-            cereal.style.height = '20px';
-            cereal.style.position = 'absolute';
-            cereal.style.backgroundColor = 'green';
-            cereal.style.top = `${Math.floor(Math.random() * 500)}px`;
-            cereal.style.left = `${Math.floor(Math.random() * 750)}px`;
+    // ---------------------- Basic setup ----------------------
+    const canvas = document.getElementById('c');
+    const scene = new THREE.Scene();
 
-            world.appendChild(cereal);
+    // subtle sky gradient via background color + large hemisphere light
+    scene.background = new THREE.Color(0x87c2ff);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 8, 18);
+
+    // lights
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x444456, 0.8);
+    hemi.position.set(0, 20, 0);
+    scene.add(hemi);
+
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(-10, 20, 10);
+    dir.castShadow = true;
+    dir.shadow.camera.left = -30;
+    dir.shadow.camera.right = 30;
+    dir.shadow.camera.top = 30;
+    dir.shadow.camera.bottom = -30;
+    dir.shadow.mapSize.set(2048, 2048);
+    scene.add(dir);
+
+    // ground
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x6b8b3a });
+    const groundGeo = new THREE.PlaneGeometry(400, 400);
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    ground.position.y = 0;
+    scene.add(ground);
+
+    // ---------------------- Game variables & settings ----------------------
+    const FIELD_SIZE = { x: 60, z: 60 }; // meters
+    const FIELD_CENTER = { x: 0, z: 0 };
+    const STALK_COUNT_X = 120; // columns
+    const STALK_COUNT_Z = 120; // rows
+    const TOTAL_STALKS = STALK_COUNT_X * STALK_COUNT_Z; // ~14400
+
+    // We will limit to safe numbers for browsers; can be tuned by user
+    const MAX_INSTANCES = TOTAL_STALKS; // can be set lower if needed
+
+    // cereal related arrays
+    let cerealInstancedMesh;
+    let cerealInfo = []; // per-instance data {pos, rotated, harvested}
+
+    // harvester vehicle object
+    const harvester = new THREE.Group();
+    harvester.position.set(0, 0.5, -FIELD_SIZE.z/2 - 8);
+    scene.add(harvester);
+
+    // harvester physical parameters
+    const vehicle = {
+      speed: 0,
+      maxSpeed: 8.0, // meters per second
+      accel: 4.0,
+      turnSpeed: Math.PI * 0.9, // radians per second
+      braking: 8.0,
+      width: 2.2,
+      length: 5.0,
+      harvesting: true,
+      harvestWidth: 2.0
+    };
+
+    // player input state
+    const inputState = { forward:0, right:0, boost:false, toggleHarvest:false };
+
+    // harvested counters
+    let harvestedCount = 0;
+    let remainingCount = 0;
+
+    // camera modes
+    let cameraMode = 0; // 0: follow chase, 1: orbit
+    let orbitControls;
+
+    // HUD elements
+    const harvestedEl = document.getElementById('harvested');
+    const remainingEl = document.getElementById('remaining');
+    const speedEl = document.getElementById('speedDisplay');
+    const seedsEl = document.getElementById('seeds');
+
+    // debug
+    const debugText = document.getElementById('debugText');
+
+    // ---------------------- Utility helpers ----------------------
+    function randRange(a,b){return a + Math.random()*(b-a)}
+
+    // clamp utility
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+    // ---------------------- Build the harvester model (simple blocky vehicle) ----------------------
+    function buildHarvester(){
+      // Main body
+      const bodyGeo = new THREE.BoxGeometry(vehicle.length, 1.2, vehicle.width);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff6f3c, metalness: 0.2, roughness: 0.6 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.castShadow = true;
+      body.position.y = 0.8;
+      harvester.add(body);
+
+      // cabin
+      const cabinGeo = new THREE.BoxGeometry(1.6, 1.0, 1.6);
+      const cabinMat = new THREE.MeshStandardMaterial({ color: 0x333944, metalness: 0.1, roughness: 0.4 });
+      const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+      cabin.position.set(-0.4, 1.3, 0);
+      cabin.castShadow = true;
+      harvester.add(cabin);
+
+      // wheels (4 simple cylinders)
+      const wheelGeo = new THREE.CylinderGeometry(0.5,0.5,0.4,12);
+      const wheelMat = new THREE.MeshStandardMaterial({ color:0x222222, metalness:0.2 });
+      const wheelPositions = [
+        [ vehicle.length/2 - 0.6, 0.45,  vehicle.width/2 + 0.1],
+        [ vehicle.length/2 - 0.6, 0.45, -vehicle.width/2 - 0.1],
+        [-vehicle.length/2 + 0.6, 0.45,  vehicle.width/2 + 0.1],
+        [-vehicle.length/2 + 0.6, 0.45, -vehicle.width/2 - 0.1]
+      ];
+      wheelPositions.forEach(pos => {
+        const w = new THREE.Mesh(wheelGeo, wheelMat);
+        w.rotation.z = Math.PI/2;
+        w.position.set(pos[0], pos[1], pos[2]);
+        w.castShadow = true;
+        harvester.add(w);
+      });
+
+      // harvesting head: a horizontal bar that indicates the active harvest width
+      const headGeo = new THREE.BoxGeometry(vehicle.harvestWidth, 0.2, vehicle.width + 0.2);
+      const headMat = new THREE.MeshStandardMaterial({ color: 0x9bbf3a, metalness:0.1, roughness:0.6 });
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.set(vehicle.length/2 + 0.1, 0.5, 0);
+      head.castShadow = true;
+      head.name = 'harvestHead';
+      harvester.add(head);
+
+      // subtle exhaust pipe
+      const pipeGeo = new THREE.CylinderGeometry(0.06,0.06,0.8,8);
+      const pipe = new THREE.Mesh(pipeGeo, new THREE.MeshStandardMaterial({color:0x1e1e1e}));
+      pipe.position.set(-vehicle.length/2 + 0.6, 1.4, -vehicle.width/2 - 0.2);
+      pipe.rotation.z = 0.2;
+      harvester.add(pipe);
+
+      // adjust bounding box helper (not added to scene)
+      harvester.userData.bb = new THREE.Box3();
+    }
+
+    // ---------------------- Create cereal field using InstancedMesh ----------------------
+    function buildCerealField(){
+      // We'll create a single stalk geometry and use InstancedMesh to render many
+      const stalkGeo = new THREE.ConeGeometry(0.08, 0.9, 6); // tapered stalk blade
+      const stalkMat = new THREE.MeshStandardMaterial({ color: 0xd4c26b, roughness: 0.8, metalness: 0.05 });
+
+      // Slight variation model: create a base geometry that is rotated upward slightly
+      const instCount = Math.min(MAX_INSTANCES, STALK_COUNT_X * STALK_COUNT_Z);
+
+      cerealInstancedMesh = new THREE.InstancedMesh(stalkGeo, stalkMat, instCount);
+      cerealInstancedMesh.castShadow = true;
+      cerealInstancedMesh.receiveShadow = false;
+
+      // For picking, frustum culling and editing: set instanceMatrix usage
+      cerealInstancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+      // Position the stalks in a jittered grid over FIELD_SIZE
+      cerealInfo = new Array(instCount);
+
+      let i = 0;
+      const startX = -FIELD_SIZE.x/2;
+      const startZ = -FIELD_SIZE.z/2;
+      for(let ix=0; ix<STALK_COUNT_X; ix++){
+        for(let iz=0; iz<STALK_COUNT_Z; iz++){
+          if(i >= instCount) break;
+          const u = ix / STALK_COUNT_X;
+          const v = iz / STALK_COUNT_Z;
+          // map to world coordinates
+          const x = startX + u * FIELD_SIZE.x + randRange(-0.12, 0.12);
+          const z = startZ + v * FIELD_SIZE.z + randRange(-0.12, 0.12);
+          const y = 0.45 + randRange(-0.05, 0.05);
+
+          // create transform
+          const m = new THREE.Matrix4();
+          const pos = new THREE.Vector3(x, y, z);
+          const s = 0.9 + (Math.random() * 0.4 - 0.1); // slight size variation
+          const r = randRange(-0.1, 0.1);
+          m.compose(pos, new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), r), new THREE.Vector3(s,s,s));
+          cerealInstancedMesh.setMatrixAt(i, m);
+
+          cerealInfo[i] = { pos: new THREE.Vector3(x,y,z), rot: r, harvested: false };
+          i++;
         }
+        if(i >= instCount) break;
+      }
 
-        // Move the harvester using arrow keys
-        const harvester = document.getElementById('harvester');
-        let harvesterX = 400;
-        let harvesterY = 300;
+      remainingCount = cerealInfo.length;
+      remainingEl.textContent = remainingCount;
 
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowUp') {
-                harvesterY -= 10;
-            } else if (event.key === 'ArrowDown') {
-                harvesterY += 10;
-            } else if (event.key === 'ArrowLeft') {
-                harvesterX -= 10;
-            } else if (event.key === 'ArrowRight') {
-                harvesterX += 10;
-            }
+      scene.add(cerealInstancedMesh);
+    }
 
-            harvester.style.transform = `translate3d(${harvesterX}px, ${harvesterY}px, 0)`;
-        });
-    </script>
-</body>
-</html>
+    // ---------------------- Harvest detection ----------------------
+    // We'll compute a simple distance test between harvester head and instance positions.
+    // This runs each frame but is optimized by checking only instances within a rough AABB.
+    function updateHarvesting(dt){
+      const head = harvester.getObjectByName('harvestHead');
+      if(!head) return;
+
+      // world position for head center
+      const headWorldPos = new THREE.Vector3();
+      head.getWorldPosition(headWorldPos);
+
+      // compute axis-aligned box for harvest area depending on vehicle orientation
+      // easier: convert instance positions into harvester local space and check X/Z extents
+
+      // prepare harvester world inverse matrix
+      const harvMatrixWorld = harvester.matrixWorld;
+      const harvInverse = new THREE.Matrix4().copy(harvMatrixWorld).invert();
+
+      // harvest width from UI
+      const harvestWidth = vehicle.harvestWidth;
+
+      // for performance, we do a single pass over cerealInfo
+      const tmpPos = new THREE.Vector3();
+      const localPos = new THREE.Vector3();
+
+      const headForward = new THREE.Vector3(1,0,0).applyQuaternion(harvester.quaternion); // vehicle forward in world
+      const headCenterWorld = headWorldPos.clone();
+
+      // We'll consider a bounding capsule: length in forward direction ~ head.x +/- some
+      // for simplicity compute distance to head center and lateral offset
+      let updated = false;
+      for(let i=0;i<cerealInfo.length;i++){
+        const info = cerealInfo[i];
+        if(info.harvested) continue;
+        // quick distance test (coarse)
+        const dx = info.pos.x - headCenterWorld.x;
+        const dz = info.pos.z - headCenterWorld.z;
+        const forwardDist = dx * headForward.x + dz * headForward.z; // projection onto forward
+        const lateralDist = Math.abs(-dx * headForward.z + dz * headForward.x); // perpendicular distance
+
+        // check if within chopping band: forwardDist roughly between -1 and +2 meters (in front of head)
+        if(forwardDist > -1.4 && forwardDist < 1.6 && lateralDist < harvestWidth/2){
+          // mark harvested
+          info.harvested = true;
+          harvestedCount++;
+          remainingCount--;
+          updated = true;
+
+          // hide instance by scaling to near-zero
+          const m = new THREE.Matrix4();
+          m.makeTranslation(info.pos.x, 0.02, info.pos.z);
+          m.scale(new THREE.Vector3(0.01,0.01,0.01));
+          cerealInstancedMesh.setMatrixAt(i, m);
+
+          // spawn a tiny particle or crop object to simulate collected grain (not heavy)
+          spawnCropParticle(info.pos);
+        }
+      }
+
+      if(updated){
+        cerealInstancedMesh.instanceMatrix.needsUpdate = true;
+        harvestedEl.textContent = harvestedCount;
+        remainingEl.textContent = remainingCount;
+      }
+    }
+
+    // ---------------------- Simple crop particle system ----------------------
+    const cropParticles = [];
+    function spawnCropParticle(pos){
+      const g = new THREE.SphereGeometry(0.05,6,6);
+      const m = new THREE.MeshStandardMaterial({color:0xffd86b,roughness:0.6});
+      const mesh = new THREE.Mesh(g,m);
+      mesh.position.copy(pos).add(new THREE.Vector3(0,0.2,0));
+      mesh.userData = { life: 1.4, vel: new THREE.Vector3(randRange(-0.4,0.4), randRange(1,2), randRange(-0.4,0.4)) };
+      scene.add(mesh);
+      cropParticles.push(mesh);
+    }
+
+    function updateCropParticles(dt){
+      for(let i=cropParticles.length-1;i>=0;i--){
+        const p = cropParticles[i];
+        p.userData.life -= dt;
+        p.position.addScaledVector(p.userData.vel, dt);
+        p.userData.vel.y -= 5.0 * dt; // gravity
+        p.material.opacity = Math.max(0, p.userData.life / 1.4);
+        p.material.transparent = true;
+        if(p.userData.life <= 0){
+          scene.remove(p);
+          cropParticles.splice(i,1);
+        }
+      }
+    }
+
+    // ---------------------- Vehicle movement & physics (kinematic) ----------------------
+    function updateVehicle(dt){
+      // update target speed based on input
+      const forward = inputState.forward; // -1..1
+      const right = inputState.right;
+      // simple throttle/backwards
+      const target = (forward) * vehicle.maxSpeed * (inputState.boost ? 1.6 : 1.0);
+      const accel = vehicle.accel;
+      if(vehicle.speed < target) vehicle.speed = Math.min(target, vehicle.speed + accel * dt);
+      else vehicle.speed = Math.max(target, vehicle.speed - vehicle.braking * dt);
+
+      // rotate based on input.right and current speed
+      const turn = right * vehicle.turnSpeed * dt * (vehicle.speed / Math.max(1, vehicle.maxSpeed));
+      harvester.rotation.y -= turn;
+
+      // compute forward vector and move
+      const forwardVec = new THREE.Vector3(1,0,0).applyQuaternion(harvester.quaternion);
+      const move = forwardVec.multiplyScalar(vehicle.speed * dt);
+
+      // lateral strafing for minor side movement (using right input as strafe)
+      const rightVec = new THREE.Vector3(0,0,1).applyQuaternion(harvester.quaternion);
+      move.addScaledVector(rightVec, right * 0.3 * dt * (vehicle.speed/Math.max(1,vehicle.maxSpeed)));
+
+      harvester.position.add(move);
+
+      // keep harvester above ground
+      harvester.position.y = 0.5;
+
+      // update harvester head width from UI
+      const head = harvester.getObjectByName('harvestHead');
+      if(head){
+        head.scale.x = vehicle.harvestWidth / head.geometry.parameters.width;
+        head.geometry.computeBoundingBox && head.geometry.computeBoundingBox();
+      }
+
+      // update harvested collision
+      if(vehicle.harvesting && vehicle.speed > 0.1){
+        updateHarvesting(dt);
+      }
+
+      // update HUD speed
+      speedEl.textContent = vehicle.speed.toFixed(2);
+    }
+
+    // ---------------------- Camera: chase + orbit ----------------------
+    function setupOrbit(){
+      orbitControls = new OrbitControls(camera, renderer.domElement);
+      orbitControls.enabled = false; // default off
+      orbitControls.enableDamping = true;
+      orbitControls.maxPolarAngle = Math.PI*0.49;
+      orbitControls.minDistance = 5;
+      orbitControls.maxDistance = 80;
+      orbitControls.target.copy(harvester.position);
+    }
+
+    function updateCamera(dt){
+      if(cameraMode === 0){
+        // chase camera: position relative to harvester
+        const desiredPos = new THREE.Vector3(-8, 6, 0).applyQuaternion(harvester.quaternion).add(harvester.position);
+        camera.position.lerp(desiredPos, 0.08);
+        const lookAt = new THREE.Vector3(4, 2.2, 0).applyQuaternion(harvester.quaternion).add(harvester.position);
+        camera.lookAt(lookAt);
+      } else {
+        // orbit mode
+        orbitControls.enabled = true;
+        orbitControls.target.copy(harvester.position);
+        orbitControls.update();
+      }
+    }
+
+    // ---------------------- Collision with field bounds ----------------------
+    function clampHarvesterToField(){
+      const halfX = FIELD_SIZE.x/2 - 1;
+      const halfZ = FIELD_SIZE.z/2 - 1;
+      harvester.position.x = clamp(harvester.position.x, -halfX, halfX);
+      harvester.position.z = clamp(harvester.position.z, -halfZ, halfZ + 10); // allow exit slightly
+    }
+
+    // ---------------------- Resize handling ----------------------
+    function onWindowResize(){
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      renderer.setSize(w,h);
+      camera.aspect = w/h;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', onWindowResize);
+
+    // ---------------------- Input handlers ----------------------
+    window.addEventListener('keydown', (e)=>{
+      const key = e.key.toLowerCase();
+      if(key === 'w'){ inputState.forward = 1; }
+      if(key === 's'){ inputState.forward = -1; }
+      if(key === 'a'){ inputState.right = 0.6; }
+      if(key === 'd'){ inputState.right = -0.6; }
+      if(key === 'shift'){ inputState.boost = true; }
+      if(key === ' '){ // space toggle harvesting
+        vehicle.harvesting = !vehicle.harvesting;
+        document.getElementById('footer').textContent = vehicle.harvesting ? 'Harvesting: ON' : 'Harvesting: OFF';
+      }
+      if(key === 'c'){
+        cameraMode = (cameraMode+1)%2;
+        if(cameraMode === 0) orbitControls.enabled = false;
+        else orbitControls.enabled = true;
+      }
+    });
+    window.addEventListener('keyup', (e)=>{
+      const key = e.key.toLowerCase();
+      if(key === 'w' || key === 's'){ inputState.forward = 0; }
+      if(key === 'a' || key === 'd'){ inputState.right = 0; }
+      if(key === 'shift'){ inputState.boost = false; }
+    });
+
+    // simple UI binding for harvest width slider
+    document.getElementById('harvWidth').addEventListener('input', (ev)=>{
+      const v = parseFloat(ev.target.value);
+      vehicle.harvestWidth = v;
+      const head = harvester.getObjectByName('harvestHead');
+      if(head){
+        head.scale.x = v / (head.geometry.parameters.width || 1);
+      }
+    });
+
+    // ---------------------- Initialization ----------------------
+    buildHarvester();
+    buildCerealField();
+    setupOrbit();
+    onWindowResize();
+
+    // small grid markers for orientation
+    (function addGrid(){
+      const grid = new THREE.GridHelper(120, 60, 0x000000, 0x1a1a1a);
+      grid.material.opacity = 0.06; grid.material.transparent = true;
+      grid.position.y = 0.01;
+      scene.add(grid);
+    })();
+
+    // ---------------------- Animation loop ----------------------
+    let lastTime = performance.now() / 1000;
+    function animate(){
+      const now = performance.now() / 1000;
+      const dt = Math.min(0.05, now - lastTime);
+      lastTime = now;
+
+      // physics
+      updateVehicle(dt);
+      clampHarvesterToField();
+
+      // update particles
+      updateCropParticles(dt);
+
+      // camera
+      updateCamera(dt);
+
+      // simple gentle sway for unharvested crops to make field feel alive
+      swayCrops(now);
+
+      // render
+      renderer.render(scene, camera);
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // ---------------------- Crop sway effect (visually update instanced matrices) ----------------------
+    // We'll periodically slightly adjust instance matrices for unharvested crops
+    function swayCrops(time){
+      // performance: update a batch per frame rather than all
+      const instCount = cerealInfo.length;
+      const updatesPerFrame = Math.max(50, Math.floor(instCount / 120));
+      for(let k=0;k<updatesPerFrame;k++){
+        const i = Math.floor(Math.abs(Math.sin(time*0.1 + k)) * instCount) % instCount;
+        const info = cerealInfo[i];
+        if(!info || info.harvested) continue;
+        const sway = Math.sin(time*1.3 + i) * 0.06;
+        const m = new THREE.Matrix4();
+        const s = 0.9 + Math.sin(time*0.12 + i)*0.03;
+        m.compose(info.pos, new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), info.rot + sway), new THREE.Vector3(s,s,s));
+        cerealInstancedMesh.setMatrixAt(i,m);
+      }
+      cerealInstancedMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    // ---------------------- Save / Export state (simple) ----------------------
+    function exportFieldState(){
+      const harvested = cerealInfo.map(ci => ci.harvested ? 1 : 0);
+      const state = { harvested, harvester: { pos: harvester.position.toArray(), rot: harvester.rotation.toArray() }, harvestedCount };
+      return JSON.stringify(state);
+    }
+
+    // ---------------------- Small helper: show some debug info ----------------------
+    function setDebug(text){
+      debugText.innerText = text;
+    }
+
+    // initial settings
+    harvestedEl.textContent = harvestedCount;
+    remainingEl.textContent = remainingCount;
+    seedsEl.textContent = '—';
+
+    // ---------------------- Additional polish: ambient birds & wind sound (simple generated tones) ----------------------
+    // We won't include big audio files — use WebAudio oscillator for lightweight ambience
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playAmbientTone(){
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 200 + Math.random()*80;
+      gain.gain.value = 0.0025;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.2 + Math.random()*2.4);
+    }
+    // periodic ambient
+    setInterval(()=>{
+      if(audioCtx.state === 'suspended') return; // don't auto-play on iOS without gesture
+      if(Math.random() < 0.5) playAmbientTone();
+    }, 1200);
+
+    // resume audio on first user interaction
+    function resumeAudio(){ if(audioCtx.state === 'suspended') audioCtx.resume(); window.removeEventListener('pointerdown', resumeAudio); }
+    window.addEventListener('pointerdown', resumeAudio);
+
+    // ---------------------- Tiny tutorial overlay (on first load) ----------------------
+    (function quickTutorial(){
+      const shown = false; // you can implement localStorage flag
+      if(!shown){
+        // we keep simple: show a console message
+        console.info('3D Farming Simulator loaded. Use W/A/S/D to drive the harvester, Space toggles harvesting.');
+      }
+    })();
+
+    // ---------------------- Finish: developer-friendly hooks for expanding ----------------------
+    // Expose some objects on window for interactive tinkering in console
+    window.__game = { scene, harvester, cerealInfo, cerealInstancedMesh, exportFieldState };
+
+    // End of module
+  </script>  <!-- =========================================================
+       This single-file demo is intentionally written as one file so you
+       can copy-paste it into a local file and open in a browser.
+
+       NOTES & POSSIBLE EXTENSIONS:
+       - Replace harvester with a glTF model for more detail.
+       - Add particle/collectable counters and save/load.
+       - Add farmland tiles (plow, sow, water) and crop growth states.
+       - Add multiplayer via WebRTC or server for competitive harvesting.
+       - Optimize instanced updates into buffer attributes for very large fields.
+
+       Enjoy — modify freely. If you'd like, I can convert this to a React
+       component or add a proper UI with play/pause, menu, and options.
+       ========================================================= --></body>
+    </html>
