@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>HarvestMaster 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --a:#f5a623;--ad:#a86e0f;--g:#39e75f;--r:#ff3b3b;--w:#f0ead8;
+  --bg:rgba(6,10,6,0.8);--bd:rgba(245,166,35,0.22);
+  --blur:blur(12px);--fd:'Rajdhani',sans-serif;--fm:'Share Tech Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+body{font-family:var(--fm);cursor:crosshair;}
+canvas#c{display:block;width:100vw;height:100vh;}
+#scanlines{position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.045) 2px,rgba(0,0,0,.045) 4px);opacity:.45;}
+
+/* LOADING */
+#loading{position:fixed;inset:0;z-index:999;background:#020a02;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 1.2s ease;}
+#loading.out{opacity:0;pointer-events:none;}
+.l-deco{display:flex;gap:3px;margin-bottom:44px;}
+.l-deco span{width:2px;background:var(--a);opacity:.25;animation:dBar 1.2s ease-in-out infinite;}
+.l-deco span:nth-child(1){height:8px;animation-delay:0s}.l-deco span:nth-child(2){height:14px;animation-delay:.1s}
+.l-deco span:nth-child(3){height:22px;animation-delay:.2s}.l-deco span:nth-child(4){height:30px;animation-delay:.3s}
+.l-deco span:nth-child(5){height:22px;animation-delay:.4s}.l-deco span:nth-child(6){height:14px;animation-delay:.5s}
+.l-deco span:nth-child(7){height:8px;animation-delay:.6s}
+@keyframes dBar{0%,100%{opacity:.15;transform:scaleY(.8)}50%{opacity:.85;transform:scaleY(1)}}
+.l-logo{font-family:var(--fd);font-size:clamp(34px,5vw,68px);font-weight:700;letter-spacing:10px;color:var(--a);
+  text-shadow:0 0 40px rgba(245,166,35,.55),0 0 90px rgba(245,166,35,.2);animation:lP 2s ease-in-out infinite;}
+@keyframes lP{0%,100%{text-shadow:0 0 40px rgba(245,166,35,.55),0 0 90px rgba(245,166,35,.2)}
+  50%{text-shadow:0 0 70px rgba(245,166,35,1),0 0 130px rgba(245,166,35,.45)}}
+.l-sub{margin-top:6px;font-size:11px;letter-spacing:6px;color:rgba(245,166,35,.38);}
+.l-bar-wrap{margin-top:48px;width:min(340px,80vw);}
+.l-bar-track{width:100%;height:2px;background:rgba(245,166,35,.1);position:relative;overflow:hidden;}
+.l-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#a06800,var(--a),#fff8e1);
+  transition:width .22s ease;box-shadow:0 0 10px var(--a);}
+.l-pct{margin-top:6px;font-size:10px;letter-spacing:3px;color:var(--ad);display:flex;justify-content:space-between;}
+.l-tip{margin-top:36px;max-width:380px;text-align:center;font-size:12px;line-height:1.9;
+  color:rgba(240,234,216,.3);border:1px solid rgba(245,166,35,.08);padding:12px 18px;border-radius:4px;}
+.l-tip strong{color:rgba(245,166,35,.6);}
+
+/* HUD */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10;}
+.panel{background:var(--bg);border:1px solid var(--bd);border-radius:6px;
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  box-shadow:0 0 14px rgba(245,166,35,.06),inset 0 1px 0 rgba(255,255,255,.04);
+  position:relative;overflow:hidden;}
+.panel::before{content:'';position:absolute;top:0;left:12%;right:12%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--a),transparent);opacity:.4;}
+.plbl{font-family:var(--fd);font-size:9px;font-weight:600;letter-spacing:3px;
+  color:var(--ad);text-transform:uppercase;padding:7px 11px 0;display:flex;align-items:center;gap:6px;}
+.plbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--bd),transparent);}
+
+/* TOP BAR */
+#topbar{position:absolute;top:0;left:0;right:0;height:52px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+  background:linear-gradient(180deg,rgba(0,0,0,.8) 0%,transparent 100%);}
+.top-l,.top-r{display:flex;align-items:center;gap:14px;}
+.money{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--g);
+  text-shadow:0 0 16px rgba(57,231,95,.4);letter-spacing:1px;}
+.money-lbl{font-size:9px;letter-spacing:3px;color:rgba(57,231,95,.45);display:block;}
+.clk{text-align:center;}
+.clk-t{font-family:var(--fd);font-size:32px;font-weight:700;color:var(--w);letter-spacing:2px;line-height:1;}
+.clk-d{font-size:9px;letter-spacing:4px;color:rgba(240,234,216,.38);}
+.wclust{display:flex;align-items:center;gap:10px;}
+.wname{font-family:var(--fd);font-size:13px;font-weight:600;color:var(--w);letter-spacing:2px;}
+.wtemp{font-size:10px;color:rgba(240,234,216,.42);}
+.pbadge{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);border-radius:4px;
+  padding:3px 10px;font-family:var(--fd);font-size:13px;font-weight:600;color:var(--a);letter-spacing:1px;}
+.pbadge small{font-size:9px;opacity:.55;letter-spacing:2px;}
+
+/* TICKER */
+#ticker{position:absolute;top:52px;left:0;right:0;height:20px;
+  background:rgba(0,0,0,.65);border-bottom:1px solid rgba(245,166,35,.09);
+  display:flex;align-items:center;padding:0 14px;gap:22px;overflow:hidden;}
+.ti{font-size:10px;letter-spacing:1px;white-space:nowrap;color:rgba(240,234,216,.38);}
+.ti span{margin-right:4px;color:rgba(240,234,216,.55);}
+.up{color:var(--g)}.dn{color:var(--r);}
+
+/* LEFT PANELS */
+#panel-l{position:absolute;top:80px;left:14px;width:200px;display:flex;flex-direction:column;gap:8px;}
+#spanel{padding:10px 14px 14px;}
+.spd-wrap{display:flex;align-items:center;gap:12px;margin-top:6px;}
+.spd-ring{position:relative;width:88px;height:88px;flex-shrink:0;}
+.spd-svg{width:88px;height:88px;transform:rotate(135deg);}
+.spd-tr{fill:none;stroke:rgba(255,255,255,.07);stroke-width:7;stroke-linecap:round;}
+.spd-fl{fill:none;stroke-width:7;stroke-linecap:round;stroke:var(--a);
+  filter:drop-shadow(0 0 5px rgba(245,166,35,.6));transition:stroke-dasharray .12s ease,stroke .25s;}
+.spd-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.spd-n{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--w);line-height:1;}
+.spd-u{font-size:8px;letter-spacing:2px;color:rgba(240,234,216,.38);}
+.spd-r{flex:1;}
+.gbadge{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--a);letter-spacing:2px;margin-bottom:3px;}
+.srow{font-size:10px;color:rgba(240,234,216,.42);margin-bottom:2px;}
+.srow em{color:var(--w);font-style:normal;}
+
+/* Arc gauges */
+#gpanel{padding:10px 14px 14px;}
+.arcs{display:flex;justify-content:space-around;margin-top:8px;}
+.ag{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.ag-svg{width:54px;height:36px;overflow:visible;}
+.agt{fill:none;stroke:rgba(255,255,255,.07);stroke-width:5;stroke-linecap:round;}
+.agf{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dasharray .4s ease;}
+.ag-n{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--w);}
+.ag-l{font-size:8px;letter-spacing:2px;color:rgba(240,234,216,.38);}
+.cf{stroke:var(--a);filter:drop-shadow(0 0 4px rgba(245,166,35,.5));}
+.cg{stroke:#d4a017;filter:drop-shadow(0 0 4px rgba(212,160,23,.5));}
+.ct{stroke:#ff7733;filter:drop-shadow(0 0 4px rgba(255,119,51,.5));}
+
+/* Harvest panel */
+#hpanel{padding:10px 14px 12px;}
+.hind{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:10px;letter-spacing:2px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--g);
+  box-shadow:0 0 8px var(--g);animation:dP .8s ease-in-out infinite;}
+.dot.off{background:#444;box-shadow:none;animation:none;}
+.ht{color:var(--g);font-weight:600;letter-spacing:1px;}
+.ht.off{color:#555;}
+@keyframes dP{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.5);opacity:.6;}}
+.sr{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:3px;}
+.sk{color:rgba(240,234,216,.42);}
+.sv{font-family:var(--fd);font-size:12px;font-weight:600;color:var(--w);}
+.sv.ac{color:var(--a);}
+.ttrack{width:100%;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-top:7px;}
+.tfill{height:100%;background:linear-gradient(90deg,#a06800,#ffd700);border-radius:2px;
+  transition:width .3s;box-shadow:0 0 8px rgba(255,215,0,.5);}
+.tsub{display:flex;justify-content:space-between;margin-top:3px;font-size:9px;color:rgba(240,234,216,.3);}
+
+/* RIGHT PANELS */
+#panel-r{position:absolute;top:80px;right:14px;width:210px;display:flex;flex-direction:column;gap:8px;}
+#fpanel{padding:10px 12px 12px;}
+.fi{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.fi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.fi-nm{flex:1;color:rgba(240,234,216,.55);font-size:10px;}
+.fi-bt{width:48px;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}
+.fi-bf{height:100%;border-radius:2px;transition:width .5s ease;}
+.fi-pct{font-size:10px;color:rgba(240,234,216,.38);width:28px;text-align:right;}
+#opanel{padding:10px 12px 12px;}
+.ops{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+.oc{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);border-radius:4px;padding:6px 8px;}
+.oc-l{font-size:8px;letter-spacing:2px;color:rgba(240,234,216,.3);margin-bottom:2px;}
+.oc-v{font-family:var(--fd);font-size:14px;font-weight:700;color:var(--w);}
+
+/* COMPASS */
+#cmp-wrap{position:absolute;top:80px;left:50%;transform:translateX(-50%);}
+
+/* MINIMAP */
+#mm-wrap{position:absolute;bottom:64px;right:14px;}
+.mmh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.mmt{font-size:8px;letter-spacing:3px;color:var(--ad);}
+.mmc{font-size:9px;color:rgba(240,234,216,.28);}
+#minimap{border:1px solid rgba(245,166,35,.3);border-radius:4px;display:block;
+  box-shadow:0 0 16px rgba(0,0,0,.6),0 0 8px rgba(245,166,35,.06);}
+
+/* HARVEST TOP BAR */
+#hbar{position:absolute;top:80px;left:50%;transform:translateX(-50%);
+  display:none;flex-direction:column;align-items:center;gap:3px;width:220px;}
+.hbl{font-size:9px;letter-spacing:3px;color:var(--ad);}
+.hbo{width:100%;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;border:1px solid rgba(245,166,35,.18);}
+.hbi{height:100%;background:linear-gradient(90deg,#a06800,#ffd700,#fff8c0);border-radius:3px;
+  box-shadow:0 0 10px rgba(255,215,0,.5);transition:width .2s;}
+
+/* BOTTOM BAR */
+#bottombar{position:absolute;bottom:0;left:0;right:0;height:50px;
+  display:flex;align-items:center;padding:0 16px;gap:5px;
+  background:linear-gradient(0deg,rgba(0,0,0,.85) 0%,transparent 100%);}
+.ctrl{display:flex;align-items:center;gap:4px;margin-right:7px;}
+.key{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 5px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-bottom-width:2px;
+  border-radius:3px;font-family:var(--fd);font-size:10px;font-weight:600;color:rgba(240,234,216,.65);}
+.cl{font-size:10px;color:rgba(240,234,216,.32);letter-spacing:.5px;}
+#status-msg{margin-left:auto;font-family:var(--fd);font-size:13px;font-weight:600;letter-spacing:1px;
+  color:var(--a);text-align:right;max-width:340px;text-shadow:0 0 12px rgba(245,166,35,.4);
+  animation:sF 4s ease-in-out infinite;}
+@keyframes sF{0%,90%,100%{opacity:1;}95%{opacity:.6;}}
+
+/* PROMPTS */
+#ipt,#spt{position:absolute;left:50%;transform:translateX(-50%);
+  background:rgba(6,10,6,.92);border:1px solid rgba(245,166,35,.5);border-radius:6px;
+  padding:9px 20px;font-family:var(--fd);font-size:14px;font-weight:600;letter-spacing:1px;
+  color:var(--w);white-space:nowrap;display:none;
+  box-shadow:0 0 24px rgba(245,166,35,.12),0 8px 32px rgba(0,0,0,.5);}
+#ipt{bottom:58px;}
+#spt{bottom:98px;border-color:rgba(57,231,95,.4);color:var(--g);}
+.pk{display:inline-block;background:rgba(245,166,35,.2);border:1px solid rgba(245,166,35,.5);
+  border-radius:3px;padding:1px 8px;color:var(--a);margin:0 4px;font-weight:700;}
+.pks{display:inline-block;background:rgba(57,231,95,.15);border:1px solid rgba(57,231,95,.4);
+  border-radius:3px;padding:1px 8px;color:var(--g);margin:0 4px;font-weight:700;}
+
+/* WARNINGS & NOTIFICATIONS */
+#ewarn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(160,15,15,.92);border:2px solid var(--r);border-radius:6px;
+  padding:10px 24px;font-family:var(--fd);font-size:16px;font-weight:700;letter-spacing:2px;
+  color:#fff;display:none;animation:wF .5s step-start infinite;box-shadow:0 0 30px rgba(255,59,59,.35);}
+@keyframes wF{0%,100%{opacity:1;}50%{opacity:.2;}}
+#cbadge{position:absolute;top:80px;right:230px;background:rgba(0,0,0,.72);
+  border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:3px 10px;
+  font-size:9px;letter-spacing:2px;color:rgba(240,234,216,.4);display:none;}
+#nstack{position:absolute;top:80px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none;}
+.notif{background:rgba(6,10,6,.95);border:1px solid rgba(245,166,35,.4);border-radius:5px;
+  padding:9px 18px;font-family:var(--fd);font-size:14px;font-weight:600;letter-spacing:.5px;
+  color:var(--w);box-shadow:0 4px 20px rgba(0,0,0,.5);
+  animation:nI .3s cubic-bezier(.34,1.56,.64,1);transition:opacity .4s,transform .4s;}
+.notif.earn{border-color:rgba(57,231,95,.5);color:var(--g);}
+.notif.warn{border-color:rgba(255,59,59,.5);color:var(--r);}
+.notif.fade{opacity:0;transform:translateY(-8px);}
+@keyframes nI{from{opacity:0;transform:translateY(-12px) scale(.95)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="l-deco"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="l-logo">HARVESTMASTER</div>
+  <div class="l-sub">3D Agricultural Simulator · Season Edition</div>
+  <div class="l-bar-wrap">
+    <div class="l-bar-track"><div class="l-bar-fill" id="lbar"></div></div>
+    <div class="l-pct"><span id="llbl">INITIALIZING TERRAIN...</span><span id="lpct">0%</span></div>
+  </div>
+  <div class="l-tip" id="ltip">Loading tips...</div>
+</div>
+<canvas id="c"></canvas>
+<div id="scanlines"></div>
+<div id="hud">
+  <div id="topbar">
+    <div class="top-l">
+      <div><span class="money-lbl">BALANCE</span><div class="money" id="hud-money">$10,000</div></div>
+    </div>
+    <div class="clk"><div class="clk-t" id="hud-time">08:00</div><div class="clk-d" id="hud-day">DAY 1</div></div>
+    <div class="top-r">
+      <div class="wclust"><span id="w-icon" style="font-size:20px">☀️</span>
+        <div><div class="wname" id="w-name">CLEAR</div><div class="wtemp" id="w-temp">24°C · 12km/h</div></div>
+      </div>
+      <div class="pbadge"><small>WHEAT </small>$<span id="hud-price">140</span><small>/t</small></div>
+    </div>
+  </div>
+  <div id="ticker">
+    <div class="ti"><span>WHEAT</span><span class="up" id="t-wh">$140 ▲</span></div>
+    <div class="ti"><span>BARLEY</span><span class="dn" id="t-ba">$118 ▼</span></div>
+    <div class="ti"><span>DIESEL</span><span id="t-di">$1.42/L</span></div>
+    <div class="ti"><span>SEED</span><span id="t-se">$2.20/cell</span></div>
+    <div class="ti" id="t-sess"><span>SESSION</span> Day 1 · 00:00</div>
+  </div>
+  <div id="panel-l">
+    <div class="panel" id="spanel">
+      <div class="plbl">⚙ Drive System</div>
+      <div class="spd-wrap">
+        <div class="spd-ring">
+          <svg class="spd-svg" viewBox="0 0 88 88">
+            <circle class="spd-tr" cx="44" cy="44" r="36" stroke-dasharray="169 283" stroke-dashoffset="-56"/>
+            <circle class="spd-fl" id="spd-arc" cx="44" cy="44" r="36" stroke-dasharray="0 283" stroke-dashoffset="-56"/>
+          </svg>
+          <div class="spd-mid"><span class="spd-n" id="spd-n">0</span><span class="spd-u">KM/H</span></div>
+        </div>
+        <div class="spd-r">
+          <div class="gbadge" id="gbadge">N</div>
+          <div class="srow">RPM <em id="rpm-v">800</em></div>
+          <div class="srow">Temp <em id="temp-v">75°C</em></div>
+          <div class="srow">Load <em id="load-v">0%</em></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="gpanel">
+      <div class="plbl">📊 Systems</div>
+      <div class="arcs">
+        <div class="ag">
+          <svg class="ag-svg" viewBox="0 0 54 36">
+            <path class="agt" d="M5,34 A24,24 0 0,1 49,34"/>
+            <path class="agf cf" id="ag-f" d="M5,34 A24,24 0 0,1 49,34" stroke-dasharray="75 75"/>
+          </svg>
+          <div class="ag-n" id="av-f">100%</div><div class="ag-l">FUEL</div>
+        </div>
+        <div class="ag">
+          <svg class="ag-svg" viewBox="0 0 54 36">
+            <path class="agt" d="M5,34 A24,24 0 0,1 49,34"/>
+            <path class="agf cg" id="ag-g" d="M5,34 A24,24 0 0,1 49,34" stroke-dasharray="0 75"/>
+          </svg>
+          <div class="ag-n" id="av-g">0%</div><div class="ag-l">GRAIN</div>
+        </div>
+        <div class="ag">
+          <svg class="ag-svg" viewBox="0 0 54 36">
+            <path class="agt" d="M5,34 A24,24 0 0,1 49,34"/>
+            <path class="agf ct" id="ag-t" d="M5,34 A24,24 0 0,1 49,34" stroke-dasharray="38 75"/>
+          </svg>
+          <div class="ag-n" id="av-t">50%</div><div class="ag-l">ENGINE</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="hpanel">
+      <div class="plbl">🌾 Harvest</div>
+      <div style="padding:5px 0 0">
+        <div class="hind"><div class="dot off" id="pdot"></div><span class="ht off" id="ptxt">STANDBY</span></div>
+        <div class="sr"><span class="sk">Total Harvested</span><span class="sv ac" id="s-harv">0.00 t</span></div>
+        <div class="sr"><span class="sk">Rate</span><span class="sv" id="s-rate">0 t/h</span></div>
+        <div class="sr"><span class="sk">Earned Today</span><span class="sv" id="s-earn">$0</span></div>
+        <div class="sr"><span class="sk">Distance</span><span class="sv" id="s-dist">0 m</span></div>
+        <div class="ttrack"><div class="tfill" id="tfill" style="width:0%"></div></div>
+        <div class="tsub"><span>GRAIN TANK</span><span id="tlbl">0% · 0 L</span></div>
+      </div>
+    </div>
+  </div>
+  <div id="cmp-wrap"><canvas id="cmp-c" width="72" height="72"></canvas></div>
+  <div id="panel-r">
+    <div class="panel" id="fpanel">
+      <div class="plbl">🌾 Field Status</div>
+      <div id="flist" style="padding:4px 0 0"></div>
+    </div>
+    <div class="panel" id="opanel">
+      <div class="plbl">🔧 Operations</div>
+      <div class="ops">
+        <div class="oc"><div class="oc-l">HEADER</div><div class="oc-v">7.5 m</div></div>
+        <div class="oc"><div class="oc-l">TANK CAP</div><div class="oc-v">12 kL</div></div>
+        <div class="oc"><div class="oc-l">DAY EARN</div><div class="oc-v" id="oc-earn" style="color:var(--g);font-size:13px">$0</div></div>
+        <div class="oc"><div class="oc-l">FIELDS</div><div class="oc-v" id="oc-flds">0/6</div></div>
+      </div>
+    </div>
+  </div>
+  <div id="mm-wrap">
+    <div class="mmh"><span class="mmt">▣ Field Map</span><span class="mmc" id="mm-xy">X:0 Z:0</span></div>
+    <canvas id="minimap" width="168" height="168"></canvas>
+  </div>
+  <div id="hbar"><div class="hbl">⬛ CUTTING ROW</div><div class="hbo"><div class="hbi" id="hbi" style="width:0%"></div></div></div>
+  <div id="ipt"></div>
+  <div id="spt"></div>
+  <div id="ewarn">⚠ CRITICAL — LOW FUEL</div>
+  <div id="cbadge"></div>
+  <div id="nstack"></div>
+  <div id="bottombar">
+    <div class="ctrl"><span class="key">W</span><span class="key">S</span><span class="cl">Drive</span></div>
+    <div class="ctrl"><span class="key">A</span><span class="key">D</span><span class="cl">Steer</span></div>
+    <div class="ctrl"><span class="key">E</span><span class="cl">Interact</span></div>
+    <div class="ctrl"><span class="key">F</span><span class="cl">Seed</span></div>
+    <div class="ctrl"><span class="key">C</span><span class="cl">Camera</span></div>
+    <div class="ctrl"><span class="key">H</span><span class="cl">Lights</span></div>
+    <div class="ctrl"><span class="key">SPC</span><span class="cl">Brake</span></div>
+    <div id="status-msg">DRIVE TO A GOLDEN WHEAT FIELD TO BEGIN HARVESTING</div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════
+//  HARVESTMASTER 3D — Full Engine v2
+// ═══════════════════════════════════════════════════════════
+
+// ── RENDERER ──
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x87ceeb, 0.0035);
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.2, 600);
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ── GAME STATE ──
+const G = {
+  money: 10000, wheatPrice: 140, totalHarv: 0, totalEarn: 0, dayEarn: 0,
+  fuel: 100, grain: 0, TANK_L: 12000, eTemp: 75,
+  headlights: false, harvesting: false, harvestRate: 0,
+  dist: 0, sessionTime: 0,
+  vel: 0, maxVel: 0.24, heading: 0, turnVel: 0,
+  gearIdx: 1, rpm: 800,
+  day: 1, hour: 8.0, timeScale: 120,
+  weather: 'clear', windSpeed: 12, windDir: 0.4, raining: false,
+  weatherTimer: 0, weatherDur: 300,
+  camMode: 0, nearSilo: false, nearBarn: false, nearField: null,
+  keys: {}, frame: 0,
+  prices: { barley: 118, diesel: 1.42, seed: 2.2 },
+  marketTimer: 0,
+};
+const harvPos = new THREE.Vector3(5, 0, 5);
+
+// ── LIGHTING ──
+const ambLight = new THREE.AmbientLight(0xfff5e0, 0.5); scene.add(ambLight);
+const sunLight = new THREE.DirectionalLight(0xfffaec, 2.5);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = sunLight.shadow.mapSize.height = 2048;
+const sc = 200;
+Object.assign(sunLight.shadow.camera, { left: -sc, right: sc, top: sc, bottom: -sc, near: 1, far: 600 });
+sunLight.shadow.bias = -0.0005;
+scene.add(sunLight);
+const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x3d6b1e, 0.7); scene.add(hemiLight);
+const moonLight = new THREE.DirectionalLight(0x4466bb, 0.2);
+moonLight.position.set(-100, 80, -80); scene.add(moonLight);
+const headL = new THREE.SpotLight(0xfffde7, 0, 60, Math.PI / 7, 0.4, 1);
+const headR = new THREE.SpotLight(0xfffde7, 0, 60, Math.PI / 7, 0.4, 1);
+const headLT = new THREE.Object3D(), headRT = new THREE.Object3D();
+scene.add(headL, headR, headLT, headRT);
+headL.target = headLT; headR.target = headRT;
+
+// ── MATERIALS ──
+const M = {
+  grass: new THREE.MeshLambertMaterial({ color: 0x4a7c2f }),
+  soil:  new THREE.MeshLambertMaterial({ color: 0x5a3418 }),
+  road:  new THREE.MeshLambertMaterial({ color: 0x8b7a65 }),
+  water: new THREE.MeshPhongMaterial({ color: 0x1a5599, transparent: true, opacity: .75, shininess: 200 }),
+  jdY: new THREE.MeshPhongMaterial({ color: 0xf5c000, shininess: 80 }),
+  jdG: new THREE.MeshPhongMaterial({ color: 0x367c2b, shininess: 60 }),
+  jdD: new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 20 }),
+  jdGl: new THREE.MeshPhongMaterial({ color: 0x99ccff, transparent: true, opacity: .55, shininess: 250, side: THREE.DoubleSide }),
+  jdCh: new THREE.MeshPhongMaterial({ color: 0xbbbbbb, shininess: 300, specular: 0xffffff }),
+  jdBk: new THREE.MeshPhongMaterial({ color: 0x0f0f0f }),
+  jdRd: new THREE.MeshPhongMaterial({ color: 0xcc2200, shininess: 50 }),
+  jdGr: new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 40 }),
+  barn: new THREE.MeshLambertMaterial({ color: 0x8b1a1a }),
+  barnR: new THREE.MeshLambertMaterial({ color: 0x4a4a4a }),
+  house: new THREE.MeshLambertMaterial({ color: 0xf0e8d8 }),
+  silo: new THREE.MeshPhongMaterial({ color: 0xb0b0b0, shininess: 60 }),
+  siloR: new THREE.MeshPhongMaterial({ color: 0x777777, shininess: 30 }),
+  trunk: new THREE.MeshLambertMaterial({ color: 0x5c3317 }),
+  foliage: new THREE.MeshLambertMaterial({ color: 0x2a6020 }),
+  fence: new THREE.MeshLambertMaterial({ color: 0xd4c090 }),
+  dust:  new THREE.MeshBasicMaterial({ color: 0xc8a060, transparent: true, opacity: .35, depthWrite: false }),
+  chaff: new THREE.MeshBasicMaterial({ color: 0xd4a017, transparent: true, opacity: .55, depthWrite: false }),
+};
+
+// ── GEOMETRY HELPERS ──
+function B(w, h, d, mat, px = 0, py = 0, pz = 0, sh = true) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(px, py, pz);
+  if (sh) { m.castShadow = true; m.receiveShadow = true; }
+  return m;
+}
+function C(rt, rb, h, seg, mat, px = 0, py = 0, pz = 0) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.position.set(px, py, pz); m.castShadow = true; return m;
+}
+
+// ── TERRAIN ──
+const WORLD = 300;
+function th(x, z) {
+  return Math.sin(x * .013) * Math.cos(z * .011) * 2.5 + Math.sin(x * .035 + .6) * .9 + Math.cos(z * .025 - 1.2) * .7;
+}
+(function () {
+  const geo = new THREE.PlaneGeometry(WORLD * 2, WORLD * 2, 80, 80);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, th(pos.getX(i), pos.getZ(i)));
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, M.grass); m.receiveShadow = true; scene.add(m);
+})();
+function road(x1, z1, x2, z2, w = 5) {
+  const dx = x2 - x1, dz = z2 - z1, len = Math.sqrt(dx * dx + dz * dz);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, .15, len), M.road);
+  m.position.set((x1 + x2) / 2, .06, (z1 + z2) / 2);
+  m.rotation.y = Math.atan2(dx, dz); m.receiveShadow = true; scene.add(m);
+}
+road(-140, 0, 140, 0, 6); road(0, -140, 0, 140, 6);
+road(-62, 0, -62, -130, 4.5); road(92, 0, 92, -130, 4.5); road(-140, 62, 140, 62, 4.5);
+const pond = new THREE.Mesh(new THREE.CylinderGeometry(20, 20, .4, 20), M.water);
+pond.position.set(-105, .12, -85); scene.add(pond);
+
+// ── SKY OBJECTS ──
+const starV = [];
+for (let i = 0; i < 1000; i++) {
+  const t = Math.random() * Math.PI * 2, p = Math.acos(2 * Math.random() - 1), r = 390 + Math.random() * 40;
+  starV.push(r * Math.sin(p) * Math.cos(t), r * Math.sin(p) * Math.sin(t), r * Math.cos(p));
+}
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starV, 3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1, sizeAttenuation: true, transparent: true }));
+scene.add(stars);
+const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(9, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffee77 }));
+const moonMesh = new THREE.Mesh(new THREE.SphereGeometry(6, 12, 12), new THREE.MeshBasicMaterial({ color: 0xddddcc }));
+scene.add(sunMesh, moonMesh);
+const cloudGroup = new THREE.Group(); scene.add(cloudGroup);
+function addCloud(x, y, z, s = 1) {
+  const g = new THREE.Group();
+  const cm = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: .88 });
+  [[0, 0, 0, 1.2], [2, .4, 0, .9], [-2, .2, .5, .8], [.5, .8, 0, .7]].forEach(([cx, cy, cz, sc2]) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(4 * sc2 * s, 7, 5), cm);
+    m.position.set(cx * s * 3, cy * s * 2, cz * s * 2); g.add(m);
+  });
+  g.position.set(x, y, z); cloudGroup.add(g);
+}
+for (let i = 0; i < 14; i++) addCloud((Math.random() - .5) * 500, 90 + Math.random() * 40, (Math.random() - .5) * 500, .7 + Math.random() * .8);
+
+// ── TREES ──
+function addTree(x, z, s = 1) {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.3 * s, .5 * s, 4 * s, 6), M.trunk);
+  trunk.position.y = 2 * s; trunk.castShadow = true;
+  [[4 * s, 7, 5, 0, 6.5 * s, 0], [2.5 * s, 7, 5, 1.6 * s, 5 * s, .5 * s], [2 * s, 7, 5, -1.2 * s, 4.5 * s, .8 * s]].forEach(([r, w, h, ox, oy, oz]) => {
+    const f = new THREE.Mesh(new THREE.SphereGeometry(r, w, h), M.foliage);
+    f.position.set(ox, oy, oz); f.castShadow = true; g.add(f);
+  });
+  g.add(trunk); g.position.set(x, th(x, z), z); scene.add(g);
+}
+for (let i = -13; i <= 13; i++) {
+  addTree(i * 20, -270, .85 + Math.random() * .4); addTree(i * 20, 270, .85 + Math.random() * .4);
+  addTree(-270, i * 20, .85 + Math.random() * .4); addTree(270, i * 20, .85 + Math.random() * .4);
+}
+[[75, 75], [95, 65], [-85, 80], [-95, 72], [65, -80], [70, -90], [110, 115], [-115, 105]].forEach(([x, z]) => addTree(x, z, 1 + Math.random() * .6));
+
+// ── BUILDINGS ──
+(function farmhouse() {
+  const g = new THREE.Group();
+  g.add(B(14, 8, 10, M.house, 0, 4, 0));
+  const rg = new THREE.ConeGeometry(10, 5, 4); rg.rotateY(Math.PI / 4);
+  const roof = new THREE.Mesh(rg, M.barnR); roof.position.set(0, 10.5, 0); roof.castShadow = true; g.add(roof);
+  g.add(B(1.2, 4, 1.2, new THREE.MeshLambertMaterial({ color: 0x8b4513 }), 3, 12, 2));
+  g.add(B(2, 3.2, .2, new THREE.MeshLambertMaterial({ color: 0x7a3a10 }), 0, 1.6, 5.1));
+  [[-4, 5.1], [4, 5.1]].forEach(([x, z]) => g.add(B(.2, 1.5, 1.8, new THREE.MeshPhongMaterial({ color: 0x88ccff, transparent: true, opacity: .7 }), x, 5, z)));
+  g.add(B(9, .3, 3.5, new THREE.MeshLambertMaterial({ color: 0xd2b48c }), 0, .15, 6.8));
+  g.position.set(60, th(60, 60), 60); scene.add(g);
+})();
+
+const BARN_POS = new THREE.Vector3(-62, 0, 62);
+(function barn() {
+  const g = new THREE.Group();
+  g.add(B(26, 13, 18, M.barn, 0, 6.5, 0));
+  const rg = new THREE.ConeGeometry(16, 8, 4); rg.rotateY(Math.PI / 4);
+  const roof = new THREE.Mesh(rg, M.barnR); roof.position.set(0, 16, 0); roof.castShadow = true; g.add(roof);
+  g.add(B(10, 10, .3, new THREE.MeshLambertMaterial({ color: 0x5c2800 }), 0, 5, 9.15));
+  g.add(C(.15, .15, 5, 8, M.jdGr, 16, 2.5, 0));
+  const pump = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, .6), new THREE.MeshPhongMaterial({ color: 0xff3300, shininess: 60 }));
+  pump.position.set(16, 5.4, 0); g.add(pump);
+  const sign = new THREE.Mesh(new THREE.BoxGeometry(1.8, .8, .06), new THREE.MeshLambertMaterial({ color: 0xee3300 }));
+  sign.position.set(16, 7, 0); g.add(sign);
+  g.position.set(BARN_POS.x, th(BARN_POS.x, BARN_POS.z), BARN_POS.z); scene.add(g);
+})();
+
+const SILO_POS = new THREE.Vector3(92, 0, -62);
+(function silo() {
+  const g = new THREE.Group();
+  g.add(C(5.5, 5.5, 22, 18, M.silo, 0, 11, 0));
+  g.add(C(0, 6, 4.5, 18, M.siloR, 0, 23.25, 0));
+  g.add(C(3.8, 3.8, 18, 18, M.silo, 12, 9, 0));
+  g.add(C(0, 4.2, 3.5, 18, M.siloR, 12, 19.75, 0));
+  g.add(B(12, .8, 1, M.jdGr, 6, 16, 0));
+  g.add(B(24, 1, 18, M.jdGr, 6, .5, 0));
+  g.add(C(.2, .2, 8, 8, M.jdD, 3.5, 6, -2));
+  g.position.set(SILO_POS.x, th(SILO_POS.x, SILO_POS.z), SILO_POS.z); scene.add(g);
+})();
+
+function addFence(x1, z1, x2, z2, posts = 10) {
+  const dx = (x2 - x1) / posts, dz = (z2 - z1) / posts;
+  const ang = Math.atan2(dx, dz), rl = Math.sqrt(dx * dx + dz * dz) * 1.04;
+  const railG = new THREE.BoxGeometry(rl, .1, .07);
+  for (let i = 0; i <= posts; i++) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, 1.6, 5), M.fence);
+    post.position.set(x1 + dx * i, .8, z1 + dz * i); scene.add(post);
+    if (i < posts) {
+      [.55, .95, 1.35].forEach(y => {
+        const r = new THREE.Mesh(railG, M.fence);
+        r.position.set(x1 + dx * (i + .5), y, z1 + dz * (i + .5)); r.rotation.y = ang; scene.add(r);
+      });
+    }
+  }
+}
+
+// ── WIND SWAY SHADER ──
+const wUni = { uTime: { value: 0 }, uWS: { value: .18 }, uWD: { value: new THREE.Vector2(1, .3) } };
+function makeSwayMat(color) {
+  return new THREE.ShaderMaterial({
+    uniforms: { ...wUni, diffuse: { value: new THREE.Color(color) } },
+    vertexShader: `
+      uniform float uTime; uniform float uWS; uniform vec2 uWD;
+      #include <common>
+      #include <instanced_pars_vertex>
+      void main() {
+        #include <begin_vertex>
+        #include <project_vertex>
+        vec4 wi = instanceMatrix * vec4(0.,0.,0.,1.);
+        float sw = sin(uTime*1.8 + wi.x*.22 + wi.z*.18) * uWS;
+        float sy = max(0., (position.y + .7) / 1.5);
+        transformed.x += uWD.x * sw * sy;
+        transformed.z += uWD.y * sw * .55 * sy;
+        gl_Position = projectionMatrix * (modelViewMatrix * instanceMatrix * vec4(transformed, 1.));
+      }`,
+    fragmentShader: `uniform vec3 diffuse; void main(){gl_FragColor=vec4(diffuse,1.);}`,
+    side: THREE.DoubleSide,
+  });
+}
+
+// ── WHEAT FIELDS ──
+const CELL = 2.5;
+const GROW = [0, 240, 480, 600, 0];
+const FDEFS = [
+  { id: 0, name: 'North A',    cx: -72, cz: -85, cols: 20, rows: 18, init: 3 },
+  { id: 1, name: 'North B',    cx:  22, cz: -80, cols: 16, rows: 14, init: 3 },
+  { id: 2, name: 'East Field', cx: 155, cz:  22, cols: 20, rows: 20, init: 2 },
+  { id: 3, name: 'South',      cx:   0, cz: 135, cols: 22, rows: 16, init: 1 },
+  { id: 4, name: 'West Field', cx:-155, cz:  12, cols: 16, rows: 18, init: 3 },
+  { id: 5, name: 'Home',       cx: -42, cz:  12, cols: 10, rows: 10, init: 0 },
+];
+const fields = [];
+const ZERO4 = new THREE.Matrix4().makeScale(.001, .001, .001);
+const dum = new THREE.Object3D();
+const gSeed = new THREE.BoxGeometry(.09, .45, .09), gGrow = new THREE.BoxGeometry(.11, .85, .11);
+const gMat  = new THREE.BoxGeometry(.13, 1.35, .13), gHead = new THREE.BoxGeometry(.17, .32, .06);
+const gStub = new THREE.BoxGeometry(.1, .18, .1);
+const mSeed = makeSwayMat(0x5aa832), mGrow = makeSwayMat(0x78c840), mMat  = makeSwayMat(0xc8a020);
+const mHead = makeSwayMat(0xd4840c), mStub = new THREE.MeshLambertMaterial({ color: 0x6b4226 });
+
+function buildField(def) {
+  const { cx, cz, cols, rows, init } = def;
+  const W = cols * CELL, D = rows * CELL, total = cols * rows;
+  const soil = new THREE.Mesh(new THREE.BoxGeometry(W + 2, .2, D + 2), M.soil.clone());
+  soil.position.set(cx, .04, cz); soil.receiveShadow = true; scene.add(soil);
+  const tc = document.createElement('canvas'); tc.width = cols; tc.height = rows;
+  const ctx = tc.getContext('2d'); ctx.fillStyle = '#5a3418'; ctx.fillRect(0, 0, cols, rows);
+  const tTex = new THREE.CanvasTexture(tc); tTex.magFilter = THREE.NearestFilter;
+  const tMesh = new THREE.Mesh(new THREE.PlaneGeometry(W, D),
+    new THREE.MeshBasicMaterial({ map: tTex, transparent: true, opacity: 0, depthWrite: false }));
+  tMesh.rotation.x = -Math.PI / 2; tMesh.position.set(cx, .22, cz); scene.add(tMesh);
+  const cells = Array.from({ length: total }, (_, i) => ({
+    row: Math.floor(i / cols), col: i % cols,
+    stage: init, gt: GROW[Math.min(init, 3)] * (.7 + Math.random() * .6),
+  }));
+  const iS = new THREE.InstancedMesh(gSeed, mSeed, total);
+  const iG = new THREE.InstancedMesh(gGrow, mGrow, total);
+  const iM = new THREE.InstancedMesh(gMat,  mMat,  total);
+  const iH = new THREE.InstancedMesh(gHead, mHead, total);
+  const iSt = new THREE.InstancedMesh(gStub, mStub, total);
+  [iS, iG, iM, iH, iSt].forEach(m => { m.castShadow = false; m.frustumCulled = true; scene.add(m); });
+
+  function redraw() {
+    cells.forEach((c, i) => {
+      const wx = cx - W / 2 + c.col * CELL + CELL / 2;
+      const wz = cz - D / 2 + c.row * CELL + CELL / 2;
+      [iS, iG, iM, iH, iSt].forEach(m => m.setMatrixAt(i, ZERO4));
+      dum.rotation.y = (c.col * 1.3 + c.row * .7) % (Math.PI * 2);
+      dum.scale.set(1, 1, 1);
+      if (c.stage === 1) { dum.position.set(wx, .22, wz); dum.updateMatrix(); iS.setMatrixAt(i, dum.matrix); }
+      else if (c.stage === 2) { dum.position.set(wx, .42, wz); dum.updateMatrix(); iG.setMatrixAt(i, dum.matrix); }
+      else if (c.stage === 3) {
+        dum.position.set(wx, .67, wz); dum.updateMatrix(); iM.setMatrixAt(i, dum.matrix);
+        dum.position.set(wx + .09, 1.25, wz + .04); dum.rotation.z = .4; dum.updateMatrix();
+        iH.setMatrixAt(i, dum.matrix); dum.rotation.z = 0;
+      } else if (c.stage === 4) {
+        dum.position.set(wx, .1, wz); dum.updateMatrix(); iSt.setMatrixAt(i, dum.matrix);
+        ctx.fillStyle = 'rgba(70,30,5,.9)'; ctx.fillRect(c.col, rows - 1 - c.row, 1, 1);
+      }
+    });
+    [iS, iG, iM, iH, iSt].forEach(m => m.instanceMatrix.needsUpdate = true);
+    tTex.needsUpdate = true;
+    tMesh.material.opacity = cells.filter(c => c.stage === 4).length / total * .75;
+  }
+
+  const hw = W / 2 + 1, hd = D / 2 + 1, fp = Math.round(Math.max(cols, rows) * .9);
+  addFence(cx - hw, cz - hd, cx + hw, cz - hd, fp); addFence(cx + hw, cz - hd, cx + hw, cz + hd, fp);
+  addFence(cx + hw, cz + hd, cx - hw, cz + hd, fp); addFence(cx - hw, cz + hd, cx - hw, cz - hd, fp);
+  redraw();
+
+  const fd = {
+    def, cells, W, D, total, iS, iG, iM, iH, iSt, ctx, tTex, tMesh, tc, redraw,
+    get matureN() { return cells.filter(c => c.stage === 3).length; },
+    get harvestedN() { return cells.filter(c => c.stage === 4).length; },
+    get stageLabel() {
+      if (this.matureN > 0) return 3;
+      if (cells.some(c => c.stage === 2)) return 2;
+      if (cells.some(c => c.stage === 1)) return 1;
+      if (cells.every(c => c.stage === 4)) return 4;
+      return 0;
+    },
+    isClear() { return cells.every(c => c.stage === 4 || c.stage === 0); },
+    seed() {
+      cells.forEach(c => {
+        if (c.stage === 4 || c.stage === 0) { c.stage = 1; c.gt = GROW[1] * (.8 + Math.random() * .4); }
+      });
+      ctx.fillStyle = '#5a3418'; ctx.fillRect(0, 0, this.def.cols, this.def.rows);
+      tTex.needsUpdate = true; tMesh.material.opacity = 0; this.redraw();
+    },
+  };
+  fields.push(fd);
+}
+FDEFS.forEach(buildField);
+// ── HARVESTER MODEL ──
+const hg = new THREE.Group(); hg.name = 'harvester';
+function hp(w, h, d, mat, px, py, pz) { const m = B(w, h, d, mat, px, py, pz); hg.add(m); return m; }
+function hc(rt, rb, h, seg, mat, px, py, pz) { const m = C(rt, rb, h, seg, mat, px, py, pz); hg.add(m); return m; }
+
+// Body structure (John Deere-inspired green/yellow)
+hp(5.2, .9, 7.5, M.jdD,  0, .85,  0);        // underframe
+hp(5.0, 3.2, 7.0, M.jdG, 0, 2.7,  0);        // lower body
+hp(5.2, .25, 7.2, M.jdY, 0, 4.42, 0);        // waistline stripe
+hp(5.0, 1.5, 6.8, M.jdY, 0, 5.4,  0);        // upper body
+hp(5.2, .2,  7.2, M.jdD, 0, 6.22, 0);        // top rail
+
+// Grain tank (right side)
+hp(2.8, 2.8, 5.5, M.jdY, -1.0, 6.8,  .5);
+hp(2.8, .12, 5.5, M.jdD, -1.0, 8.26, .5);   // tank lid
+
+// Cab
+hp(3.2, 2.8, 3.4, M.jdY, 1.0, 7.1, -1.6);
+hp(3.2, .18, 3.4, M.jdD, 1.0, 8.56,-1.6);   // cab roof
+hp(3.2, .15, 1.0, M.jdY, 1.0, 8.72,-2.6);   // visor
+
+// Cab glass (front, left, right)
+hp(3.0, 2.4, .12, M.jdGl,  1.0, 7.0, -3.35);
+hp(.12, 2.4, 3.2, M.jdGl,  2.56,7.0, -1.6);
+hp(.12, 2.4, 3.2, M.jdGl, -.56, 7.0, -1.6);
+
+// Engine hood + rear panel + louvres
+hp(5.0, 2.0, 2.8, M.jdD, 0, 2.2, -3.4);
+hp(5.0, .5,  2.8, M.jdY, 0, 3.3, -3.4);
+hp(4.8, 1.8, .18, M.jdG, 0, 2.2, -4.85);
+for (let i = 0; i < 4; i++) hp(5.0, .06, .3, M.jdGr, 0, 2.8 + i * .35, -3.4);
+
+// Exhaust stack
+hc(.12, .12, 2.0, 8, M.jdD, 1.9, 5.0, -3.4);
+const exCap = new THREE.Mesh(new THREE.CylinderGeometry(.2, .12, .28, 8), M.jdD);
+exCap.position.set(1.9, 6.14, -3.4); hg.add(exCap);
+
+// Header (cutting platform)
+hp(9.0,  .85, 1.5, M.jdD, 0, .85, 4.8);
+hp(8.8,  .45, 2.0, M.jdG, 0, 1.42, 4.5);
+hp(9.0,  .14, .28, M.jdCh,0, .45, 5.55);     // cutter bar
+for (let i = -4; i <= 4; i++) hp(.15, .6, 1.2, M.jdD, i * 1.05, 1.1, 4.8); // crop dividers
+
+// Reel (spinning)
+const reel = new THREE.Group(); reel.position.set(0, 2.1, 4.3); hg.add(reel);
+const reelAxle = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 9.2, 8), M.jdGr);
+reelAxle.rotation.z = Math.PI / 2; reel.add(reelAxle);
+for (let b = 0; b < 6; b++) {
+  const ang = (b / 6) * Math.PI * 2;
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 9.2, 6), M.jdD);
+  bar.rotation.z = Math.PI / 2; bar.position.set(0, Math.sin(ang) * .85, Math.cos(ang) * .85); reel.add(bar);
+  for (let t = -4; t <= 4; t++) {
+    const tine = new THREE.Mesh(new THREE.BoxGeometry(.05, .28, .04), M.jdCh);
+    tine.position.set(t, Math.sin(ang) * .85 - .14, Math.cos(ang) * .85);
+    tine.rotation.z = ang + Math.PI / 2; reel.add(tine);
+  }
+}
+
+// Feeder / elevator
+hp(.9, 2.8, 1.1, M.jdD, 0, 2.4, 2.4);
+const auger = hc(.3, .3, 8.6, 12, M.jdY, 0, 1.2, 3.9); auger.rotation.z = Math.PI / 2;
+
+// Unloading arm
+const uArm = new THREE.Group(); hg.add(uArm); uArm.position.set(-3.2, 6.5, .5);
+const ap = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, 6, 8), M.jdD);
+ap.rotation.z = Math.PI / 4; ap.position.set(0, 2, 0); uArm.add(ap);
+const at = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .5), M.jdRd); at.position.set(3.6, 5.5, 0); uArm.add(at);
+
+// Wheels (large front, small rear)
+function addWheel(px, py, pz, r, w) {
+  const g = new THREE.Group();
+  const tire = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 20), M.jdBk); tire.rotation.z = Math.PI / 2;
+  const rim  = new THREE.Mesh(new THREE.CylinderGeometry(r * .62, r * .62, w + .06, 16), M.jdGr); rim.rotation.z = Math.PI / 2;
+  const hub  = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, w + .12, 8), M.jdCh); hub.rotation.z = Math.PI / 2;
+  for (let s = 0; s < 6; s++) {
+    const sp = new THREE.Mesh(new THREE.BoxGeometry(r * .85, .1, .07), M.jdGr);
+    sp.rotation.z = (s / 6) * Math.PI * 2; sp.rotation.x = Math.PI / 2; g.add(sp);
+  }
+  g.add(tire, rim, hub); g.position.set(px, py, pz); g.castShadow = true; hg.add(g); return g;
+}
+const wFL = addWheel(-3,  1.15,  2.8, 1.3, .85);
+const wFR = addWheel( 3,  1.15,  2.8, 1.3, .85);
+const wRL = addWheel(-2.5,.7,  -2.8, .85, .65);
+const wRR = addWheel( 2.5,.7,  -2.8, .85, .65);
+const wheels = [wFL, wFR, wRL, wRR];
+
+// Mud guards
+hp(.14, .5, 2.0, M.jdG, -3.4, 1.8,  2.8);
+hp(.14, .5, 2.0, M.jdG,  3.4, 1.8,  2.8);
+
+// Work lights (front + header)
+const lightOnMat = new THREE.MeshPhongMaterial({ color: 0xffffcc, emissive: 0xffff88, emissiveIntensity: 0 });
+const hLights = [];
+[[-1.6, 7.2, -3.4], [1.6, 7.2, -3.4], [-4.3, 2.8, 4.4], [4.3, 2.8, 4.4]].forEach(([x, y, z]) => {
+  const lm = new THREE.Mesh(new THREE.BoxGeometry(.35, .22, .12), lightOnMat.clone());
+  lm.position.set(x, y, z); hg.add(lm); hLights.push(lm);
+});
+// Rear brake lights
+const rearMat = new THREE.MeshPhongMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: .4 });
+[[-2.4, 1.8, -4.9], [2.4, 1.8, -4.9]].forEach(([x, y, z]) => {
+  const rl = new THREE.Mesh(new THREE.BoxGeometry(.4, .25, .1), rearMat); rl.position.set(x, y, z); hg.add(rl);
+});
+// Mirrors
+hp(.06, .25, .4, M.jdGr, -.7, 9.2, -3.1);
+hp(.06, .25, .4, M.jdGr, 2.8, 9.2, -3.1);
+
+hg.position.copy(harvPos); scene.add(hg);
+
+// ── PARTICLES ──
+const PMAX = 160; const particles = [];
+const pGeo = new THREE.SphereGeometry(.14, 3, 3), cGeo = new THREE.BoxGeometry(.07, .22, .04);
+for (let i = 0; i < PMAX; i++) {
+  const isDust = i < 100;
+  const m = new THREE.Mesh(isDust ? pGeo : cGeo, isDust ? M.dust.clone() : M.chaff.clone());
+  m.visible = false; m.userData = { active: false, vx: 0, vy: 0, vz: 0, life: 0, ml: 1 };
+  scene.add(m); particles.push(m);
+}
+function spawnP(x, y, z, isDust = true) {
+  const p = particles.find(pp => !pp.userData.active); if (!p) return;
+  p.position.set(x + (Math.random() - .5) * 2, y, z + (Math.random() - .5) * 2);
+  Object.assign(p.userData, { active: true, vx: (Math.random() - .5) * .12, vy: .05 + Math.random() * .09, vz: (Math.random() - .5) * .12, life: 0, ml: .9 + Math.random() * .8 });
+  p.material.opacity = isDust ? .4 : .6; p.visible = true;
+}
+function updateParticles(dt) {
+  particles.forEach(p => {
+    if (!p.userData.active) return;
+    p.userData.life += dt;
+    const t = p.userData.life / p.userData.ml;
+    if (t >= 1) { p.userData.active = false; p.visible = false; return; }
+    p.position.x += p.userData.vx; p.position.y += p.userData.vy * (1 - t * t); p.position.z += p.userData.vz;
+    p.userData.vy -= .0015;
+    p.material.opacity = (1 - t) * (p.material.color.r > .8 ? .35 : .55);
+    p.scale.setScalar(1 - t * .5);
+  });
+}
+
+// Rain
+const RAIN_N = 800, rainPos = new Float32Array(RAIN_N * 3);
+for (let i = 0; i < RAIN_N; i++) { rainPos[i*3] = (Math.random()-.5)*250; rainPos[i*3+1] = Math.random()*70; rainPos[i*3+2] = (Math.random()-.5)*250; }
+const rainGeo = new THREE.BufferGeometry(); rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+const rainMesh = new THREE.Points(rainGeo, new THREE.PointsMaterial({ color: 0x99aacc, size: .25, transparent: true, opacity: .55, depthWrite: false }));
+rainMesh.visible = false; scene.add(rainMesh);
+
+// ── AUDIO ──
+let actx = null, engOsc = null, engGain = null, hNoise = null, hGain = null;
+function initAudio() {
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    const mg = actx.createGain(); mg.gain.value = .18; mg.connect(actx.destination);
+    const lpf = actx.createBiquadFilter(); lpf.type = 'lowpass'; lpf.frequency.value = 400; lpf.connect(mg);
+    engGain = actx.createGain(); engGain.gain.value = 1; engGain.connect(lpf);
+    engOsc = actx.createOscillator(); engOsc.type = 'sawtooth'; engOsc.frequency.value = 60;
+    const dist = actx.createWaveShaper();
+    const crv = new Float32Array(256);
+    for (let i = 0; i < 256; i++) { const x = i * 2/256 - 1; crv[i] = (Math.PI+380)*x/(Math.PI+380*Math.abs(x)); }
+    dist.curve = crv; engOsc.connect(dist); dist.connect(engGain); engOsc.start();
+    const o2 = actx.createOscillator(); o2.type = 'square'; o2.frequency.value = 120;
+    const g2 = actx.createGain(); g2.gain.value = .2; o2.connect(g2); g2.connect(engGain); o2.start();
+    const buf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+    const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() - .5;
+    hNoise = actx.createBufferSource(); hNoise.buffer = buf; hNoise.loop = true;
+    hGain = actx.createGain(); hGain.gain.value = 0;
+    const hpf = actx.createBiquadFilter(); hpf.type = 'bandpass'; hpf.frequency.value = 1200; hpf.Q.value = .8;
+    hNoise.connect(hpf); hpf.connect(hGain); hGain.connect(actx.destination); hNoise.start();
+  } catch (e) { console.warn('Audio init failed', e); }
+}
+function updateAudio(spd, harv) {
+  if (!actx || actx.state === 'suspended') return;
+  const rpm = 800 + Math.abs(spd) * 180 + (harv ? 300 : 0);
+  if (engOsc) engOsc.frequency.setTargetAtTime(rpm * .065, actx.currentTime, .08);
+  if (engGain) engGain.gain.setTargetAtTime(.8 + Math.abs(spd) * .04, actx.currentTime, .06);
+  if (hGain) hGain.gain.setTargetAtTime(harv ? .1 : 0, actx.currentTime, .15);
+}
+
+// ── CONTROLS ──
+document.addEventListener('keydown', e => {
+  G.keys[e.code] = true;
+  if (e.code === 'KeyC') cycleCamera();
+  if (e.code === 'KeyH') toggleLights();
+  if (e.code === 'KeyE') handleInteract();
+  if (e.code === 'KeyF') handleSeed();
+  e.preventDefault();
+});
+document.addEventListener('keyup', e => { G.keys[e.code] = false; });
+document.addEventListener('click', () => { if (actx && actx.state === 'suspended') actx.resume(); }, { once: true });
+
+// ── CAMERA ──
+const CAMS = [
+  { name: 'FOLLOW',   dist: 22, h: 9.5, fwd: 6  },
+  { name: 'OVERHEAD', dist: 0,  h: 75,  fwd: 0  },
+  { name: 'CAB VIEW', dist: -2, h: 6.5, fwd: 26 },
+];
+const camSpr = { pos: new THREE.Vector3(0, 10, 30), vel: new THREE.Vector3() };
+const camTgt = new THREE.Vector3();
+
+function updateCamera(dt) {
+  const cm = CAMS[G.camMode];
+  const fX = Math.sin(G.heading), fZ = Math.cos(G.heading);
+  const desired = new THREE.Vector3(harvPos.x - fX * cm.dist, harvPos.y + cm.h, harvPos.z - fZ * cm.dist);
+  camSpr.vel.addScaledVector(desired.clone().sub(camSpr.pos), 5.5 * dt);
+  camSpr.vel.multiplyScalar(.78);
+  camSpr.pos.add(camSpr.vel);
+  camera.position.copy(camSpr.pos);
+  camTgt.set(harvPos.x + fX * cm.fwd, harvPos.y + 3, harvPos.z + fZ * cm.fwd);
+  camera.lookAt(camTgt);
+  if (G.headlights) {
+    headL.position.copy(hg.localToWorld(new THREE.Vector3(-1.6, 7.2, -3.4)));
+    headR.position.copy(hg.localToWorld(new THREE.Vector3( 1.6, 7.2, -3.4)));
+    headLT.position.set(harvPos.x + fX * 30 - 1, 0, harvPos.z + fZ * 30 - 1);
+    headRT.position.set(harvPos.x + fX * 30 + 1, 0, harvPos.z + fZ * 30 + 1);
+    headLT.updateMatrixWorld(); headRT.updateMatrixWorld();
+  }
+}
+
+function cycleCamera() {
+  G.camMode = (G.camMode + 1) % 3;
+  camSpr.vel.set(0, 0, 0);
+  const b = document.getElementById('cbadge');
+  b.textContent = CAMS[G.camMode].name;
+  b.style.display = 'block';
+  b.style.animation = 'none';
+  requestAnimationFrame(() => {
+    b.style.animation = 'none'; b.offsetHeight; // reflow
+    b.style.transition = 'opacity 2s';
+    setTimeout(() => { b.style.opacity = '0'; setTimeout(() => { b.style.display = 'none'; b.style.opacity = '1'; }, 2000); }, 1500);
+  });
+}
+
+// ── PHYSICS & GEAR ──
+const GEARS = [
+  { n: 'R', max: .06 }, { n: 'N', max: 0 },
+  { n: '1', max: .05 }, { n: '2', max: .09 }, { n: '3', max: .13 },
+  { n: '4', max: .18 }, { n: '5', max: .22 }, { n: '6', max: .26 },
+];
+function autoGear() {
+  const s = Math.abs(G.vel);
+  if (G.vel < -.005) { G.gearIdx = 0; return; }
+  if (s < .001) { G.gearIdx = 1; return; }
+  for (let g = 2; g < GEARS.length; g++) { if (s <= GEARS[g].max + .01) { G.gearIdx = g; return; } }
+  G.gearIdx = GEARS.length - 1;
+}
+
+function updatePhysics(dt) {
+  if (G.fuel <= 0) { G.vel *= .97; return; }
+  const ACC = .0028 * (G.raining ? .75 : 1), DEC = .022, BRAKE = .1, MT = .024, TDAMP = .86;
+  let ai = 0;
+  if (G.keys['KeyW'] || G.keys['ArrowUp'])   ai = 1;
+  if (G.keys['KeyS'] || G.keys['ArrowDown']) ai = -1;
+  if (G.keys['Space']) { G.vel *= (1 - BRAKE); }
+  else if (ai !== 0) {
+    const mx = GEARS[Math.max(G.gearIdx, 2)].max;
+    G.vel = Math.max(-GEARS[0].max, Math.min(mx, G.vel + ai * ACC));
+  } else { G.vel *= (1 - DEC); if (Math.abs(G.vel) < .0005) G.vel = 0; }
+  if (Math.abs(G.vel) > .002) {
+    const tf = Math.min(1, Math.abs(G.vel) / .1);
+    if (G.keys['KeyA'] || G.keys['ArrowLeft'])  G.turnVel += MT * tf * Math.sign(G.vel);
+    if (G.keys['KeyD'] || G.keys['ArrowRight']) G.turnVel -= MT * tf * Math.sign(G.vel);
+  }
+  G.turnVel *= TDAMP; G.heading += G.turnVel;
+  const fX = Math.sin(G.heading), fZ = Math.cos(G.heading);
+  harvPos.x += fX * G.vel; harvPos.z += fZ * G.vel;
+  harvPos.y = th(harvPos.x, harvPos.z);
+  harvPos.x = Math.max(-290, Math.min(290, harvPos.x));
+  harvPos.z = Math.max(-290, Math.min(290, harvPos.z));
+  hg.position.copy(harvPos); hg.rotation.y = G.heading;
+  const hx = th(harvPos.x + .5, harvPos.z) - th(harvPos.x - .5, harvPos.z);
+  const hz = th(harvPos.x, harvPos.z + .5) - th(harvPos.x, harvPos.z - .5);
+  hg.rotation.z = -Math.atan2(hx, 1) * .4;
+  hg.rotation.x = Math.atan2(hz, 1) * .4;
+  const abs = Math.abs(G.vel);
+  G.dist += abs * 60 * dt;
+  G.fuel = Math.max(0, G.fuel - (abs * .06 + .004 + (G.harvesting ? .025 : 0)) * dt);
+  const tTemp = 75 + abs * 30 + (G.harvesting ? 15 : 0);
+  G.eTemp += (tTemp - G.eTemp) * .02 * dt;
+  autoGear();
+  const tRPM = 800 + abs * 200 + (G.harvesting ? 350 : 0) + (G.keys['KeyW'] ? 200 : 0);
+  G.rpm += (tRPM - G.rpm) * 4 * dt;
+  const spin = G.vel * 4.5;
+  wheels.forEach(w => { w.children[0].rotation.x += spin; });
+  reel.rotation.x += .055 + abs * .12;
+  auger.rotation.x += .1;
+  uArm.rotation.y += .008;
+}
+
+// ── HARVEST DETECTION ──
+function checkHarvest(dt) {
+  if (Math.abs(G.vel) < .003 || G.fuel <= 0 || G.grain >= 100) {
+    G.harvesting = false; G.harvestRate *= .85; return;
+  }
+  const hw = 9.0, hd = 2.0;
+  const fX = Math.sin(G.heading), fZ = Math.cos(G.heading);
+  const hcx = harvPos.x + fX * 5.8, hcz = harvPos.z + fZ * 5.8;
+  const cosH = Math.cos(-G.heading), sinH = Math.sin(-G.heading);
+  let gained = 0, harv = false;
+  fields.forEach(f => {
+    const { cx, cz, W, D } = f.def;
+    if (Math.abs(harvPos.x - cx) > W/2+14 || Math.abs(harvPos.z - cz) > D/2+14) return;
+    let chg = false;
+    f.cells.forEach((c) => {
+      if (c.stage !== 3) return;
+      const wx = cx - W/2 + c.col * CELL + CELL/2;
+      const wz = cz - D/2 + c.row * CELL + CELL/2;
+      const dx = wx - hcx, dz = wz - hcz;
+      const lx = dx * cosH - dz * sinH;
+      const lz = dx * sinH + dz * cosH;
+      if (Math.abs(lx) < hw/2 + .8 && Math.abs(lz) < hd + .5) {
+        c.stage = 4; gained += .18; harv = true; chg = true;
+        if (Math.random() < .35) spawnP(wx, 1.1, wz, false);
+        if (Math.random() < .25) spawnP(wx + (Math.random() - .5) * 3, .6, wz + (Math.random() - .5) * 3, true);
+      }
+    });
+    if (chg) f.redraw();
+  });
+  G.harvesting = harv;
+  if (harv) {
+    G.grain = Math.min(100, G.grain + gained * .9);
+    G.totalHarv += gained * .012;
+    G.harvestRate = gained / dt * .5;
+  } else { G.harvestRate *= .8; }
+  if (G.grain >= 100) { notify('⚠ GRAIN TANK FULL — Unload at Silo!', 'warn'); G.harvesting = false; }
+}
+
+// ── CROP GROWTH ──
+let growTimer = 0;
+const GROW_TICK = 20;
+function tickGrowth() {
+  let any = false;
+  fields.forEach(f => {
+    let chg = false;
+    f.cells.forEach(c => {
+      if (c.stage === 0 || c.stage === 3 || c.stage === 4) return;
+      c.gt -= GROW_TICK;
+      if (c.gt <= 0) {
+        c.stage = Math.min(3, c.stage + 1);
+        c.gt = GROW[c.stage] * (.75 + Math.random() * .5) + (G.raining ? -30 : 0);
+        chg = any = true;
+      }
+    });
+    if (chg) f.redraw();
+  });
+  if (any) updateFieldsHUD();
+}
+
+// ── PROXIMITY & INTERACTION ──
+function checkProximity() {
+  const dSilo = harvPos.distanceTo(SILO_POS);
+  const dBarn = harvPos.distanceTo(BARN_POS);
+  G.nearSilo = dSilo < 22;
+  G.nearBarn = dBarn < 20;
+  G.nearField = null;
+  fields.forEach(f => {
+    if (Math.abs(harvPos.x - f.def.cx) < f.W/2 + 5 && Math.abs(harvPos.z - f.def.cz) < f.D/2 + 5) {
+      if (f.isClear()) G.nearField = f;
+    }
+  });
+  const ipt = document.getElementById('ipt');
+  const spt = document.getElementById('spt');
+  const ewarn = document.getElementById('ewarn');
+  ewarn.style.display = G.fuel < 12 ? 'block' : 'none';
+  if (G.nearSilo && G.grain > 1) {
+    const l = (G.grain / 100 * G.TANK_L / 1000);
+    const earn = Math.round(l * G.wheatPrice);
+    ipt.innerHTML = `<span class="pk">E</span> UNLOAD — Sell ${l.toFixed(1)}t &nbsp;(+$${earn.toLocaleString()})`;
+    ipt.style.display = 'block'; spt.style.display = 'none';
+  } else if (G.nearBarn) {
+    const cost = Math.round((100 - G.fuel) * G.prices.diesel * 2);
+    ipt.innerHTML = `<span class="pk">E</span> REFUEL — $${cost} &nbsp;(${(100-G.fuel).toFixed(0)}L)`;
+    ipt.style.display = 'block'; spt.style.display = 'none';
+  } else {
+    ipt.style.display = 'none';
+    if (G.nearField) {
+      const cost = Math.round(G.nearField.total * G.prices.seed);
+      spt.innerHTML = `<span class="pks">F</span> SEED FIELD — Cost $${cost}`;
+      spt.style.display = 'block';
+    } else { spt.style.display = 'none'; }
+  }
+  const sm = document.getElementById('status-msg');
+  if (G.harvesting)     sm.textContent = '🌾 HARVESTING  ·  TANK ' + Math.round(G.grain) + '%';
+  else if (G.fuel < 12) sm.textContent = '⛽ LOW FUEL — RETURN TO BARN (SW)';
+  else if (G.grain >= 100) sm.textContent = '⚠ TANK FULL — UNLOAD AT SILO (SE)';
+  else sm.textContent = 'DRIVE TO A GOLDEN WHEAT FIELD TO BEGIN HARVESTING';
+}
+
+function handleInteract() {
+  if (G.nearSilo && G.grain > 1) {
+    const tons = G.grain / 100 * G.TANK_L / 1000;
+    const earned = Math.round(tons * G.wheatPrice);
+    G.money += earned; G.totalEarn += earned; G.dayEarn += earned; G.grain = 0;
+    notify(`🌾 Sold ${tons.toFixed(1)}t  ·  +$${earned.toLocaleString()}`, 'earn');
+    updateHUD();
+  } else if (G.nearBarn) {
+    const fuelNeeded = 100 - G.fuel;
+    const cost = Math.round(fuelNeeded * G.prices.diesel * 2);
+    if (G.money >= cost) { G.money -= cost; G.fuel = 100; notify(`⛽ Refueled  ·  -$${cost}`); }
+    else notify(`❌ Need $${cost} to refuel`, 'warn');
+  }
+}
+
+function handleSeed() {
+  if (!G.nearField) return;
+  const cost = Math.round(G.nearField.total * G.prices.seed);
+  if (G.money < cost) { notify(`❌ Need $${cost} to seed field`, 'warn'); return; }
+  G.money -= cost; G.nearField.seed();
+  notify(`🌱 Field seeded! -$${cost}`);
+  updateFieldsHUD();
+}
+
+// ── NOTIFICATIONS ──
+function notify(msg, type = '', dur = 3500) {
+  const stack = document.getElementById('nstack');
+  const el = document.createElement('div'); el.className = `notif ${type}`;
+  el.textContent = msg; stack.appendChild(el);
+  setTimeout(() => el.classList.add('fade'), dur - 500);
+  setTimeout(() => el.parentNode && el.parentNode.removeChild(el), dur);
+}
+
+// ── WEATHER ──
+const WDATA = {
+  clear:  { icon:'☀️', name:'CLEAR',  temp:24, wind:12, fog:.003, sky:0x87ceeb },
+  cloudy: { icon:'⛅', name:'CLOUDY', temp:19, wind:18, fog:.005, sky:0x9ab0c8 },
+  windy:  { icon:'💨', name:'WINDY',  temp:17, wind:38, fog:.004, sky:0x8ab0c0 },
+  rainy:  { icon:'🌧️',name:'RAINY',  temp:13, wind:22, fog:.008, sky:0x5a7080 },
+};
+const WPOOL = ['clear','clear','clear','cloudy','cloudy','windy','rainy'];
+
+function setWeather(w) {
+  G.weather = w; const d = WDATA[w];
+  G.windSpeed = d.wind + (Math.random() - .5) * 8;
+  G.raining = w === 'rainy';
+  scene.fog.density = d.fog;
+  wUni.uWS.value = G.windSpeed * .004;
+  wUni.uWD.value.set(Math.cos(G.windDir), Math.sin(G.windDir));
+  rainMesh.visible = G.raining;
+  document.getElementById('w-icon').textContent = d.icon;
+  document.getElementById('w-name').textContent = d.name;
+  document.getElementById('w-temp').textContent = `${d.temp + Math.round(Math.random()*3)}°C · ${Math.round(G.windSpeed)}km/h`;
+}
+setWeather('clear');
+
+function updateWeather(dt) {
+  G.weatherTimer += dt;
+  if (G.weatherTimer > G.weatherDur) {
+    G.weatherTimer = 0; G.weatherDur = 180 + Math.random() * 300;
+    G.windDir += (Math.random() - .5) * 1.2;
+    const nw = WPOOL[Math.floor(Math.random() * WPOOL.length)];
+    if (nw !== G.weather) { setWeather(nw); notify(`${WDATA[nw].icon} Weather: ${WDATA[nw].name}`); }
+  }
+}
+
+function updateSky(h) {
+  const ang = (h / 24 - .25) * Math.PI * 2;
+  sunMesh.position.set(Math.cos(ang) * 220, Math.sin(ang) * 180, -60);
+  moonMesh.position.set(-Math.cos(ang) * 220, -Math.sin(ang) * 180 + 20, -60);
+  sunLight.position.copy(sunMesh.position);
+  sunLight.target.position.copy(harvPos); sunLight.target.updateMatrixWorld();
+  const day = Math.max(0, Math.sin(ang));
+  sunLight.intensity = day * 2.8;
+  ambLight.intensity = .15 + day * .55;
+  hemiLight.intensity = .2 + day * .55;
+  moonLight.intensity = Math.max(0, -Math.sin(ang)) * .35;
+  stars.material.opacity = Math.max(0, 1 - day * 4);
+  const d = WDATA[G.weather];
+  const sky = new THREE.Color(d.sky).lerp(new THREE.Color(0x05081a), 1 - day);
+  renderer.setClearColor(sky);
+  if (day < .08 && !G.headlights) toggleLights(true);
+  cloudGroup.children.forEach(c => {
+    c.position.x += Math.cos(G.windDir) * G.windSpeed * .00003;
+    c.position.z += Math.sin(G.windDir) * G.windSpeed * .00003;
+    if (c.position.x > 260) c.position.x = -260;
+    if (c.position.z > 260) c.position.z = -260;
+  });
+}
+
+function toggleLights(forceOn) {
+  G.headlights = forceOn !== undefined ? forceOn : !G.headlights;
+  const int = G.headlights ? 3.0 : 0;
+  headL.intensity = int; headR.intensity = int;
+  hLights.forEach(l => { l.material.emissiveIntensity = G.headlights ? 1.2 : 0; });
+  if (forceOn === undefined) notify(G.headlights ? '🔦 Headlights ON' : '🔦 Headlights OFF');
+}
+
+function updateRain(dt) {
+  if (!G.raining) return;
+  const rp = rainMesh.geometry.attributes.position;
+  for (let i = 0; i < RAIN_N; i++) {
+    rp.setY(i, rp.getY(i) - 1.1);
+    if (rp.getY(i) < 0) {
+      rp.setX(i, harvPos.x + (Math.random() - .5) * 250);
+      rp.setY(i, 70);
+      rp.setZ(i, harvPos.z + (Math.random() - .5) * 250);
+    }
+  }
+  rp.needsUpdate = true;
+}
+// ── HUD UPDATE ──
+const SPEEDO_CIRC = 2 * Math.PI * 36;
+const SPEEDO_ARC  = SPEEDO_CIRC * (270 / 360);
+
+function updateHUD() {
+  const kmh = Math.abs(G.vel) * 360;
+  document.getElementById('spd-n').textContent = Math.round(kmh);
+  const arcFill = Math.min(1, kmh / 24) * SPEEDO_ARC;
+  const arcEl = document.getElementById('spd-arc');
+  arcEl.setAttribute('stroke-dasharray', `${arcFill.toFixed(1)} ${SPEEDO_CIRC.toFixed(1)}`);
+  const r2 = kmh > 18 ? 255 : 245, g2 = kmh > 18 ? Math.round((1-(kmh-18)/6)*166) : 166;
+  arcEl.style.stroke = `rgb(${r2},${g2},30)`;
+
+  document.getElementById('gbadge').textContent = GEARS[G.gearIdx].n;
+  document.getElementById('rpm-v').textContent = Math.round(G.rpm);
+  const tc = Math.round(G.eTemp);
+  const tv = document.getElementById('temp-v');
+  tv.textContent = tc + '°C'; tv.style.color = tc > 100 ? '#ff4444' : tc > 88 ? '#ffaa00' : '';
+  document.getElementById('load-v').textContent = Math.round(Math.abs(G.vel) / G.maxVel * 100) + '%';
+
+  function setArc(id, pct) { document.getElementById(id).setAttribute('stroke-dasharray', `${(pct*75).toFixed(1)} 75`); }
+  setArc('ag-f', G.fuel / 100);
+  setArc('ag-g', G.grain / 100);
+  setArc('ag-t', Math.min(1, (G.eTemp - 50) / 80));
+  document.getElementById('av-f').textContent  = Math.round(G.fuel) + '%';
+  document.getElementById('av-g').textContent  = Math.round(G.grain) + '%';
+  document.getElementById('av-t').textContent  = Math.round(G.eTemp) + '°';
+  const fArc = document.getElementById('ag-f');
+  fArc.style.stroke = G.fuel < 20 ? '#ff3b3b' : G.fuel < 40 ? '#ffaa00' : '#f5a623';
+
+  const harv = G.harvesting;
+  document.getElementById('pdot').className = 'dot' + (harv ? '' : ' off');
+  document.getElementById('ptxt').className = 'ht' + (harv ? '' : ' off');
+  document.getElementById('ptxt').textContent = harv ? 'HARVESTING' : 'STANDBY';
+  document.getElementById('s-harv').textContent = G.totalHarv.toFixed(2) + ' t';
+  document.getElementById('s-rate').textContent = (G.harvestRate * 60).toFixed(1) + ' t/h';
+  document.getElementById('s-earn').textContent = '$' + G.totalEarn.toLocaleString();
+  document.getElementById('s-dist').textContent = Math.round(G.dist) + ' m';
+  const liters = Math.round(G.grain / 100 * G.TANK_L);
+  document.getElementById('tfill').style.width = G.grain + '%';
+  document.getElementById('tlbl').textContent = `${Math.round(G.grain)}% · ${liters.toLocaleString()} L`;
+  document.getElementById('hud-money').textContent = '$' + G.money.toLocaleString();
+  document.getElementById('oc-earn').textContent = '$' + G.dayEarn.toLocaleString();
+
+  const hr = Math.floor(G.hour), mn = Math.floor((G.hour - hr) * 60);
+  document.getElementById('hud-time').textContent = String(hr).padStart(2,'0') + ':' + String(mn).padStart(2,'0');
+  document.getElementById('hud-day').textContent = 'DAY ' + G.day;
+  document.getElementById('hud-price').textContent = G.wheatPrice;
+
+  const hbarEl = document.getElementById('hbar');
+  hbarEl.style.display = harv ? 'flex' : 'none';
+  document.getElementById('hbi').style.width = Math.min(100, G.harvestRate * 5) + '%';
+  document.getElementById('mm-xy').textContent = `X:${Math.round(harvPos.x)} Z:${Math.round(harvPos.z)}`;
+}
+
+function updateFieldsHUD() {
+  const list = document.getElementById('flist');
+  list.innerHTML = '';
+  const barCol = ['#3a2210','#336622','#66cc44','#f5c000','#7a4a2a'];
+  let done = 0;
+  fields.forEach(f => {
+    const pct = Math.round(f.harvestedN / f.total * 100);
+    const stage = f.stageLabel;
+    if (stage === 4) done++;
+    const el = document.createElement('div'); el.className = 'fi';
+    el.innerHTML = `<div class="fi-dot" style="background:${barCol[stage]}"></div>
+      <span class="fi-nm">${f.def.name}</span>
+      <div class="fi-bt"><div class="fi-bf" style="width:${pct}%;background:${barCol[stage]}"></div></div>
+      <span class="fi-pct">${pct}%</span>`;
+    list.appendChild(el);
+  });
+  document.getElementById('oc-flds').textContent = `${done}/${fields.length}`;
+}
+
+function updateMarket() {
+  G.marketTimer++;
+  if (G.marketTimer % 25 === 0) {
+    G.wheatPrice = Math.round(120 + Math.random() * 70);
+    G.prices.barley = Math.round(100 + Math.random() * 50);
+    G.prices.diesel = +(1.2 + Math.random() * .5).toFixed(2);
+    const up = Math.random() > .5;
+    document.getElementById('t-wh').textContent = `$${G.wheatPrice} ${up?'▲':'▼'}`;
+    document.getElementById('t-wh').className = up ? 'up' : 'dn';
+    document.getElementById('t-ba').textContent = `$${G.prices.barley} ${Math.random()>.5?'▲':'▼'}`;
+    document.getElementById('t-di').textContent = `$${G.prices.diesel}/L`;
+  }
+  const elapsed = Math.floor(G.sessionTime);
+  const em = Math.floor(elapsed/60), es = elapsed%60;
+  document.getElementById('t-sess').innerHTML = `<span>SESSION</span> Day ${G.day} · ${String(em).padStart(2,'0')}:${String(es).padStart(2,'0')}`;
+}
+
+// ── MINIMAP ──
+const mm = document.getElementById('minimap');
+const mmCtx = mm.getContext('2d');
+const MM = 168, MMS = MM / 320;
+function toMM(v, flip) { return MM/2 + v * MMS * (flip ? -1 : 1); }
+
+function drawMinimap() {
+  mmCtx.fillStyle = '#0c160c'; mmCtx.fillRect(0, 0, MM, MM);
+  // Grid
+  mmCtx.strokeStyle = 'rgba(255,255,255,.035)'; mmCtx.lineWidth = 1;
+  for (let i = 0; i <= 6; i++) {
+    const v = i * (MM/6);
+    mmCtx.beginPath(); mmCtx.moveTo(v,0); mmCtx.lineTo(v,MM); mmCtx.stroke();
+    mmCtx.beginPath(); mmCtx.moveTo(0,v); mmCtx.lineTo(MM,v); mmCtx.stroke();
+  }
+  // Roads
+  mmCtx.strokeStyle = '#665540'; mmCtx.lineWidth = 3;
+  [[-140,0,140,0],[0,-140,0,140],[-62,0,-62,-130],[92,0,92,-130],[-140,62,140,62]].forEach(([x1,z1,x2,z2]) => {
+    mmCtx.beginPath(); mmCtx.moveTo(toMM(x1),toMM(z1,true)); mmCtx.lineTo(toMM(x2),toMM(z2,true)); mmCtx.stroke();
+  });
+  // Pond
+  mmCtx.fillStyle = '#1a4a88';
+  mmCtx.beginPath(); mmCtx.arc(toMM(-105), toMM(-85,true), 20*MMS, 0, Math.PI*2); mmCtx.fill();
+  // Fields
+  const fc = ['#3a2210','#2a5218','#3d8228','#c8a000','#5a3418'];
+  fields.forEach(f => {
+    mmCtx.fillStyle = fc[Math.min(4, f.stageLabel)];
+    const fx = toMM(f.def.cx) - f.W*MMS/2, fz = toMM(f.def.cz,true) - f.D*MMS/2;
+    mmCtx.fillRect(fx, fz, f.W*MMS, f.D*MMS);
+    if (f.harvestedN > 0) {
+      mmCtx.fillStyle = 'rgba(58,34,16,.8)';
+      mmCtx.fillRect(fx, fz, f.W*MMS*(f.harvestedN/f.total), f.D*MMS);
+    }
+  });
+  // Buildings
+  mmCtx.fillStyle = '#882222'; mmCtx.fillRect(toMM(-62)-5, toMM(62,true)-4, 11, 8);
+  mmCtx.fillStyle = '#aaaaaa'; mmCtx.beginPath(); mmCtx.arc(toMM(92), toMM(-62,true), 6, 0, Math.PI*2); mmCtx.fill();
+  mmCtx.fillStyle = '#f0e0c0'; mmCtx.fillRect(toMM(60)-4, toMM(60,true)-3, 8, 6);
+  // BARN / SILO labels
+  mmCtx.fillStyle = 'rgba(255,255,255,.28)'; mmCtx.font = '7px monospace'; mmCtx.textAlign = 'center';
+  mmCtx.fillText('B', toMM(-62), toMM(62,true)+12);
+  mmCtx.fillText('S', toMM(92), toMM(-62,true)+12);
+  // Harvester triangle
+  const hx = toMM(harvPos.x), hz = toMM(harvPos.z, true);
+  mmCtx.save(); mmCtx.translate(hx, hz); mmCtx.rotate(-G.heading);
+  mmCtx.fillStyle = '#ffd700';
+  mmCtx.beginPath(); mmCtx.moveTo(0,-7); mmCtx.lineTo(-5,5); mmCtx.lineTo(5,5); mmCtx.closePath(); mmCtx.fill();
+  mmCtx.strokeStyle = '#fff'; mmCtx.lineWidth = 1; mmCtx.stroke();
+  mmCtx.restore();
+  // Heading range
+  mmCtx.strokeStyle = 'rgba(255,215,0,.25)'; mmCtx.lineWidth = .5;
+  mmCtx.beginPath(); mmCtx.moveTo(hx, hz);
+  mmCtx.lineTo(hx + Math.sin(G.heading)*20, hz - Math.cos(G.heading)*20); mmCtx.stroke();
+}
+
+// ── COMPASS ──
+const cmpC = document.getElementById('cmp-c');
+const cmpCtx = cmpC.getContext('2d');
+function drawCompass() {
+  const W = 72, cx = 36, cy = 36, r = 33;
+  cmpCtx.clearRect(0, 0, W, W);
+  cmpCtx.fillStyle = 'rgba(6,10,6,.82)';
+  cmpCtx.beginPath(); cmpCtx.arc(cx, cy, r, 0, Math.PI*2); cmpCtx.fill();
+  cmpCtx.strokeStyle = 'rgba(245,166,35,.3)'; cmpCtx.lineWidth = 1.5; cmpCtx.stroke();
+  for (let i = 0; i < 36; i++) {
+    const a = (i/36)*Math.PI*2 - G.heading;
+    const inner = i%9===0 ? r-8 : r-4;
+    cmpCtx.beginPath();
+    cmpCtx.moveTo(cx + Math.sin(a)*inner, cy - Math.cos(a)*inner);
+    cmpCtx.lineTo(cx + Math.sin(a)*r, cy - Math.cos(a)*r);
+    cmpCtx.strokeStyle = i%9===0 ? 'rgba(245,166,35,.6)' : 'rgba(255,255,255,.15)';
+    cmpCtx.lineWidth = i%9===0 ? 1.5 : .8; cmpCtx.stroke();
+  }
+  [['N',0],['E',Math.PI/2],['S',Math.PI],['W',-Math.PI/2]].forEach(([lbl,ang]) => {
+    const a = ang - G.heading;
+    cmpCtx.font = 'bold 9px monospace'; cmpCtx.textAlign='center'; cmpCtx.textBaseline='middle';
+    cmpCtx.fillStyle = lbl==='N' ? '#ff4444' : 'rgba(240,234,216,.65)';
+    cmpCtx.fillText(lbl, cx+Math.sin(a)*(r-14), cy-Math.cos(a)*(r-14));
+  });
+  cmpCtx.lineWidth = 2;
+  cmpCtx.beginPath(); cmpCtx.moveTo(cx,cy-(r-16)); cmpCtx.lineTo(cx,cy);
+  cmpCtx.strokeStyle = '#ff4444'; cmpCtx.stroke();
+  cmpCtx.beginPath(); cmpCtx.moveTo(cx,cy); cmpCtx.lineTo(cx,cy+(r-16));
+  cmpCtx.strokeStyle = 'rgba(255,255,255,.35)'; cmpCtx.stroke();
+  cmpCtx.fillStyle = '#ffd700';
+  cmpCtx.beginPath(); cmpCtx.arc(cx,cy,3,0,Math.PI*2); cmpCtx.fill();
+}
+
+// ── MAIN LOOP ──
+const clock = new THREE.Clock();
+let frameN = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .05);
+  G.sessionTime += dt; G.frame = ++frameN;
+
+  wUni.uTime.value += dt;
+  wUni.uWS.value = G.windSpeed * .004 + Math.sin(G.sessionTime * .7) * .008;
+
+  G.hour += dt * (G.timeScale / 3600);
+  if (G.hour >= 24) {
+    G.hour -= 24; G.day++;
+    G.dayEarn = 0;
+    G.wheatPrice = Math.round(120 + Math.random() * 70);
+    notify(`🌅 Day ${G.day} — New morning! Wheat: $${G.wheatPrice}/t`);
+  }
+
+  updatePhysics(dt);
+  checkHarvest(dt);
+  checkProximity();
+  updateParticles(dt);
+
+  if (frameN % 2 === 0) { updateSky(G.hour); updateWeather(dt * 2); updateRain(dt); }
+
+  growTimer += dt;
+  if (growTimer >= GROW_TICK) { growTimer = 0; tickGrowth(); }
+
+  updateCamera(dt);
+  updateAudio(Math.abs(G.vel) * 10, G.harvesting);
+  updateMarket();
+  if (frameN % 2 === 0) updateHUD();
+  if (frameN % 5 === 0) { drawMinimap(); drawCompass(); }
+  if (frameN % 30 === 0) updateFieldsHUD();
+
+  renderer.render(scene, camera);
+}
+
+// ── LOADING SEQUENCE ──
+const LOAD_STEPS = [
+  'INITIALIZING TERRAIN...','PLANTING WHEAT FIELDS...','ASSEMBLING COMBINE HARVESTER...',
+  'CALIBRATING WEATHER SYSTEM...','TUNING ENGINE AUDIO...','PRIMING GRAIN SENSORS...','READY — STARTING ENGINE',
+];
+const TIPS = [
+  '<strong>TIP:</strong> Press <strong>E</strong> near the Silo to sell harvested grain for cash.',
+  '<strong>TIP:</strong> Only <strong>golden wheat</strong> (Stage 3, fully grown) can be harvested.',
+  '<strong>TIP:</strong> Press <strong>F</strong> when near a cleared field to re-seed it.',
+  '<strong>TIP:</strong> Wheat prices fluctuate daily — check the ticker and sell at peak.',
+  '<strong>TIP:</strong> Headlights automatically turn on at dusk for visibility.',
+  '<strong>TIP:</strong> Rain speeds up crop growth but reduces traction.',
+  '<strong>TIP:</strong> Press <strong>C</strong> to cycle: Follow Camera → Overhead → Cab View.',
+  '<strong>TIP:</strong> The Barn (west, red) refuels your combine. The Silo (east, silver) buys grain.',
+];
+document.getElementById('ltip').innerHTML = TIPS[Math.floor(Math.random() * TIPS.length)];
+
+let loadPct = 0, loadStep = 0;
+function doLoad() {
+  loadPct += Math.random() * 18 + 4;
+  if (loadPct > 100) loadPct = 100;
+  const pct = Math.round(loadPct);
+  document.getElementById('lbar').style.width = pct + '%';
+  document.getElementById('lpct').textContent = pct + '%';
+  const si = Math.floor(pct / (100 / LOAD_STEPS.length));
+  if (si !== loadStep && si < LOAD_STEPS.length) { loadStep = si; document.getElementById('llbl').textContent = LOAD_STEPS[loadStep]; }
+  if (loadPct < 100) { setTimeout(doLoad, 120 + Math.random() * 200); }
+  else {
+    document.getElementById('llbl').textContent = 'COMPLETE — STARTING SIMULATION';
+    setTimeout(() => {
+      document.getElementById('loading').classList.add('out');
+      initAudio();
+      updateFieldsHUD();
+      animate();
+      notify('🌾 Welcome to HarvestMaster 3D!', '', 5000);
+      setTimeout(() => notify('⬆ Drive north to the golden wheat fields (North A & B)!'), 2500);
+      setTimeout(() => notify('⛽ BARN (SW) = refuel  ·  🏭 SILO (SE) = sell grain'), 5000);
+    }, 600);
+  }
+}
+doLoad();
+</script>
+</body>
+</html>
