@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#020810" />
+  <title>SNAKE.IO — Neon Arena</title>  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">  <!-- Später: Hauptstil in eigener Datei -->  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="hud" aria-label="Spielstatus">
+      <div class="hud-card">
+        <span class="hud-label">Score</span>
+        <strong id="scoreValue" class="hud-value">0</strong>
+      </div><div id="titleBlock" aria-label="Spieltitel">
+    <span class="title-main">SNAKE.IO</span>
+    <span class="title-sub">NEON ARENA</span>
+  </div>
+
+  <div class="hud-card hud-card-best">
+    <span class="hud-label">Best</span>
+    <strong id="bestValue" class="hud-value">0</strong>
+  </div>
+</header>
+
+<main id="gameShell">
+  <section id="gameFrame" aria-label="Spielfeld">
+    <canvas id="gameCanvas" width="1280" height="1280"></canvas>
+
+    <div id="startOverlay" class="overlay overlay-visible" role="dialog" aria-modal="true">
+      <div class="overlay-panel">
+        <h1>SNAKE.IO</h1>
+        <p>
+          Sammle Coins. Vermeide Steine. Bleib im Arena-Raum.
+        </p>
+        <button id="startButton" type="button">START GAME</button>
+        <small>Steuerung: Pfeiltasten / WASD / Touch</small>
+      </div>
+    </div>
+
+    <div id="gameOverOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+      <div class="overlay-panel">
+        <h2>GAME OVER</h2>
+        <p id="deathReason">Du bist gestorben.</p>
+        <div class="resultRow">
+          <div>
+            <span>Score</span>
+            <strong id="finalScore">0</strong>
+          </div>
+          <div>
+            <span>Best</span>
+            <strong id="finalBest">0</strong>
+          </div>
+        </div>
+        <button id="restartButton" type="button">PLAY AGAIN</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="controls" aria-label="Mobile Steuerung">
+    <div id="joystick" aria-hidden="true">
+      <div id="joystickBase">
+        <div id="joystickKnob"></div>
+      </div>
+    </div>
+    <p id="keyboardHint">Tastatur: Pfeiltasten oder WASD</p>
+  </section>
+</main>
+
+  </div>  <!-- Später: Karten-/Arena-Daten -->  <script src="map.js" defer></script>  <!-- Später: Spiel-Logik -->  <script src="game.js" defer></script></body>
+  </html>
