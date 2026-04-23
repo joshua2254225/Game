@@ -894,16 +894,63 @@ drawFocusRing(head) {
   ctx.restore();
 },
 
+                                                                                                                                                       
+                                                                                                                                                       
 };
 
-/* ===================================================== 9) EVENTS / BOOT ===================================================== */ function resizeAll() { Camera.resize(); if (Game.snake.length) { Camera.follow(Game.snake[0]); } }
+        /* =====================================================
+   9) EVENTS / BOOT
+===================================================== */
 
-window.addEventListener('resize', resizeAll); window.addEventListener('orientationchange', resizeAll);
+function resizeAll() {
+  Camera.resize();
+  if (Game.snake.length) {
+    Camera.follow(Game.snake[0]);
+  }
+}
 
-ui.startButton.addEventListener('click', () => Game.start()); ui.restartButton.addEventListener('click', () => Game.restart());
+function boot() {
+  Game.loadBest();
+  resizeAll();
+  World.generate();
+  Game.reset();
 
-// Initial boot Game.loadBest(); resizeAll(); World.generate(); Game.reset();
+  // Start-Overlay bleibt sichtbar, Spiel-Loop läuft schon im Hintergrund
+  ui.startOverlay.hidden = false;
+  ui.startOverlay.classList.add('overlay-visible');
 
-// Startscreen sichtbar lassen, aber bereits schön vorbereiten ui.startOverlay.hidden = false; ui.startOverlay.classList.add('overlay-visible');
+  // Ein erstes Bild rendern
+  Renderer.draw(performance.now(), Game);
 
-// Draw one idle frame before start Renderer.draw(performance.now(), Game); Input.bind(); })();
+  // Loop genau EINMAL starten
+  if (!Game._loopStarted) {
+    Game._loopStarted = true;
+    requestAnimationFrame(ts => Game.loop(ts));
+  }
+
+  Input.bind();
+
+  ui.startButton.addEventListener('click', () => {
+    ui.startOverlay.hidden = true;
+    ui.startOverlay.classList.remove('overlay-visible');
+    Game.running = true;
+    Game.over = false;
+    Game.stepAccumulator = 0;
+  });
+
+  ui.restartButton.addEventListener('click', () => {
+    ui.gameOverOverlay.hidden = true;
+    ui.gameOverOverlay.classList.remove('overlay-visible');
+    Game.reset();
+    Game.running = true;
+  });
+}
+
+window.addEventListener('resize', resizeAll);
+window.addEventListener('orientationchange', resizeAll);
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+  }
