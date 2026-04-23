@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Viewport for Mobile Optimization -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- --- SEO: PRIMARY METADATA --- -->
+<title>Reversed Snake - Play as the Apple | Hard Survival AI Game</title>
+<meta name="description" content="Play Reversed Snake, the twist on the classic retro game where YOU are the apple. Survive against AI snakes using A* pathfinding. Free browser game, no install required.">
+<meta name="keywords" content="reversed snake, play as apple, snake game AI, hard snake game, A* algorithm game, browser game, html5 game, survival game, impossible snake">
+<meta name="author" content="ImBIOS">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://imbios.github.io/lab-snake-reverse/" />
+
+<!-- --- SEO: OPEN GRAPH (Facebook/Discord/LinkedIn) --- -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://imbios.github.io/lab-snake-reverse/">
+<meta property="og:title" content="Reversed Snake: The Swarm">
+<meta property="og:description" content="Run for your life. You are the apple, and the snakes are hunting you. Can you survive Level 10?">
+<!-- UPDATED IMAGE URL -->
+<meta property="og:image" content="https://imbios.github.io/lab-snake-reverse/social-preview.png">
+
+<!-- --- SEO: TWITTER CARDS --- -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reversed Snake - You are the Apple">
+<meta name="twitter:description" content="The classic game inverted. Evade the AI swarm in this intense survival browser game.">
+<!-- UPDATED IMAGE URL -->
+<meta name="twitter:image" content="https://imbios.github.io/lab-snake-reverse/social-preview.png">
+
+<!-- --- SEO: STRUCTURED DATA (JSON-LD) --- -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Reversed Snake",
+  "description": "A browser-based survival game where the player controls an apple evading AI-controlled snakes utilizing A* pathfinding algorithms.",
+  "genre": ["Arcade", "Survival", "Puzzle"],
+  "gamePlatform": "Web Browser",
+  "applicationCategory": "Browser Game",
+  "operatingSystem": "Any",
+  "author": {
+    "@type": "Person",
+    "name": "ImBIOS"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "category": "free"
+  }
+}
+</script>
+
+<style>
+  :root {
+    --bg-color: #050505;
+    --term-green: #0f0;
+    --term-red: #f33;
+    --ui-bg: rgba(10, 10, 10, 0.95);
+  }
+
+  body { 
+    margin: 0; 
+    background: var(--bg-color); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden; 
+    touch-action: none; 
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #game-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  canvas { 
+    background: #111; 
+    border: 2px solid #333; 
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.05);
+    image-rendering: pixelated; 
+    display: block;
+  }
+
+  /* --- UI OVERLAYS --- */
+  .screen {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: var(--ui-bg);
+    z-index: 20;
+    transition: opacity 0.3s;
+    overflow-y: auto; /* Allow scrolling for SEO content on small screens */
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .hidden { opacity: 0; pointer-events: none; z-index: -1; }
+
+  h1 { font-size: 2.5rem; text-shadow: 0 0 10px var(--term-green); color: var(--term-green); margin-bottom: 10px; text-align: center; }
+  h2 { font-size: 2rem; color: var(--term-red); text-shadow: 0 0 10px var(--term-red); margin: 0 0 20px 0; }
+  
+  /* SEO Optimized Text Blocks */
+  .intro-text { margin: 5px 0 20px 0; color: #fff; text-align: center; max-width: 500px; line-height: 1.5; font-size: 1.1rem; }
+  .seo-footer { margin-top: 30px; color: #666; font-size: 0.8rem; max-width: 600px; text-align: center; line-height: 1.4; border-top: 1px solid #333; padding-top: 20px; }
+
+  /* Level Grid */
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    max-width: 300px;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 12px 20px;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    position: relative;
+  }
+
+  .btn:active { transform: scale(0.95); }
+  .btn:hover { background: #222; border-color: var(--term-green); color: var(--term-green); box-shadow: 0 0 10px rgba(0,255,0,0.2); }
+  
+  .btn-lvl { display: flex; flex-direction: column; align-items: center; min-width: 80px; }
+  .btn-lvl small { font-size: 0.6em; color: #666; margin-top: 4px; }
+  
+  .btn-action { margin-top: 10px; min-width: 150px; border-color: #666; background: #111; }
+  .btn-action:hover { border-color: #fff; color: #fff; }
+
+  /* HUD */
+  #hud {
+    position: absolute;
+    top: 10px; left: 10px;
+    pointer-events: none;
+    z-index: 10;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* GitHub Button */
+  .github-btn {
+    position: absolute;
+    top: max(10px, env(safe-area-inset-top));
+    right: 10px;
+    display: flex;
+    align-items: center;
+    background: rgba(36, 41, 46, 0.8);
+    color: white;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    border: 1px solid #444;
+    z-index: 30;
+    backdrop-filter: blur(4px);
+  }
+  .github-icon { 
+    width: 16px; 
+    height: 16px; 
+    fill: white; 
+    margin-right: 4px;
+  }
+  .star-count {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    margin-left: 6px;
+    border-radius: 10px; 
+    font-weight: normal;
+    font-size: 0.9em;
+    min-width: 25px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Joystick */
+  #joystick-zone {
+    display: none;
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px; height: 140px;
+    z-index: 15;
+  }
+  
+  .joystick-base {
+    position: absolute; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    pointer-events: auto;
+  }
+
+  .joystick-stick {
+    position: absolute; top: 50%; left: 50%;
+    width: 50px; height: 50px;
+    margin-top: -25px; margin-left: -25px;
+    background: rgba(0, 255, 255, 0.3);
+    border-radius: 50%;
+    transition: transform 0.1s;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="game-wrapper">
+  <canvas id="c"></canvas>
+
+  <a href="#" target="_blank" id="gh-link" class="github-btn" rel="noopener noreferrer" aria-label="View Source on GitHub">
+    <svg class="github-icon" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+    </svg>
+    <span>Star</span>
+    <span id="star-count" class="star-count">...</span> 
+  </a>
+
+  <div id="hud" class="hidden">
+    <div id="hud-level">LVL 1</div>
+    <div id="hud-time">0.0s</div>
+  </div>
+
+  <!-- MAIN MENU & SEO CONTENT -->
+  <!-- We keep this rich in text for Google to crawl -->
+  <main id="menu-screen" class="screen">
+    <h1>REVERSED SNAKE</h1>
+    <p class="intro-text">
+      <strong>You are the Apple.</strong> The Snakes are AI-controlled hunters. 
+      <br>Survive the swarm in this reverse twist on the classic arcade game.
+    </p>
+    
+    <div class="level-grid" id="level-container">
+      <!-- Buttons generated by JS -->
+    </div>
+
+    <!-- SEO Footer: Visible text describing the game logic -->
+    <article class="seo-footer">
+      <h3>About Reversed Snake</h3>
+      <p>
+        Reversed Snake is a <strong>free HTML5 survival game</strong> where you play as the apple, avoiding snakes that use <strong>A* (A-Star) Pathfinding AI</strong>. 
+        Unlike the traditional Nokia snake game, here the roles are inverted. The snakes grow automatically over time, increasing the difficulty.
+        Test your reflexes in Level 10, the hardest snake game mode available in the browser.
+      </p>
+      <p>
+        Built with vanilla JavaScript and Canvas. Features mobile touch controls, joystick support, and high-score tracking.
+      </p>
+    </article>
+  </main>
+
+  <div id="game-over-screen" class="screen hidden">
+    <h2>GAME OVER</h2>
+    <p id="go-stats" class="intro-text">Survived: 0s<br>Best: 0s</p>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-action" onclick="retryLevel()">Retry</button>
+      <button class="btn btn-action" onclick="showMainMenu()">Menu</button>
+    </div>
+  </div>
+
+  <div id="joystick-zone">
+    <div class="joystick-base"></div>
+    <div class="joystick-stick" id="stick"></div>
+  </div>
+</div>
+
+<script>
+// --- CONFIGURATION ---
+const GITHUB_REPO = "ImBIOS/lab-snake-reverse"; 
+document.getElementById('gh-link').href = `https://github.com/${GITHUB_REPO}`;
+
+// Fetch stars
+fetch(`https://api.github.com/repos/${GITHUB_REPO}`)
+  .then(res => res.json())
+  .then(data => {
+    if(data.stargazers_count !== undefined) {
+      document.getElementById('star-count').innerText = formatCount(data.stargazers_count);
+    }
+  })
+  .catch(e => console.log("Repo info skipped"));
+
+function formatCount(count) {
+  if (count >= 1000) return (count / 1000).toFixed(1) + 'k';
+  return count;
+}
+
+// --- ENGINE SETUP ---
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const GRID_SIZE = 30;
+let CELL_SIZE = 20;
+
+function resizeGame() {
+  const maxWidth = window.innerWidth;
+  const maxHeight = window.innerHeight;
+  const isMobile = maxWidth < 768;
+  const availableHeight = isMobile ? maxHeight * 0.70 : maxHeight * 0.95;
+  const availableWidth = maxWidth * 0.95;
+  const size = Math.min(availableWidth, availableHeight);
+  const adjustedSize = Math.floor(size / GRID_SIZE) * GRID_SIZE;
+  canvas.width = adjustedSize;
+  canvas.height = adjustedSize;
+  CELL_SIZE = canvas.width / GRID_SIZE;
+}
+window.addEventListener('resize', resizeGame);
+resizeGame();
+
+// --- DATA STRUCTURES ---
+class Point {
+  constructor(x, y) { this.x = x; this.y = y; }
+  add(p) { return new Point(this.x + p.x, this.y + p.y); }
+  equals(p) { return this.x === p.x && this.y === p.y; }
+  manhattan(p) { return Math.abs(this.x - p.x) + Math.abs(this.y - p.y); }
+}
+
+const DIRECTIONS = [new Point(0, -1), new Point(1, 0), new Point(0, 1), new Point(-1, 0)];
+
+class PriorityQueue {
+  constructor() { this.elements = []; }
+  enqueue(item, priority) {
+    this.elements.push({item, priority});
+    this.elements.sort((a, b) => a.priority - b.priority);
+  }
+  dequeue() { return this.elements.shift().item; }
+  isEmpty() { return this.elements.length === 0; }
+}
+
+// OPTIMIZATION: Global Grid Map for O(1) collision checks
+let collisionGrid = new Array(GRID_SIZE * GRID_SIZE).fill(false);
+
+function buildCollisionGrid(snakes) {
+  collisionGrid.fill(false);
+  for (let s of snakes) {
+    for (let bp of s.body) {
+      if (bp.x >= 0 && bp.x < GRID_SIZE && bp.y >= 0 && bp.y < GRID_SIZE) {
+        collisionGrid[bp.y * GRID_SIZE + bp.x] = true;
+      }
+    }
+  }
+}
+
+function isBlockedFast(x, y) {
+  if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return true;
+  return collisionGrid[y * GRID_SIZE + x];
+}
+
+function findPath(start, goal, currentSnake) {
+  const heuristic = p => p.manhattan(goal);
+  const pq = new PriorityQueue();
+  const cameFrom = new Map();
+  const cost = new Map();
+  const startKey = (start.y * GRID_SIZE + start.x);
+
+  pq.enqueue(start, heuristic(start));
+  cameFrom.set(startKey, null);
+  cost.set(startKey, 0);
+
+  let iterations = 0;
+  // Reduced iterations to ensure frame rate stability with multiple snakes
+  const MAX_ITERATIONS = 200; 
+
+  while (!pq.isEmpty()) {
+    iterations++;
+    if (iterations > MAX_ITERATIONS) break;
+
+    const current = pq.dequeue();
+    if (current.equals(goal)) {
+      const path = [];
+      let cur = current;
+      while (cur) { 
+        path.unshift(cur); 
+        const key = (cur.y * GRID_SIZE + cur.x);
+        cur = cameFrom.get(key); 
+      }
+      return path;
+    }
+
+    for (const dir of DIRECTIONS) {
+      const next = current.add(dir);
+      
+      if (isBlockedFast(next.x, next.y)) continue;
+
+      const nextKey = (next.y * GRID_SIZE + next.x);
+      const newCost = cost.get(startKey) + 1; 
+      
+      if (!cost.has(nextKey) || newCost < cost.get(nextKey)) {
+        cost.set(nextKey, newCost);
+        pq.enqueue(next, newCost + heuristic(next));
+        cameFrom.set(nextKey, current);
+      }
+    }
+  }
+  return null;
+}
+
+class Snake {
+  constructor(index) {
+    this.body = [];
+    this.color = index === 0 ? '#0f0' : (index % 2 === 0 ? '#0c0' : '#0a0'); 
+    this.growing = false;
+    const cx = Math.floor(GRID_SIZE / 2);
+    const cy = Math.floor(GRID_SIZE / 2);
+    const startX = Math.max(2, Math.min(GRID_SIZE-2, cx + (Math.floor(Math.random()*10) - 5)));
+    const startY = Math.max(2, Math.min(GRID_SIZE-2, cy + (Math.floor(Math.random()*10) - 5)));
+    
+    for (let i = 0; i < 8; i++) this.body.push(new Point(startX, startY));
+  }
+  get head() { return this.body[0]; }
+  get tail() { return this.body[this.body.length - 1]; }
+  grow() { this.growing = true; }
+}
+
+const STATE = { MENU: 0, PLAYING: 1, GAMEOVER: 2 };
+const game = {
+  state: STATE.MENU,
+  level: 1,
+  snakes: [],
+  apple: null,
+  startTime: 0,
+  survived: 0,
+  glitchStart: 0,
+  snakeSpeed: 140,
+  appleSpeed: 100,
+  lastSnake: 0,
+  lastApple: 0,
+  growInterval: null
+};
+
+function getHighScore(lvl) {
+  try { return localStorage.getItem(`revSnake_HS_${lvl}`) || 0; } catch(e) { return 0; }
+}
+function setHighScore(lvl, score) {
+  try { localStorage.setItem(`revSnake_HS_${lvl}`, score); } catch(e) {}
+}
+
+function generateMenu() {
+  const container = document.getElementById('level-container');
+  container.innerHTML = '';
+  for(let i=1; i<=10; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-lvl';
+    const hs = parseFloat(getHighScore(i)).toFixed(1);
+    btn.innerHTML = `LVL ${i}<small>BEST: ${hs}s</small>`;
+    btn.onclick = () => startLevel(i);
+    container.appendChild(btn);
+  }
+}
+
+function showMainMenu() {
+  game.state = STATE.MENU;
+  document.getElementById('menu-screen').classList.remove('hidden');
+  document.getElementById('game-over-screen').classList.add('hidden');
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('joystick-zone').style.display = 'none'; 
+  generateMenu(); 
+}
+
+let animFrameId;
+let lastTime = 0;
+
+function startLevel(lvl) {
+  game.level = lvl;
+  game.state = STATE.PLAYING;
+  game.startTime = Date.now();
+  game.survived = 0;
+  game.snakes = [];
+  game.lastSnake = 0;
+  game.lastApple = 0;
+  
+  lastTime = 0;
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  
+  document.getElementById('menu-screen').classList.add('hidden');
+  document.getElementById('game-over-screen').classList.add('hidden');
+  document.getElementById('hud').classList.remove('hidden');
+  document.getElementById('hud-level').innerText = `LVL ${lvl}`;
+  
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    document.getElementById('joystick-zone').style.display = 'block';
+  }
+
+  game.apple = new Point(Math.floor(Math.random() * GRID_SIZE), Math.floor(Math.random() * GRID_SIZE));
+
+  for(let i=0; i<lvl; i++) {
+    game.snakes.push(new Snake(i));
+  }
+
+  if (game.growInterval) clearInterval(game.growInterval);
+  game.growInterval = setInterval(() => {
+    game.snakes.forEach(s => s.grow());
+  }, 5000); 
+
+  loop(0);
+}
+
+function retryLevel() {
+  startLevel(game.level);
+}
+
+const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+
+window.addEventListener('keydown', e => { 
+  if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
+  if (e.key in keys) keys[e.key] = true; 
+});
+window.addEventListener('keyup', e => { if (e.key in keys) keys[e.key] = false; });
+
+function getInputDir() {
+  let dx = 0, dy = 0;
+  if (keys.ArrowLeft) dx--; if (keys.ArrowRight) dx++;
+  if (keys.ArrowUp) dy--; if (keys.ArrowDown) dy++;
+  return (dx || dy) ? new Point(dx, dy) : null;
+}
+
+function gameOverFunc() {
+  game.state = STATE.GAMEOVER;
+  clearInterval(game.growInterval);
+  game.survived = (Date.now() - game.startTime) / 1000;
+  
+  const currentBest = parseFloat(getHighScore(game.level));
+  if (game.survived > currentBest) {
+    setHighScore(game.level, game.survived);
+  }
+
+  document.getElementById('go-stats').innerHTML = `Survived: ${game.survived.toFixed(1)}s<br>Best (Lvl ${game.level}): ${Math.max(game.survived, currentBest).toFixed(1)}s`;
+  document.getElementById('game-over-screen').classList.remove('hidden');
+  document.getElementById('joystick-zone').style.display = 'none';
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  const glitching = Date.now() - game.glitchStart < 700;
+  if (glitching) {
+    ctx.save();
+    const amp = CELL_SIZE * 0.5;
+    ctx.translate((Math.random() - 0.5) * amp, (Math.random() - 0.5) * amp);
+  }
+
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for(let i=0; i<=GRID_SIZE; i++) {
+    ctx.moveTo(i*CELL_SIZE, 0); ctx.lineTo(i*CELL_SIZE, canvas.height);
+    ctx.moveTo(0, i*CELL_SIZE); ctx.lineTo(canvas.width, i*CELL_SIZE);
+  }
+  ctx.stroke();
+
+  game.snakes.forEach(snake => {
+    snake.body.forEach((seg, i) => {
+      ctx.fillStyle = i === 0 ? '#0ff' : snake.color; 
+      ctx.fillRect(seg.x * CELL_SIZE + 1, seg.y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+    });
+  });
+
+  if (game.apple) {
+    ctx.fillStyle = '#f33';
+    ctx.beginPath();
+    ctx.arc((game.apple.x + 0.5) * CELL_SIZE, (game.apple.y + 0.5) * CELL_SIZE, CELL_SIZE * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#f33';
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  if (game.state === STATE.PLAYING) {
+    const t = (Date.now() - game.startTime) / 1000;
+    document.getElementById('hud-time').innerText = t.toFixed(1) + 's';
+  }
+
+  if (glitching) ctx.restore();
+}
+
+function loop(t) {
+  if (game.state !== STATE.PLAYING && game.state !== STATE.GAMEOVER) return; 
+  animFrameId = requestAnimationFrame(loop);
+  
+  if (!lastTime) { lastTime = t; return; }
+  let delta = t - lastTime;
+  lastTime = t;
+
+  if (delta > 200) delta = 200; 
+
+  if (game.state === STATE.PLAYING) {
+    game.lastSnake += delta;
+    game.lastApple += delta;
+
+    if (game.lastSnake >= game.snakeSpeed) {
+      let closeThreat = false;
+      buildCollisionGrid(game.snakes);
+
+      for (let i = 0; i < game.snakes.length; i++) {
+        const s = game.snakes[i];
+        const path = findPath(s.head, game.apple, s);
+        let nextDir = null;
+
+        if (path && path.length > 1) {
+          nextDir = new Point(path[1].x - s.head.x, path[1].y - s.head.y);
+        } else {
+          const candidates = DIRECTIONS.filter(d => {
+            const np = s.head.add(d);
+            return !isBlockedFast(np.x, np.y); 
+          });
+          if (candidates.length) {
+            candidates.sort((a, b) => game.apple.manhattan(s.head.add(a)) - game.apple.manhattan(s.head.add(b)));
+            nextDir = candidates[0];
+          }
+        }
+
+        if (nextDir) {
+          const newHead = s.head.add(nextDir);
+          if (newHead.equals(game.apple)) {
+            gameOverFunc();
+            return;
+          }
+          s.body.unshift(newHead);
+          if (!s.growing) s.body.pop();
+          else s.growing = false;
+        }
+
+        if (s.head.manhattan(game.apple) <= 2) closeThreat = true;
+      }
+      
+      if (closeThreat) game.glitchStart = Date.now();
+      game.lastSnake -= game.snakeSpeed; 
+    }
+
+    if (game.lastApple >= game.appleSpeed) {
+      const dir = getInputDir();
+      if (dir) {
+        const np = game.apple.add(dir);
+        if (np.x >= 0 && np.x < GRID_SIZE && np.y >= 0 && np.y < GRID_SIZE) {
+           if (!isBlockedFast(np.x, np.y)) {
+              game.apple = np;
+           }
+        }
+      }
+      game.lastApple -= game.appleSpeed;
+    }
+  }
+  draw();
+}
+
+const joystickZone = document.querySelector('.joystick-base');
+const stick = document.getElementById('stick');
+let jActive = false;
+
+joystickZone.addEventListener('touchstart', e => { e.preventDefault(); jActive = true; handleJoystick(e.changedTouches[0]); }, {passive: false});
+joystickZone.addEventListener('touchmove', e => { if (!jActive) return; e.preventDefault(); handleJoystick(e.changedTouches[0]); }, {passive: false});
+
+const endJoystick = () => { jActive = false; stick.style.transform = `translate(0px, 0px)`; Object.keys(keys).forEach(k => keys[k] = false); };
+joystickZone.addEventListener('touchend', endJoystick);
+joystickZone.addEventListener('touchcancel', endJoystick);
+
+function handleJoystick(touch) {
+  const rect = joystickZone.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const x = touch.clientX - centerX;
+  const y = touch.clientY - centerY;
+  const dist = Math.min(35, Math.sqrt(x*x + y*y));
+  const angle = Math.atan2(y, x);
+  stick.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+
+  Object.keys(keys).forEach(k => keys[k] = false);
+  if (dist > 10) {
+    if (Math.abs(x) > Math.abs(y)) { keys[x > 0 ? 'ArrowRight' : 'ArrowLeft'] = true; } 
+    else { keys[y > 0 ? 'ArrowDown' : 'ArrowUp'] = true; }
+  }
+}
+
+showMainMenu();
+</script>
+</body>
+  </html>
