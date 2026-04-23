@@ -443,7 +443,6 @@ start() {
   this.hideOverlays();
   this.reset();
   this.running = true;
-  this.loop(performance.now());
 },
 
 restart() {
