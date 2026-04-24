@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hextris Game</title>
+
+<style>
+body {
+    margin: 0;
+    background: #0f0f0f;
+    font-family: Arial;
+    overflow: hidden;
+}
+
+/* START SCREEN */
+#startScreen {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #111, #000);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 10;
+}
+
+h1 {
+    color: white;
+    font-size: 40px;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: cyan;
+}
+
+/* GAME FRAME */
+#gameFrame {
+    width: 100%;
+    height: 100vh;
+    border: none;
+    display: none;
+}
+
+/* OPTIONAL AD SPACE */
+#adBanner {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    background: #222;
+    color: white;
+    text-align: center;
+    line-height: 60px;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- START SCREEN -->
+<div id="startScreen">
+    <h1>HEXTRIS</h1>
+    <button onclick="startGame()">▶ Start Game</button>
+</div>
+
+<!-- GAME -->
+<iframe 
+    id="gameFrame"
+    src="https://hextris.github.io/hextris/">
+</iframe>
+
+<!-- AD BANNER -->
+<div id="adBanner">
+    Your Ad Here
+</div>
+
+<script>
+function startGame() {
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("gameFrame").style.display = "block";
+}
+</script>
+
+</body>
+  </html>
