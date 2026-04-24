@@ -199,8 +199,7 @@ html, body {
         <button id="closeBtn" class="iconBtn" onclick="closeGame()">✕</button>
 
         <!-- RELOAD -->
-        <button id="reloadBtn" class="iconBtn" onclick="reloadGame()">⟳</button>
-
+        
     </div>
 
     <div class="title">HEXTRIS</div>
@@ -236,17 +235,9 @@ function closeGame() {
     window.location.href = "https://arcadeowl.vercel.app/";
     }
 
-function reloadGame() {
-    const frame = document.getElementById("gameFrame");
-    frame.src = frame.src;
-    }
-    
-    frame.style.display = "none";
-    overlay.style.display = "flex";
 
-    // Optional: stoppt das laufende Spiel sauber
-    frame.src = "about:blank";
-}
+    
+    
 </script>
 
 </body>
