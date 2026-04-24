@@ -193,7 +193,16 @@ html, body {
 <body>
 
 <header id="topBar">
-    <button id="closeBtn" class="iconBtn" type="button" aria-label="Close game" onclick="closeGame()">✕</button>
+    <div style="display:flex; gap:8px; justify-content:center;">
+
+        <!-- CLOSE -->
+        <button id="closeBtn" class="iconBtn" onclick="closeGame()">✕</button>
+
+        <!-- RELOAD -->
+        <button id="reloadBtn" class="iconBtn" onclick="reloadGame()">⟳</button>
+
+    </div>
+
     <div class="title">HEXTRIS</div>
     <div></div>
 </header>
@@ -222,10 +231,16 @@ html, body {
 </footer>
 
 <script>
-function closeGame() {
-    const frame = document.getElementById("gameFrame");
-    const overlay = document.getElementById("closedOverlay");
 
+function closeGame() {
+    window.location.href = "https://arcadeowl.vercel.app/";
+    }
+
+function reloadGame() {
+    const frame = document.getElementById("gameFrame");
+    frame.src = frame.src;
+    }
+    
     frame.style.display = "none";
     overlay.style.display = "flex";
 
