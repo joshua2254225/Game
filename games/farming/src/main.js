@@ -7,12 +7,16 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
 // === CAMERA ===
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
+const cameraOffset = new THREE.Vector3(0, 5, 8);
+
+// Zielposition der Kamera
+const targetPosition = player.position.clone().add(cameraOffset);
+
+// Smooth folgen (lerp)
+camera.position.lerp(targetPosition, 0.1);
+
+// Immer auf Spieler schauen
+camera.lookAt(player.position);
 
 // === RENDERER ===
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -45,6 +49,10 @@ scene.add(player);
 
 const joystick = new Joystick();
 
+const velocity = { x: 0, z: 0 };
+const acceleration = 0.02;
+const friction = 0.9;
+
 
 // === INPUT ===
 const keys = {};
@@ -63,8 +71,25 @@ function animate() {
 
   const dir = joystick.getDirection();
 
-player.position.x += dir.x * speed;
-player.position.z += dir.y * speed;
+// Beschleunigung
+velocity.x += dir.x * acceleration;
+velocity.z += dir.y * acceleration;
+
+// Reibung (langsames Stoppen)
+velocity.x *= friction;
+velocity.z *= friction;
+
+// Position updaten
+player.position.x += velocity.x;
+player.position.z += velocity.z;
+
+// === ROTATION (in Bewegungsrichtung schauen) ===
+if (Math.abs(velocity.x) > 0.001 || Math.abs(velocity.z) > 0.001) {
+  const angle = Math.atan2(velocity.x, velocity.z);
+  player.rotation.y = angle;
+  }
+
+
 
   // === CAMERA FOLLOW ===
   camera.position.x = player.position.x;
