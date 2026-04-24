@@ -1,78 +1,78 @@
-// src/main.js
-
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js';
 
-// === BASIC SETUP ===
-
-// Szene
+// === SCENE ===
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb); // Himmelblau
+scene.background = new THREE.Color(0x87ceeb);
 
-// Kamera
+// === CAMERA ===
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
 );
-camera.position.set(0, 5, 10);
 
-// Renderer
+// === RENDERER ===
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-
-// In HTML einfügen
 document.getElementById("game-container").appendChild(renderer.domElement);
 
-
-// === LICHT ===
-
-// Sonnenlicht
+// === LIGHT ===
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 10, 5);
 scene.add(light);
 
-// Ambient Licht (damit nichts komplett schwarz ist)
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambientLight);
 
-
-// === BODEN ===
-
-const groundGeometry = new THREE.PlaneGeometry(50, 50);
-const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x3cb043 });
-
-const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+// === GROUND ===
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(50, 50),
+  new THREE.MeshStandardMaterial({ color: 0x3cb043 })
+);
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
+// === PLAYER ===
+const player = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshStandardMaterial({ color: 0x0000ff })
+);
+player.position.y = 0.5;
+scene.add(player);
 
-// === TEST OBJECT (zum sehen ob alles geht) ===
+// === INPUT ===
+const keys = {};
 
-const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+window.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
+window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
 
-const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-cube.position.y = 0.5;
-scene.add(cube);
-
+// === MOVEMENT SETTINGS ===
+const speed = 0.1;
 
 // === GAME LOOP ===
-
 function animate() {
   requestAnimationFrame(animate);
 
-  // Beispiel Animation
-  cube.rotation.y += 0.01;
+  // === MOVEMENT ===
+  if (keys["w"]) player.position.z -= speed;
+  if (keys["s"]) player.position.z += speed;
+  if (keys["a"]) player.position.x -= speed;
+  if (keys["d"]) player.position.x += speed;
+
+  // === CAMERA FOLLOW ===
+  camera.position.x = player.position.x;
+  camera.position.z = player.position.z + 8;
+  camera.position.y = player.position.y + 5;
+
+  camera.lookAt(player.position);
 
   renderer.render(scene, camera);
 }
 
 animate();
 
-
-// === RESIZE HANDLING ===
-
+// === RESIZE ===
 window.addEventListener("resize", () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
