@@ -1,4 +1,6 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js';
+import { Joystick } from "./controls.js";
+
 
 // === SCENE ===
 const scene = new THREE.Scene();
@@ -41,6 +43,9 @@ const player = new THREE.Mesh(
 player.position.y = 0.5;
 scene.add(player);
 
+const joystick = new Joystick();
+
+
 // === INPUT ===
 const keys = {};
 
@@ -55,10 +60,11 @@ function animate() {
   requestAnimationFrame(animate);
 
   // === MOVEMENT ===
-  if (keys["w"]) player.position.z -= speed;
-  if (keys["s"]) player.position.z += speed;
-  if (keys["a"]) player.position.x -= speed;
-  if (keys["d"]) player.position.x += speed;
+
+  const dir = joystick.getDirection();
+
+player.position.x += dir.x * speed;
+player.position.z += dir.y * speed;
 
   // === CAMERA FOLLOW ===
   camera.position.x = player.position.x;
