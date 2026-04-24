@@ -1,131 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Hextris Game</title>
 
 <style>
-body {
+:root {
+    --topbar-h: 60px;
+    --bottombar-h: 64px;
+    --bg: #0f0f12;
+    --panel: rgba(24, 24, 28, 0.96);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --text: #f4f7fb;
+    --muted: #a7afbd;
+    --accent: #00e5ff;
+    --danger: #ff4d4f;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
     margin: 0;
-    background: #0f0f0f;
-    font-family: Arial;
+    background: var(--bg);
+    font-family: Arial, Helvetica, sans-serif;
     overflow: hidden;
+    color: var(--text);
 }
 
-/* BANNER (TOP + BOTTOM) */
-.banner {
+/* TOP BAR */
+#topBar {
     position: fixed;
-    width: 100%;
-    height: 60px;
-    background: #222;
-    color: white;
-    text-align: center;
-    line-height: 60px;
-    z-index: 20;
-}
-
-#topBanner { top: 0; }
-#bottomBanner { bottom: 0; }
-
-/* START SCREEN */
-#startScreen {
-    position: fixed;
-    top: 60px;
-    bottom: 60px;
-    width: 100%;
-    background: radial-gradient(circle, #111, #000);
-    display: flex;
-    justify-content: center;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--topbar-h);
+    padding-top: env(safe-area-inset-top);
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+    display: grid;
+    grid-template-columns: 64px 1fr 64px;
     align-items: center;
-    flex-direction: column;
-    z-index: 10;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
-h1 {
-    color: white;
-    font-size: 40px;
-    margin-bottom: 20px;
-}
-
-button {
-    padding: 15px 30px;
+#topBar .title {
+    text-align: center;
     font-size: 18px;
-    border: none;
-    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    color: var(--text);
+    user-select: none;
+}
+
+.iconBtn {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font-size: 18px;
     cursor: pointer;
-    margin: 10px;
-    background: cyan;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
 }
 
-/* GAME FRAME */
+.iconBtn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+}
+
+.iconBtn:active {
+    transform: translateY(0);
+}
+
+#closeBtn {
+    color: var(--danger);
+}
+
+/* MAIN GAME AREA */
+#gameArea {
+    position: fixed;
+    top: calc(var(--topbar-h) + env(safe-area-inset-top));
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom));
+    background: #000;
+    z-index: 1;
+}
+
 #gameFrame {
-    position: fixed;
-    top: 60px;
-    bottom: 60px;
     width: 100%;
-    border: none;
-    display: none;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #000;
 }
 
-/* EXIT BUTTON */
-#exitBtn {
-    position: fixed;
-    top: 70px;
-    right: 10px;
-    z-index: 30;
+/* CLOSED STATE */
+#closedOverlay {
+    position: absolute;
+    inset: 0;
     display: none;
-    background: red;
-    color: white;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+    background:
+        radial-gradient(circle at center, rgba(0,229,255,0.08), transparent 40%),
+        linear-gradient(180deg, rgba(0,0,0,0.92), rgba(10,10,14,0.98));
+    color: var(--text);
+}
+
+#closedOverlay h2 {
+    margin: 0 0 10px;
+    font-size: 28px;
+    letter-spacing: 1px;
+}
+
+#closedOverlay p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.5;
+    max-width: 420px;
+}
+
+/* BOTTOM BAR */
+#bottomBar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--bottombar-h);
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--panel);
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding-left: 14px;
+    padding-right: 14px;
+    text-align: center;
+}
+
+#bottomBar a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+#bottomBar a:hover {
+    text-decoration: underline;
+}
+
+#creditText {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.35;
+}
+
+/* MOBILE TWEAKS */
+@media (max-width: 480px) {
+    #topBar .title {
+        font-size: 16px;
+        letter-spacing: 1.2px;
+    }
+
+    #closedOverlay h2 {
+        font-size: 24px;
+    }
+
+    #creditText {
+        font-size: 11px;
+    }
 }
 </style>
 </head>
-
 <body>
 
-<!-- TOP BANNER -->
-<div id="topBanner" class="banner">
-    TOP AD BANNER
-</div>
+<header id="topBar">
+    <button id="closeBtn" class="iconBtn" type="button" aria-label="Close game" onclick="closeGame()">✕</button>
+    <div class="title">HEXTRIS</div>
+    <div></div>
+</header>
 
-<!-- START SCREEN -->
-<div id="startScreen">
-    <h1>HEXTRIS</h1>
-    <button onclick="startGame()">▶ Start Game</button>
-</div>
+<main id="gameArea">
+    <iframe
+        id="gameFrame"
+        src="https://hextris.github.io/hextris/"
+        title="Hextris Game"
+        allowfullscreen
+        loading="eager"
+        referrerpolicy="no-referrer"
+    ></iframe>
 
-<!-- EXIT BUTTON -->
-<button id="exitBtn" onclick="exitGame()">✖ Exit</button>
+    <section id="closedOverlay" aria-live="polite">
+        <h2>Game closed</h2>
+        <p>Du kannst die Seite neu laden, um das Spiel wieder zu starten.</p>
+    </section>
+</main>
 
-<!-- GAME -->
-<iframe 
-    id="gameFrame"
-    src="https://hextris.github.io/hextris/">
-</iframe>
-
-<!-- GPL NOTICE -->
-<p style="position:fixed; bottom:70px; width:100%; text-align:center; color:white; font-size:12px; z-index:25;">
-This game is based on Hextris (GPL v3) –
-<a href="https://github.com/Hextris/hextris" style="color:cyan;">Source</a>
-</p>
-
-<!-- BOTTOM BANNER -->
-<div id="bottomBanner" class="banner">
-    BOTTOM AD BANNER
-</div>
+<footer id="bottomBar">
+    <div id="creditText">
+        This game is based on Hextris (GPL v3) –
+        <a href="https://github.com/Hextris/hextris" target="_blank" rel="noopener noreferrer">Source</a>
+    </div>
+</footer>
 
 <script>
-function startGame() {
-    document.getElementById("startScreen").style.display = "none";
-    document.getElementById("gameFrame").style.display = "block";
-    document.getElementById("exitBtn").style.display = "block";
-}
+function closeGame() {
+    const frame = document.getElementById("gameFrame");
+    const overlay = document.getElementById("closedOverlay");
 
-function exitGame() {
-    document.getElementById("startScreen").style.display = "flex";
-    document.getElementById("gameFrame").style.display = "none";
-    document.getElementById("exitBtn").style.display = "none";
+    frame.style.display = "none";
+    overlay.style.display = "flex";
+
+    // Optional: stoppt das laufende Spiel sauber
+    frame.src = "about:blank";
 }
 </script>
 
 </body>
-</html>
+    </html>
