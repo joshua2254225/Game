@@ -7,8 +7,13 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
 // === CAMERA ===
-const cameraOffset = new THREE.Vector3(0, 5, 8);
-
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+camera.position.set(0, 5, 10);
 // Zielposition der Kamera
 const targetPosition = player.position.clone().add(cameraOffset);
 
@@ -91,12 +96,15 @@ if (Math.abs(velocity.x) > 0.001 || Math.abs(velocity.z) > 0.001) {
 
 
 
-  // === CAMERA FOLLOW ===
-  camera.position.x = player.position.x;
-  camera.position.z = player.position.z + 8;
-  camera.position.y = player.position.y + 5;
+  // === CAMERA FOLLOW animate() ===
+  const cameraOffset = new THREE.Vector3(0, 5, 8);
+const targetPosition = player.position.clone().add(cameraOffset);
 
-  camera.lookAt(player.position);
+// Smooth follow
+camera.position.lerp(targetPosition, 0.1);
+
+// Look at player
+camera.lookAt(player.position);
 
   renderer.render(scene, camera);
 }
