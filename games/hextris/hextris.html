@@ -12,11 +12,27 @@ body {
     overflow: hidden;
 }
 
+/* BANNER (TOP + BOTTOM) */
+.banner {
+    position: fixed;
+    width: 100%;
+    height: 60px;
+    background: #222;
+    color: white;
+    text-align: center;
+    line-height: 60px;
+    z-index: 20;
+}
+
+#topBanner { top: 0; }
+#bottomBanner { bottom: 0; }
+
 /* START SCREEN */
 #startScreen {
     position: fixed;
+    top: 60px;
+    bottom: 60px;
     width: 100%;
-    height: 100%;
     background: radial-gradient(circle, #111, #000);
     display: flex;
     justify-content: center;
@@ -37,33 +53,39 @@ button {
     border: none;
     border-radius: 10px;
     cursor: pointer;
+    margin: 10px;
     background: cyan;
 }
 
 /* GAME FRAME */
 #gameFrame {
+    position: fixed;
+    top: 60px;
+    bottom: 60px;
     width: 100%;
-    height: 100vh;
     border: none;
     display: none;
 }
 
-/* OPTIONAL AD SPACE */
-#adBanner {
+/* EXIT BUTTON */
+#exitBtn {
     position: fixed;
-    bottom: 0;
-    width: 100%;
-    height: 60px;
-    background: #222;
+    top: 70px;
+    right: 10px;
+    z-index: 30;
+    display: none;
+    background: red;
     color: white;
-    text-align: center;
-    line-height: 60px;
-    font-size: 14px;
 }
 </style>
 </head>
 
 <body>
+
+<!-- TOP BANNER -->
+<div id="topBanner" class="banner">
+    TOP AD BANNER
+</div>
 
 <!-- START SCREEN -->
 <div id="startScreen">
@@ -71,28 +93,39 @@ button {
     <button onclick="startGame()">▶ Start Game</button>
 </div>
 
+<!-- EXIT BUTTON -->
+<button id="exitBtn" onclick="exitGame()">✖ Exit</button>
+
 <!-- GAME -->
 <iframe 
     id="gameFrame"
     src="https://hextris.github.io/hextris/">
 </iframe>
 
-
-    <p style="position:fixed; bottom:70px; width:100%; text-align:center; color:white; font-size:12px;">
+<!-- GPL NOTICE -->
+<p style="position:fixed; bottom:70px; width:100%; text-align:center; color:white; font-size:12px; z-index:25;">
 This game is based on Hextris (GPL v3) –
 <a href="https://github.com/Hextris/hextris" style="color:cyan;">Source</a>
-    </p>
-<!-- AD BANNER -->
-<div id="adBanner">
-    Your Ad Here
+</p>
+
+<!-- BOTTOM BANNER -->
+<div id="bottomBanner" class="banner">
+    BOTTOM AD BANNER
 </div>
 
 <script>
 function startGame() {
     document.getElementById("startScreen").style.display = "none";
     document.getElementById("gameFrame").style.display = "block";
+    document.getElementById("exitBtn").style.display = "block";
+}
+
+function exitGame() {
+    document.getElementById("startScreen").style.display = "flex";
+    document.getElementById("gameFrame").style.display = "none";
+    document.getElementById("exitBtn").style.display = "none";
 }
 </script>
 
 </body>
-  </html>
+</html>
