@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Idle Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        #coin {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            background-color: gold;
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            user-select: none;
+        }
+        #coin:active {
+            transform: scale(0.95);
+        }
+        .upgrade {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .upgrade:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>Coin Clicker</h1>
+    <div id="stats">
+        <h2>Coins: <span id="coinCount">0</span></h2>
+        <h3>Coins per second: <span id="cps">0</span></h3>
+    </div>
+    <div id="coin">$</div>
+    <div id="upgrades">
+        <button class="upgrade" onclick="buyAutoClicker()">
+            Buy Auto Clicker (Cost: <span id="autoClickerCost">10</span> coins)
+        </button>
+    </div>
+
+    <script>
+        let game = {
+            coins: 0,
+            autoClickers: 0,
+            autoClickerCost: 10
+        };
+
+        // Load saved game
+        const savedGame = localStorage.getItem('idleGame');
+        if (savedGame) {
+            game = JSON.parse(savedGame);
+            updateDisplay();
+        }
+
+        function clickCoin() {
+            game.coins++;
+            updateDisplay();
+        }
+
+        function buyAutoClicker() {
+            if (game.coins >= game.autoClickerCost) {
+                game.coins -= game.autoClickerCost;
+                game.autoClickers++;
+                game.autoClickerCost = Math.floor(game.autoClickerCost * 1.5); // Increase cost
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('coinCount').textContent = Math.floor(game.coins);
+            document.getElementById('cps').textContent = game.autoClickers;
+            document.getElementById('autoClickerCost').textContent = game.autoClickerCost;
+            
+            // Save game
+            localStorage.setItem('idleGame', JSON.stringify(game));
+        }
+
+        // Auto clicker loop
+        setInterval(() => {
+            game.coins += game.autoClickers;
+            updateDisplay();
+        }, 1000);
+
+        // Add click event listener to coin
+        document.getElementById('coin').addEventListener('click', clickCoin);
+    </script>
+</body>
+  </html>
