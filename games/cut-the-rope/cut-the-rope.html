@@ -1,219 +1,245 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Cut the Rope</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Cut the Rope</title>
 
-        body {
-            background: linear-gradient(145deg, #0b2b26 0%, #0a1f1c 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            font-family: system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            color: #eef4ff;
-        }
+<style>
+:root {
+    --topbar-h: 60px;
+    --bottombar-h: 64px;
+    --bg: #0f0f12;
+    --panel: rgba(24, 24, 28, 0.96);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --text: #f4f7fb;
+    --muted: #a7afbd;
+    --accent: #00e5ff;
+    --danger: #ff4d4f;
+}
 
-        /* ----- HEADER (oben mit X) ----- */
-        .top-bar {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            padding: 0.8rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            border-bottom: 1px solid rgba(255, 215, 120, 0.5);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-        }
+* {
+    box-sizing: border-box;
+}
 
-        .logo {
-            font-size: 1.4rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            background: linear-gradient(135deg, #ffd966, #ffb347);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-        }
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+    color: var(--text);
+}
 
-        .close-btn {
-            background: #2a3b36;
-            width: 42px;
-            height: 42px;
-            border-radius: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
+/* TOP BAR */
+#topBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--topbar-h);
+    padding-top: env(safe-area-inset-top);
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
 
-        .close-btn a {
-            color: #ffd966;
-            font-size: 28px;
-            font-weight: bold;
-            text-decoration: none;
-            line-height: 1;
-            display: inline-block;
-            transition: transform 0.2s;
-        }
+#topBar .title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--text);
+    user-select: none;
+    white-space: nowrap;
+}
 
-        .close-btn:hover {
-            background: #4a2e1e;
-            transform: scale(1.02);
-        }
-        .close-btn a:hover {
-            transform: scale(1.1);
-            color: #ffaa33;
-        }
+.iconBtn {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
 
-        /* ----- HAUPTBEREICH (Spiel-Container responsive 16:9) ----- */
-        .game-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem 1.5rem;
-        }
+.iconBtn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+}
 
-        /* 16:9 Aspect Ratio Wrapper */
-        .aspect-wrapper {
-            width: 100%;
-            max-width: 1024px;   /* Original-Breite des Spiels als Maximum */
-            margin: 0 auto;
-            position: relative;
-        }
+.iconBtn:active {
+    transform: translateY(0);
+}
 
-        /* Das padding-bottom erzeugt das 16:9-Verhältnis (9/16 = 0.5625 = 56.25%) */
-        .responsive-iframe-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 */
-            height: 0;
-            overflow: hidden;
-            border-radius: 28px;
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.1);
-            background: #000;
-        }
+#closeBtn {
+    color: var(--danger);
+    margin-left: 12px;
+}
 
-        .responsive-iframe-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 24px;
-        }
+#reloadBtn {
+    margin-right: 12px;
+    justify-self: end;
+}
 
-        /* Hinweislink (muss bleiben, lt. Lizenz) */
-        .credit-link {
-            text-align: center;
-            margin-top: 1.2rem;
-            font-size: 0.85rem;
-        }
-        .credit-link a {
-            color: #ffcd7e;
-            text-decoration: none;
-            background: rgba(0,0,0,0.5);
-            padding: 0.3rem 0.9rem;
-            border-radius: 30px;
-            transition: 0.2s;
-        }
-        .credit-link a:hover {
-            background: #ffcd7e;
-            color: #1e2a27;
-            text-decoration: underline;
-        }
+/* MAIN GAME AREA */
+#gameArea {
+    position: fixed;
+    top: calc(var(--topbar-h) + env(safe-area-inset-top));
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom));
+    background: #000;
+    z-index: 1;
+}
 
-        /* ----- FOOTER (unten) ----- */
-        .footer {
-            background: #071917e0;
-            backdrop-filter: blur(5px);
-            text-align: center;
-            padding: 1.2rem 1rem;
-            font-size: 0.75rem;
-            border-top: 1px solid #38635a;
-            color: #bbd4ce;
-            margin-top: 1rem;
-        }
-        .footer p {
-            margin: 0.3rem 0;
-        }
-        .footer a {
-            color: #ffcd7e;
-            text-decoration: none;
-        }
-        .footer a:hover {
-            text-decoration: underline;
-        }
+#gameFrame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #000;
+}
 
-        /* Für ganz kleine Geräte etwas weniger Padding */
-        @media (max-width: 640px) {
-            .top-bar {
-                padding: 0.6rem 1rem;
-            }
-            .game-container {
-                padding: 1rem;
-            }
-            .logo {
-                font-size: 1.1rem;
-            }
-            .close-btn {
-                width: 36px;
-                height: 36px;
-            }
-            .close-btn a {
-                font-size: 24px;
-            }
-        }
-    </style>
+/* CLOSED STATE */
+#closedOverlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+    background:
+        radial-gradient(circle at center, rgba(0,229,255,0.08), transparent 40%),
+        linear-gradient(180deg, rgba(0,0,0,0.92), rgba(10,10,14,0.98));
+    color: var(--text);
+}
+
+#closedOverlay h2 {
+    margin: 0 0 10px;
+    font-size: 28px;
+    letter-spacing: 1px;
+}
+
+#closedOverlay p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.5;
+    max-width: 420px;
+}
+
+/* BOTTOM BAR */
+#bottomBar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--bottombar-h);
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--panel);
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding-left: 14px;
+    padding-right: 14px;
+    text-align: center;
+}
+
+#bottomBar a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+#bottomBar a:hover {
+    text-decoration: underline;
+}
+
+#creditText {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.35;
+}
+
+/* MOBILE TWEAKS */
+@media (max-width: 480px) {
+    #topBar .title {
+        font-size: 16px;
+        letter-spacing: 1.1px;
+    }
+
+    #closedOverlay h2 {
+        font-size: 24px;
+    }
+
+    #creditText {
+        font-size: 11px;
+    }
+}
+</style>
 </head>
 <body>
 
-    <!-- HEADER mit X (schließt zur Startseite) -->
-    <div class="top-bar">
-        <div class="logo">🦉 ARCADE OWL</div>
-        <div class="close-btn">
-            <a href="/" title="Zurück zur Startseite">✕</a>
-        </div>
-    </div>
+<header id="topBar">
+    <button id="closeBtn" class="iconBtn" onclick="closeGame()">✕</button>
+    <div class="title">CUT THE ROPE</div>
+    <button id="reloadBtn" class="iconBtn" onclick="reloadGame()">↻</button>
+</header>
 
-    <!-- SPIEL BEREICH -->
-    <div class="game-container">
-        <div class="aspect-wrapper">
-            <!-- Der originale Embed-Code wird hier eingefügt, aber in ein responsives Container-System -->
-            <div class="responsive-iframe-container">
-                <iframe 
-                    src="https://html5gameshq.com/iframed/cut-the-rope" 
-                    frameborder="0" 
-                    scrolling="no"
-                    allowfullscreen
-                    title="Cut the Rope Spiel">
-                </iframe>
-            </div>
-            <!-- Bitte nicht entfernen: Pflicht-Link lt. Anbieter -->
-            <div class="credit-link">
-                <a href="https://html5gameshq.com/?r=embed-ref" target="_blank" rel="noopener noreferrer">
-                    🎮 More Games at HTML5GamesHQ...
-                </a>
-            </div>
-        </div>
-    </div>
+<main id="gameArea">
+    <iframe
+        id="gameFrame"
+        src="https://html5gameshq.com/iframed/cut-the-rope"
+        title="Cut the Rope"
+        allowfullscreen
+        loading="eager"
+        scrolling="no"
+        referrerpolicy="no-referrer"
+    ></iframe>
 
-    <!-- FOOTER (unten) -->
-    <div class="footer">
-        <p>© 2025 Arcade Owl – Kostenlose Browserspiele</p>
-        <p>✧ Spiel einbetten unter <a href="https://html5gameshq.com" target="_blank">HTML5GamesHQ</a> ✧</p>
+    <section id="closedOverlay" aria-live="polite">
+        <h2>Game closed</h2>
+        <p>Du kannst die Seite neu laden, um das Spiel wieder zu starten.</p>
+    </section>
+</main>
+
+<footer id="bottomBar">
+    <div id="creditText">
+        More Games at
+        <a href="https://html5gameshq.com/?r=embed-ref" target="_blank" rel="noopener noreferrer">
+            HTML5GamesHQ
+        </a>
     </div>
+</footer>
+
+<script>
+function closeGame() {
+    window.location.href = "https://arcadeowl.vercel.app/";
+}
+
+function reloadGame() {
+    const frame = document.getElementById("gameFrame");
+    frame.src = frame.src;
+}
+</script>
 
 </body>
-  </html>
+</html>
