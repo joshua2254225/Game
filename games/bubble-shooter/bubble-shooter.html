@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Bubble Shooter</title>
+
+<style>
+:root {
+    --topbar-h: 60px;
+    --bottombar-h: 64px;
+    --bg: #0f0f12;
+    --panel: rgba(24, 24, 28, 0.96);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --text: #f4f7fb;
+    --muted: #a7afbd;
+    --accent: #4dd0e1;
+    --danger: #ff4d4f;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: Arial, sans-serif;
+    color: var(--text);
+}
+
+/* TOP BAR */
+#topBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--topbar-h);
+    padding-top: env(safe-area-inset-top);
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+}
+
+#topBar .title {
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+}
+
+/* BUTTONS */
+.iconBtn {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    cursor: pointer;
+}
+
+/* GAME AREA */
+#gameArea {
+    position: fixed;
+    top: calc(var(--topbar-h) + env(safe-area-inset-top));
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom));
+    background: #000;
+}
+
+/* IFRAME */
+#gameFrame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: none;
+}
+
+/* START SCREEN */
+#startOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background:
+        radial-gradient(circle at top, rgba(77,208,225,0.18), transparent 45%),
+        rgba(0,0,0,0.95);
+}
+
+.card {
+    width: min(90vw, 420px);
+    padding: 26px;
+    border-radius: 20px;
+    background: rgba(20,20,28,0.85);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(14px);
+}
+
+.card h1 {
+    margin: 0 0 10px;
+}
+
+.card p {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+#startBtn {
+    margin-top: 16px;
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: linear-gradient(135deg, #4dd0e1, #00acc1);
+    color: #0b0f12;
+}
+
+/* LOADING */
+#loadingOverlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: rgba(0,0,0,0.96);
+}
+
+.spinner {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 5px solid rgba(255,255,255,0.15);
+    border-top-color: var(--accent);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* BOTTOM */
+#bottomBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--bottombar-h);
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--panel);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+#bottomBar a {
+    color: var(--accent);
+    text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<header id="topBar">
+    <button class="iconBtn" onclick="closeGame()">✕</button>
+    <div class="title">BUBBLE SHOOTER</div>
+    <button class="iconBtn" onclick="reloadGame()">↻</button>
+</header>
+
+<main id="gameArea">
+
+    <iframe id="gameFrame"
+        src=""
+        allowfullscreen
+        scrolling="no"></iframe>
+
+    <!-- START -->
+    <div id="startOverlay">
+        <div class="card">
+            <h1>Bubble Shooter</h1>
+            <p>Drücke Start um das Spiel zu laden.</p>
+            <button id="startBtn" onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+</main>
+
+<footer id="bottomBar">
+    More Games at
+    <a href="https://html5gameshq.com/?r=embed-ref" target="_blank">&nbsp;HTML5GamesHQ</a>
+</footer>
+
+<script>
+const GAME_URL = "https://html5gameshq.com/iframed/bubble-shooter";
+
+const frame = document.getElementById("gameFrame");
+const startOverlay = document.getElementById("startOverlay");
+const loadingOverlay = document.getElementById("loadingOverlay");
+
+let started = false;
+
+function startGame() {
+    if (started) return;
+    started = true;
+
+    startOverlay.style.display = "none";
+    loadingOverlay.style.display = "flex";
+
+    frame.src = GAME_URL;
+    frame.style.display = "block";
+}
+
+frame.addEventListener("load", () => {
+    loadingOverlay.style.display = "none";
+});
+
+function reloadGame() {
+    location.reload();
+}
+
+function closeGame() {
+    window.location.href = "https://arcadeowl.vercel.app/";
+}
+</script>
+
+</body>
+  </html>
