@@ -16,6 +16,7 @@
     --muted: #a7afbd;
     --accent: #00e5ff;
     --danger: #ff4d4f;
+    --success: #39d98a;
 }
 
 * {
@@ -94,7 +95,7 @@ html, body {
     justify-self: end;
 }
 
-/* MAIN GAME AREA */
+/* GAME AREA */
 #gameArea {
     position: fixed;
     top: calc(var(--topbar-h) + env(safe-area-inset-top));
@@ -103,14 +104,127 @@ html, body {
     bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom));
     background: #000;
     z-index: 1;
+    overflow: hidden;
 }
 
 #gameFrame {
     width: 100%;
     height: 100%;
     border: 0;
-    display: block;
+    display: none;
     background: #000;
+}
+
+/* START SCREEN */
+#startOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    background:
+        radial-gradient(circle at top, rgba(0, 229, 255, 0.12), transparent 40%),
+        linear-gradient(180deg, rgba(8, 10, 14, 0.98), rgba(0, 0, 0, 0.96));
+    z-index: 20;
+}
+
+#startCard {
+    width: min(92vw, 420px);
+    padding: 28px 22px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    background: rgba(20, 22, 28, 0.78);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+#startCard h1 {
+    margin: 0 0 10px;
+    font-size: 30px;
+    letter-spacing: 1px;
+    color: var(--text);
+}
+
+#startCard p {
+    margin: 0 0 22px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-size: 15px;
+}
+
+#startBtn {
+    width: 100%;
+    padding: 14px 18px;
+    border: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #00e5ff, #39d98a);
+    color: #081017;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+#startBtn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+}
+
+#startBtn:active {
+    transform: translateY(0);
+}
+
+/* LOADING SCREEN */
+#loadingOverlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+    background:
+        radial-gradient(circle at center, rgba(0,229,255,0.09), transparent 42%),
+        linear-gradient(180deg, rgba(0,0,0,0.95), rgba(10,10,14,0.98));
+    z-index: 25;
+}
+
+.spinner {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 5px solid rgba(255,255,255,0.12);
+    border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite;
+}
+
+#loadingOverlay h2 {
+    margin: 0;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+#loadingOverlay p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 320px;
+    line-height: 1.5;
+}
+
+#loadingHint {
+    display: none;
+    margin-top: 10px;
+    color: var(--danger);
+    font-size: 13px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* CLOSED STATE */
@@ -127,6 +241,7 @@ html, body {
         radial-gradient(circle at center, rgba(0,229,255,0.08), transparent 40%),
         linear-gradient(180deg, rgba(0,0,0,0.92), rgba(10,10,14,0.98));
     color: var(--text);
+    z-index: 30;
 }
 
 #closedOverlay h2 {
@@ -179,14 +294,19 @@ html, body {
     line-height: 1.35;
 }
 
-/* MOBILE TWEAKS */
+/* MOBILE */
 @media (max-width: 480px) {
     #topBar .title {
         font-size: 16px;
         letter-spacing: 1.1px;
     }
 
-    #closedOverlay h2 {
+    #startCard h1 {
+        font-size: 26px;
+    }
+
+    #closedOverlay h2,
+    #loadingOverlay h2 {
         font-size: 24px;
     }
 
@@ -207,13 +327,28 @@ html, body {
 <main id="gameArea">
     <iframe
         id="gameFrame"
-        src="https://html5gameshq.com/iframed/cut-the-rope"
+        src=""
         title="Cut the Rope"
         allowfullscreen
         loading="eager"
         scrolling="no"
         referrerpolicy="no-referrer"
     ></iframe>
+
+    <section id="startOverlay" aria-live="polite">
+        <div id="startCard">
+            <h1>Cut the Rope</h1>
+            <p>Drücke auf Start, um das Spiel zu laden. Danach siehst du einen kurzen Ladebildschirm und das Game öffnet sich direkt.</p>
+            <button id="startBtn" onclick="startGame()">Start Game</button>
+        </div>
+    </section>
+
+    <section id="loadingOverlay" aria-live="polite">
+        <div class="spinner"></div>
+        <h2>Loading...</h2>
+        <p>Bitte kurz warten. Das Spiel wird gerade geladen.</p>
+        <div id="loadingHint">Wenn es zu lange dauert, einfach auf Reload drücken.</div>
+    </section>
 
     <section id="closedOverlay" aria-live="polite">
         <h2>Game closed</h2>
@@ -231,15 +366,69 @@ html, body {
 </footer>
 
 <script>
-function closeGame() {
-    window.location.href = "https://arcadeowl.vercel.app/";
+const GAME_URL = "https://html5gameshq.com/iframed/cut-the-rope";
+
+const gameFrame = document.getElementById("gameFrame");
+const startOverlay = document.getElementById("startOverlay");
+const loadingOverlay = document.getElementById("loadingOverlay");
+const closedOverlay = document.getElementById("closedOverlay");
+const loadingHint = document.getElementById("loadingHint");
+const startBtn = document.getElementById("startBtn");
+
+let loadTimeout = null;
+let started = false;
+
+function showOnly(section) {
+    startOverlay.style.display = "none";
+    loadingOverlay.style.display = "none";
+    closedOverlay.style.display = "none";
+    gameFrame.style.display = "none";
+
+    if (section) section.style.display = "flex";
 }
 
+function startGame() {
+    if (started) return;
+    started = true;
+
+    showOnly(loadingOverlay);
+    startBtn.disabled = true;
+    startBtn.textContent = "Loading...";
+
+    gameFrame.src = GAME_URL;
+    gameFrame.style.display = "block";
+
+    clearTimeout(loadTimeout);
+    loadTimeout = setTimeout(() => {
+        loadingHint.style.display = "block";
+    }, 8000);
+}
+
+gameFrame.addEventListener("load", () => {
+    if (!started) return;
+    clearTimeout(loadTimeout);
+    showOnly(null);
+});
+
 function reloadGame() {
-    const frame = document.getElementById("gameFrame");
-    frame.src = frame.src;
+    if (!started) {
+        location.reload();
+        return;
+    }
+
+    showOnly(loadingOverlay);
+    loadingHint.style.display = "none";
+
+    gameFrame.src = "";
+    setTimeout(() => {
+        gameFrame.src = GAME_URL;
+    }, 120);
+}
+
+function closeGame() {
+    window.location.href = "https://arcadeowl.vercel.app/";
 }
 </script>
 
 </body>
-</html>
+    </html>
