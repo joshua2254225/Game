@@ -1,193 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>There is no GAME</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <meta name="google-adsense-account" content="ca-pub-4202960510877115">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4202960510877115" crossorigin="anonymous"></script>
+    <title>There is no GAME - Play Online</title>
 
 <style>
-:root{
-    --bg:#0f0f12;
-    --panel:rgba(24,24,28,.96);
-    --text:#f4f7fb;
-    --muted:#a7afbd;
-    --accent:#7c4dff;
-    --accent2:#00e5ff;
-    --danger:#ff4d4f;
+:root {
+    --bg: #0f0f12;
+    --panel: rgba(24, 24, 28, 0.96);
+    --text: #f4f7fb;
+    --muted: #a7afbd;
+    --accent: #7c4dff;
+    --accent2: #00e5ff;
+    --danger: #ff4d4f;
+    --topbar-h: 60px;
+    --bottombar-h: 64px;
 }
 
-*{box-sizing:border-box;}
+* { box-sizing: border-box; }
 
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:var(--bg);
-    color:var(--text);
-    font-family:Arial,Helvetica,sans-serif;
+/* 1. ÄNDERUNG: overflow-y auf auto, damit die Seite scrollen kann */
+html, body {
+    margin: 0;
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    overflow-x: hidden;
+    overflow-y: auto; 
+    scroll-behavior: smooth;
 }
 
-/* TOP BAR */
-#topBar{
-    position:fixed;
-    top:0;
-    left:0;
-    right:0;
-    height:60px;
-    display:grid;
-    grid-template-columns:60px 1fr 60px;
-    align-items:center;
-    background:var(--panel);
-    z-index:50;
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
+/* TOP BAR: Bleibt oben fixiert */
+#topBar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--topbar-h);
+    display: grid;
+    grid-template-columns: 60px 1fr 60px;
+    align-items: center;
+    background: var(--panel);
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-#title{
-    text-align:center;
-    font-weight:700;
-    letter-spacing:1.2px;
-    font-size:16px;
+#title { text-align: center; font-weight: 700; letter-spacing: 1.2px; font-size: 16px; }
+
+.btn {
+    width: 40px; height: 40px; margin: auto;
+    border: 0; border-radius: 12px;
+    background: rgba(255, 255, 255, .06);
+    color: var(--text); font-size: 18px; cursor: pointer;
 }
 
-.btn{
-    width:40px;
-    height:40px;
-    margin:auto;
-    border:0;
-    border-radius:12px;
-    background:rgba(255,255,255,.06);
-    color:var(--text);
-    font-size:18px;
-    cursor:pointer;
+/* 2. ÄNDERUNG: GameArea hat jetzt eine feste Höhe von 100% Sichtfeld minus Bars */
+#gameArea {
+    position: relative;
+    margin-top: var(--topbar-h);
+    width: 100%;
+    height: calc(100vh - var(--topbar-h) - var(--bottombar-h));
+    background: #000;
+    overflow: hidden;
 }
 
-.btn:active{
-    transform:scale(.96);
+#gameFrame { width: 100%; height: 100%; border: 0; display: none; background: #000; }
+
+/* OVERLAYS (Start/Loading) */
+#startScreen, #loadingScreen {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; text-align: center;
 }
 
-/* GAME AREA */
-#gameArea{
-    position:fixed;
-    top:60px;
-    left:0;
-    right:0;
-    bottom:64px;
-    background:#000;
+#startScreen {
+    background: radial-gradient(circle at top, rgba(124,77,255,.18), transparent 45%), linear-gradient(180deg, rgba(0,0,0,.96), rgba(10,10,14,.98));
 }
 
-#gameFrame{
-    width:100%;
-    height:100%;
-    border:0;
-    display:none;
-    background:#000;
+.card {
+    width: min(92vw, 420px); padding: 26px; border-radius: 22px;
+    background: rgba(20, 20, 28, .86); border: 1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(14px);
 }
 
-/* START SCREEN */
-#startScreen,
-#loadingScreen{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
+#startBtn {
+    margin-top: 18px; width: 100%; padding: 14px; border: 0; border-radius: 14px;
+    font-size: 16px; font-weight: 700; cursor: pointer; color: #081017;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
 }
 
-#startScreen{
-    background:
-        radial-gradient(circle at top, rgba(124,77,255,.18), transparent 45%),
-        linear-gradient(180deg, rgba(0,0,0,.96), rgba(10,10,14,.98));
+/* 3. ÄNDERUNG: Die neue Text-Sektion für den AdSense Bot */
+#howToPlay {
+    padding: 60px 20px;
+    max-width: 850px;
+    margin: 0 auto;
+    line-height: 1.7;
 }
 
-.card{
-    width:min(92vw,420px);
-    padding:26px;
-    border-radius:22px;
-    background:rgba(20,20,28,.86);
-    border:1px solid rgba(255,255,255,.08);
-    backdrop-filter:blur(14px);
+#howToPlay h2 { color: var(--accent2); font-size: 26px; margin-top: 0; }
+#howToPlay h3 { color: var(--accent); margin-top: 30px; }
+#howToPlay p { color: var(--muted); font-size: 15px; }
+
+.backBtn {
+    background: none; border: 1px solid var(--muted); color: var(--muted);
+    padding: 8px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 20px;
 }
 
-.card h1{
-    margin:0 0 10px;
-    font-size:28px;
+/* BOTTOM BAR: Jetzt mit Sticky, damit sie am Spielende klebt */
+#bottomBar {
+    position: sticky;
+    bottom: 0;
+    height: var(--bottombar-h);
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 100;
+    border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-.card p{
-    margin:0;
-    color:var(--muted);
-    line-height:1.5;
-    font-size:14px;
-}
-
-#startBtn{
-    margin-top:18px;
-    width:100%;
-    padding:14px;
-    border:0;
-    border-radius:14px;
-    font-size:16px;
-    font-weight:700;
-    cursor:pointer;
-    color:#081017;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-}
-
-/* LOADING */
-#loadingScreen{
-    display:none;
-    flex-direction:column;
-    gap:14px;
-    background:rgba(0,0,0,.96);
-}
-
-.spinner{
-    width:56px;
-    height:56px;
-    border-radius:50%;
-    border:5px solid rgba(255,255,255,.12);
-    border-top-color:var(--accent);
-    animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-    to{transform:rotate(360deg);}
-}
-
-#loadingText{
-    color:var(--muted);
-    font-size:14px;
-}
-
-/* BOTTOM BAR */
-#bottomBar{
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:0;
-    height:64px;
-    background:var(--panel);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    padding:0 14px;
-    color:var(--muted);
-    font-size:12px;
-}
-
-#bottomBar a{
-    color:var(--accent2);
-    text-decoration:none;
-    font-weight:700;
-}
+.guideLink { color: var(--accent2); text-decoration: none; font-weight: 700; cursor: pointer; background: none; border: none; font-size: 13px; }
 
 @media (max-width:480px){
-    #title{font-size:15px;}
-    .card h1{font-size:24px;}
+    #title{font-size: 14px;}
+    #howToPlay { padding: 40px 15px; }
 }
 </style>
 </head>
@@ -195,62 +135,89 @@ html,body{
 
 <header id="topBar">
     <button class="btn" onclick="closeGame()">✕</button>
-    <div id="title">There is no GAME</div>
+    <div id="title">Loading...</div>
     <button class="btn" onclick="reloadGame()">↻</button>
 </header>
 
 <main id="gameArea">
-
     <iframe
         id="gameFrame"
         src=""
         allow="fullscreen; autoplay; encrypted-media"
         allowfullscreen="true"
-        msallowfullscreen="true"
-        mozallowfullscreen="true"
-        webkitallowfullscreen="true"
-        allowpaymentrequest="false"
         referrerpolicy="unsafe-url"
         sandbox="allow-same-origin allow-forms allow-scripts allow-pointer-lock allow-orientation-lock allow-popups"
         scrolling="no"
     ></iframe>
 
-    <!-- START -->
     <section id="startScreen">
         <div class="card">
-            <h1>There is no GAME</h1>
-        
-            <button id="startBtn" onclick="startGame()">Start</button>
+            <h1 id="cardTitle">There is no GAME</h1>
+            <p>A puzzle adventure that claims it doesn't exist.</p>
+            <button id="startBtn" onclick="startGame()">Start Game</button>
         </div>
     </section>
 
-    <!-- LOADING -->
-    <section id="loadingScreen">
-        <div class="spinner"></div>
-        <div id="loadingText">Loading...</div>
+    <section id="loadingScreen" style="display:none; flex-direction:column; gap:14px; background:#000;">
+        <div style="width:50px; height:50px; border:4px solid rgba(255,255,255,0.1); border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite;"></div>
+        <div style="color:var(--muted)">Loading Experience...</div>
     </section>
-
 </main>
 
 <footer id="bottomBar">
-    Powered by Construct Arcade
+    <div style="font-size:11px; color:var(--muted);">ArcadeOwl Games</div>
+    <button class="guideLink" onclick="scrollToGuide()">Game Info & How to Play ↓</button>
 </footer>
 
+<section id="howToPlay">
+    <button class="backBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑ Back to Game</button>
+    
+    <h2>About "There is no Game"</h2>
+    <p>
+        "There is no Game" is a unique and award-winning point-and-click puzzle adventure that constantly challenges the player's expectations. 
+        As the title suggests, a narrator will try to convince you that there is nothing to play here. 
+        Your task is to ignore him, explore the interface, and find hidden interactions to progress through this clever meta-fictional journey.
+    </p>
+
+    <h3>How to Play & Controls</h3>
+    <p>
+        The game is played entirely with the <strong>Mouse</strong> (or Touch on mobile devices). 
+        Since the narrator doesn't want you to play, you have to click on everything you see—even the title itself! 
+        Drag objects, click buttons multiple times, and listen closely to the narrator's clues (or his complaints) to solve the puzzles.
+    </p>
+
+    <h3>Why it's a must-play Browser Game</h3>
+    <p>
+        This game is famous for "breaking the fourth wall." It belongs to the category of casual puzzle games but offers 
+        a level of humor and creativity rarely seen in free browser games. It’s a perfect example of how simple 
+        mechanics can create a deep and funny experience.
+    </p>
+
+    <h3>Strategy Tips</h3>
+    <p>
+        If you get stuck, try to think literally. If the narrator says "Don't touch the ball," 
+        you should probably touch the ball. The game rewards curiosity and experimentation. 
+        Pay attention to visual changes and sound effects, as they often signal that you have unlocked a new part of the "non-game."
+    </p>
+</section>
+
 <script>
+// Spiele-Konfiguration
 const GAME = {
-    title: "Construct Game",
+    title: "There is no GAME",
     url: "https://games.construct.net/174/latest"
 };
 
 const frame = document.getElementById("gameFrame");
 const startScreen = document.getElementById("startScreen");
 const loadingScreen = document.getElementById("loadingScreen");
-const title = document.getElementById("title");
+const titleHeader = document.getElementById("title");
 
-title.textContent = GAME.title;
+titleHeader.textContent = GAME.title;
 
 let started = false;
 
+// Funktion: Spiel starten
 function startGame(){
     if(started) return;
     started = true;
@@ -262,18 +229,33 @@ function startGame(){
     frame.style.display = "block";
 }
 
+// Iframe geladen -> Spinner weg
 frame.addEventListener("load", () => {
-    loadingScreen.style.display = "none";
+    if(started) loadingScreen.style.display = "none";
 });
 
+// Seite neu laden
 function reloadGame(){
     location.reload();
 }
 
+// Zurück zur Hauptseite
 function closeGame(){
     window.location.href = "https://arcadeowl.vercel.app/";
+}
+
+// SMOOTH SCROLL FUNKTION: Bringt den User zum Text
+function scrollToGuide() {
+    document.getElementById('howToPlay').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Keyframes für den Spinner (da sie oben im Style waren, hier zur Sicherheit)
+if (!document.querySelector('style').textContent.includes('@keyframes spin')) {
+    const style = document.createElement('style');
+    style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
 }
 </script>
 
 </body>
-  </html>
+</html>
