@@ -88,47 +88,6 @@ html,body{
   font-weight:700;
 }
 
-/* FEEDBACK */
-  /*
-.feedback{
-  position:fixed;
-  right:16px;
-  bottom:16px;
-  background:#ff006e;
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:white;
-  font-size:26px;
-  text-decoration:none;
-  box-shadow:0 6px 20px rgba(0,0,0,.3);
-}
-  */
-
-/* SEARCH BUTTON */
-  /*
-#searchBtn{
-  position:fixed;
-  top:10px;
-  left:16px;
-  background:var(--card);
-  border:none;
-  border-radius:50%;
-  width:36px;
-  height:36px;
-  font-size:18px;
-  cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,.2);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
-}
-  */
-
 /* USER BOX & POPUP */
 #userBox{
   position:fixed;
@@ -262,29 +221,61 @@ html,body{
 .footer-bar a:hover{
   color:white;
 }
+
+/* RESPONSIVE WERBE-BOXEN STYLES */
+.ad-responsive-container {
+  margin: 30px auto 10px auto;
+  max-width: var(--max-width);
+}
+
+/* Die Boxen erhalten hier ein sauberes Design */
+.ad-box-wrapper {
+  background: #ffffff;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #dcdfe6; /* Kleiner, grauer Rand */
+  box-shadow: 0 6px 18px rgba(0,0,0,.04);
+  box-sizing: border-box;
+}
+
+.ad-box-wrapper iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.ad-label {
+  font-size: 11px;
+  color: #999;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+}
+
+/* Die Weiche für die verschiedenen Geräte */
+.ad-mobile { display: none !important; }
+.ad-desktop { display: block !important; text-align: center; }
+
+@media (max-width: 767px) {
+  .ad-desktop { display: none !important; }
+  .ad-mobile { display: block !important; }
+  
+  /* Verbindet die mobilen Banner zu einem zweispaltigen Grid */
+  .ad-mobile-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+}
 </style>
 </head>
 
 <body>
 
 <a href="login.html" class="login-btn" id="loginBtn">Login</a>
-
-<!--  
-<button id="searchBtn">🔍</button>
-
-<input id="searchInput" type="text" placeholder="Search..."
-style="
-display:none;
-position:fixed;
-top:12px;
-left:60px;
-padding:6px 10px;
-border-radius:8px;
-border:1px solid #ccc;
-z-index:1000;
-">
-
--->
 
 <header class="topbar">
   <span class="wave-title">
@@ -337,17 +328,9 @@ z-index:1000;
     <img src="images/wheelie-bike.png" alt="Wheelie Bike">
   </a>
 
-  <!-- <a href="harvest.html" class="game-card">
-    <img src="images/harvest.jpg" alt="HarvestFARM">
-  </a> -->
-
   <a href="emoji-memory.html" class="game-card">
     <img src="images/Emojimemory.jpg" alt="Emoji Memory">
   </a>
-
-  <!-- <a href="snake-game.html" class="game-card">
-    <img src="images/Blockworms.jpg" alt="Snake">
-  </a> -->
 
   <a href="tic-tac-toe.html" class="game-card">
     <img src="images/Tic-tac-toe.jpg" alt="Tic Tac Toe">
@@ -357,38 +340,17 @@ z-index:1000;
     <img src="images/Tic-tac-toeAI.jpg" alt="Tic Tac Toe AI">
   </a>
 
-  <!-- <a href="LiveWebcams.html" class="game-card">
-    <img src="images/LiveCameras.jpg" alt="LIVEwebcams">
-  </a> -->
-
-  <!-- <a href="minesweeper.html" class="game-card">
-    <img src="images/Minesweeper.jpg" alt="Minesweeper">
-  </a> -->
-
-  <!-- <a href="multiplayermemory.html" class="game-card">
-    <img src="images/Multiplayermemory.jpg" alt="Multiplayer MEMORY">
-  </a> -->
-
   <div class="game-card locked" id="minecraftCard">
     <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
     <div class="lock-overlay">🔒 Only for logged-in users</div>
   </div>
 
-  <!-- <a href="Lesanimeaux.html" class="game-card">
-    <img src="images/Lesanimeaux.jpg" alt="Les Animaux">
-  </a> -->
-
-</div>
-
-
-
-    
-
 </div> <div class="ad-responsive-container">
   
   <div class="ad-mobile">
     <div class="ad-mobile-grid">
-      <div class="ad-box">
+      
+      <div class="ad-box-wrapper">
         <script>
           atOptions = {
             'key' : '8f7abc592ab94aa1596a9af62d3ea2d2',
@@ -402,7 +364,7 @@ z-index:1000;
         <div class="ad-label">Anzeige / Ad</div>
       </div>
       
-      <div class="ad-box">
+      <div class="ad-box-wrapper">
         <script>
           atOptions = {
             'key' : '8f7abc592ab94aa1596a9af62d3ea2d2',
@@ -415,11 +377,12 @@ z-index:1000;
         <script src="https://www.highperformanceformat.com/8f7abc592ab94aa1596a9af62d3ea2d2/invoke.js"></script>
         <div class="ad-label">Anzeige / Ad</div>
       </div>
+      
     </div>
   </div>
 
   <div class="ad-desktop">
-    <div class="ad-box">
+    <div class="ad-box-wrapper" style="max-width: 756px; margin: 0 auto;">
       <script>
         atOptions = {
           'key' : '711484764fd19ef9e5d39cd184b106e9',
@@ -435,80 +398,6 @@ z-index:1000;
   </div>
 
 </div>
-</main> ```
-
----
-
-### 2. Das CSS für dein `<style>`-Verzeichnis
-
-Füge diese Zeilen oben in deinen `<style>`-Bereich im `<head>` ein. Das sorgt dafür, dass das Handy-Layout exakt wie deine Spiele-Kacheln aussieht:
-
-```css
-/* Styling für den Werbe-Container */
-.ad-responsive-container {
-  margin: 30px auto 10px auto;
-  max-width: var(--max-width);
-  padding: 0 12px;
-}
-
-/* Die einzelnen weißen Werbeboxen im Stil deiner Spiele-Cards */
-.ad-box {
-  background: #ffffff;
-  padding: 14px 16px;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,.06);
-  text-align: center;
-  display: inline-block;
-  box-sizing: border-box;
-}
-
-/* Adsterra-Iframes innerhalb der Boxen zentrieren */
-.ad-box iframe {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-}
-
-/* Kleine Beschriftung unter den Bannern */
-.ad-label {
-  font-size: 11px;
-  color: #999;
-  margin-top: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-family: system-ui, sans-serif;
-}
-
-/* --- DIE WEICHE & DAS GRID --- */
-
-/* Desktop-Ansicht standardmäßig aktiv */
-.ad-mobile { display: none !important; }
-.ad-desktop { display: block !important; text-align: center; }
-
-/* Mobile Ansicht (Handy) */
-@media (max-width: 767px) {
-  .ad-desktop { display: none !important; }
-  .ad-mobile { display: block !important; }
-  
-  /* Erstellt genau wie bei den Spielen 2 Blöcke pro Reihe */
-  .ad-mobile-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 14px !important;
-  }
-  
-  .ad-box {
-    display: block;
-    width: 100%;
-  }
-}
-
-
-
-
-
-  
 </main>
 
 <footer class="footer-bar">
@@ -528,11 +417,8 @@ Füge diese Zeilen oben in deinen `<style>`-Bereich im `<head>` ein. Das sorgt d
   <button id="logoutBtn" style="background:#ff006e;color:white;">Logout</button>
   <hr>
 </div>
-<!--
-<a class="feedback" href="https://docs.google.com/forms/d/e/1FAIpQLSdilZn6pumyHbKGZUnK1-0wRGi0d5STMr_nR37P058gZOB73A/viewform" target="_blank">💬</a>
--->
+
 <script type="module">
-  
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getAuth,
@@ -541,28 +427,6 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-  
-  /*
-  const searchBtn = document.getElementById("searchBtn");
-const searchInput = document.getElementById("searchInput");
-
-searchBtn.onclick = ()=>{
-  searchInput.style.display =
-    searchInput.style.display === "block" ? "none" : "block";
-  searchInput.focus();
-};
-
-searchInput.addEventListener("input", ()=>{
-  const q = searchInput.value.toLowerCase();
-  document.querySelectorAll(".games-list li").forEach(li=>{
-    li.style.display = li.innerText.toLowerCase().includes(q)
-      ? "flex"
-      : "none";
-  });
-});
-
-*/
-  
 const firebaseConfig = {
   apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
   authDomain: "arcadeowl.firebaseapp.com",
@@ -576,7 +440,6 @@ const userBox = document.getElementById("userBox");
 const settingsPopup = document.getElementById("settingsPopup");
 const loginBtn = document.getElementById("loginBtn");
 
-// Toggle Popup
 userBox.addEventListener("click", e=>{
   e.stopPropagation();
   settingsPopup.style.display = settingsPopup.style.display==="none"?"block":"none";
@@ -587,27 +450,21 @@ document.addEventListener("click", e=>{
   }
 });
 
-// Auth State
 onAuthStateChanged(auth, user => {
   if (user) {
     const name = user.displayName || user.email.split("@")[0] || "User";
     userBox.textContent = name;
-
-    // Login-Button verstecken
     loginBtn.style.display = "none";
     userBox.style.display = "block";
   } else {
-    // Nicht eingeloggt
     userBox.textContent = "Guest";
     userBox.style.display = "none";
     loginBtn.style.display = "block";
   }
 });
 
-// Logout
 document.getElementById("logoutBtn").onclick = ()=>signOut(auth).then(()=>location.reload());
 
-// Save Username
 document.getElementById("saveUsernameBtn").onclick = ()=>{
   const newName = document.getElementById("usernameInput").value.trim();
   if(newName && auth.currentUser){
@@ -622,7 +479,6 @@ const minecraftCard = document.getElementById("minecraftCard");
 
 onAuthStateChanged(auth, user => {
   if(user){
-    // 🔓 freischalten
     minecraftCard.outerHTML = `
       <a href="minecraft.html" class="game-card">
         <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
@@ -634,7 +490,5 @@ onAuthStateChanged(auth, user => {
 
 <script src="https://pl29483307.effectivecpmnetwork.com/c5/d5/a6/c5d5a62f9fde4e2457984eca82b8e044.js"></script>
 
-
-  
 </body>
-    </html>
+</html>
