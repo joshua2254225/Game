@@ -380,34 +380,129 @@ z-index:1000;
 
 </div>
 
-<!--
 
- <div style="text-align: center; margin-top: 20px;">
-  <div id="container-6939e8b9145f215dd832953c5ad6b2d3"></div>
-  <script async="async" data-cfasync="false" src="https://pl29483306.effectivecpmnetwork.com/6939e8b9145f215dd832953c5ad6b2d3/invoke.js"></script>
-</div>
-
-
--->
 
     
 
- <div style="text-align: center; margin: 30px auto 10px auto; max-width: 320px; background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.05);">
+</div> <div class="ad-responsive-container">
   
-  <script>
-    atOptions = {
-      'key' : '8f7abc592ab94aa1596a9af62d3ea2d2',
-      'format' : 'iframe',
-      'height' : 250,
-      'width' : 300,
-      'params' : {}
-    };
-  </script>
-  <script src="https://www.highperformanceformat.com/8f7abc592ab94aa1596a9af62d3ea2d2/invoke.js"></script>
+  <div class="ad-mobile">
+    <div class="ad-mobile-grid">
+      <div class="ad-box">
+        <script>
+          atOptions = {
+            'key' : '8f7abc592ab94aa1596a9af62d3ea2d2',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+          };
+        </script>
+        <script src="https://www.highperformanceformat.com/8f7abc592ab94aa1596a9af62d3ea2d2/invoke.js"></script>
+        <div class="ad-label">Anzeige / Ad</div>
+      </div>
+      
+      <div class="ad-box">
+        <script>
+          atOptions = {
+            'key' : '8f7abc592ab94aa1596a9af62d3ea2d2',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+          };
+        </script>
+        <script src="https://www.highperformanceformat.com/8f7abc592ab94aa1596a9af62d3ea2d2/invoke.js"></script>
+        <div class="ad-label">Anzeige / Ad</div>
+      </div>
+    </div>
+  </div>
 
-  <div style="font-size: 11px; color: #999; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; font-family: system-ui, sans-serif;">Anzeige / Ad</div>
+  <div class="ad-desktop">
+    <div class="ad-box">
+      <script>
+        atOptions = {
+          'key' : '711484764fd19ef9e5d39cd184b106e9',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/711484764fd19ef9e5d39cd184b106e9/invoke.js"></script>
+      <div class="ad-label">Anzeige / Ad</div>
+    </div>
+  </div>
 
 </div>
+</main> ```
+
+---
+
+### 2. Das CSS für dein `<style>`-Verzeichnis
+
+Füge diese Zeilen oben in deinen `<style>`-Bereich im `<head>` ein. Das sorgt dafür, dass das Handy-Layout exakt wie deine Spiele-Kacheln aussieht:
+
+```css
+/* Styling für den Werbe-Container */
+.ad-responsive-container {
+  margin: 30px auto 10px auto;
+  max-width: var(--max-width);
+  padding: 0 12px;
+}
+
+/* Die einzelnen weißen Werbeboxen im Stil deiner Spiele-Cards */
+.ad-box {
+  background: #ffffff;
+  padding: 14px 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
+  text-align: center;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+/* Adsterra-Iframes innerhalb der Boxen zentrieren */
+.ad-box iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Kleine Beschriftung unter den Bannern */
+.ad-label {
+  font-size: 11px;
+  color: #999;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: system-ui, sans-serif;
+}
+
+/* --- DIE WEICHE & DAS GRID --- */
+
+/* Desktop-Ansicht standardmäßig aktiv */
+.ad-mobile { display: none !important; }
+.ad-desktop { display: block !important; text-align: center; }
+
+/* Mobile Ansicht (Handy) */
+@media (max-width: 767px) {
+  .ad-desktop { display: none !important; }
+  .ad-mobile { display: block !important; }
+  
+  /* Erstellt genau wie bei den Spielen 2 Blöcke pro Reihe */
+  .ad-mobile-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+  
+  .ad-box {
+    display: block;
+    width: 100%;
+  }
+}
 
 
 
