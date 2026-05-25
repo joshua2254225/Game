@@ -228,61 +228,88 @@
             icon.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
         }
 
-        async function startGeneration() {
-            const geminiKey = document.getElementById('geminiKey').value.trim();
-            const prompt = document.getElementById('gamePrompt').value.trim();
+async function startGeneration() {
+    const geminiKey = document.getElementById('geminiKey').value.trim();
+    const prompt = document.getElementById('gamePrompt').value.trim();
 
-            if (!geminiKey) { showAlert("Trage bitte zuerst deinen API-Key ein!"); return; }
-            if (!prompt) { showAlert("Beschreibe zuerst das Spiel!"); return; }
+    if (!geminiKey) { showAlert("Trage bitte zuerst deinen API-Key ein!"); return; }
+    if (!prompt) { showAlert("Beschreibe zuerst das Spiel!"); return; }
 
-            resetAll();
-            document.getElementById('statusIndicator').innerText = 'Building...';
-            document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-purple-950 text-purple-300 border border-purple-800';
+    resetAll();
+    document.getElementById('statusIndicator').innerText = 'Building...';
+    document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-purple-950 text-purple-300 border border-purple-800';
 
-            try {
-                setStepActive(1); document.getElementById('progressPercent').innerText = '12% Completed'; await sleep(800); setStepDone(1);
-                setStepActive(2); document.getElementById('progressPercent').innerText = '25% Completed'; await sleep(800); setStepDone(2);
-                setStepActive(3); document.getElementById('progressPercent').innerText = '37% Completed'; await sleep(600); setStepDone(3);
+    try {
+        setStepActive(1); document.getElementById('progressPercent').innerText = '12% Completed'; await sleep(800); setStepDone(1);
+        setStepActive(2); document.getElementById('progressPercent').innerText = '25% Completed'; await sleep(800); setStepDone(2);
+        setStepActive(3); document.getElementById('progressPercent').innerText = '37% Completed'; await sleep(600); setStepDone(3);
 
-                setStepActive(4); 
-                document.getElementById('progressPercent').innerText = '50% Completed';
-                document.getElementById('aiActiveWriting').classList.remove('hidden');
+        setStepActive(4); 
+        document.getElementById('progressPercent').innerText = '50% Completed';
+        document.getElementById('aiActiveWriting').classList.remove('hidden');
 
-                const systemPrompt = `Du bist ein präziser Bot, der Spieldateien schreibt. Generiere ein im Browser spielbares 2D Web-Spiel. Nutze HTML Canvas, CSS Styling und JavaScript. Nutze KEINE externen Bildlinks, zeichne Grafiken mit JavaScript Canvas/Emoji-Symbolen. Du musst AUSSCHLIESSLICH im folgenden JSON-Format antworten, ohne jeglichen Text davor/danach und ohne Markdown-Codeblöcke:
+        // Wir kombinieren System-Anweisung und Spiel-Prompt in einen einzigen Text!
+        const vollerPrompt = `Du bist ein präziser Bot, der Spieldateien schreibt. Generiere ein im Browser spielbares 2D Web-Spiel. Nutze HTML Canvas, CSS Styling und JavaScript. Nutze KEINE externen Bildlinks, zeichne Grafiken mit JavaScript Canvas/Emoji-Symbolen. Du musst AUSSCHLIESSLICH im folgenden JSON-Format antworten, ohne jeglichen Text davor/danach und ohne Markdown-Codeblöcke:
 {
   "dateien": [
     { "pfad": "index.html", "inhalt": "...vollständiges HTML..." },
     { "pfad": "style.css", "inhalt": "...vollständiges CSS..." },
     { "pfad": "game.js", "inhalt": "...vollständige JS Spiellogik..." }
   ]
-}`;
+}
 
-                const responseText = await callGeminiAPI(geminiKey, systemPrompt, prompt);
-                let gameData;
-                try {
-                    gameData = JSON.parse(responseText);
-                } catch(e) {
-                    const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-                    gameData = JSON.parse(cleaned);
-                }
+Hier ist die Spielbeschreibung:
+${prompt}`;
 
-                gameData.dateien.forEach(f => { generatedFiles[f.pfad] = f.inhalt; });
-                document.getElementById('aiActiveWriting').classList.add('hidden');
-                setStepDone(4);
+        const responseText = await callGeminiAPI(geminiKey, vollerPrompt);
+        let gameData;
+        try {
+            gameData = JSON.parse(responseText);
+        } catch(e) {
+            const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+            gameData = JSON.parse(cleaned);
+        }
 
-                setStepActive(5); document.getElementById('progressPercent').innerText = '62% Completed'; await sleep(800); setStepDone(5);
-                setStepActive(6); document.getElementById('progressPercent').innerText = '75% Completed'; buildIframePreview(); await sleep(800); setStepDone(6);
-                setStepActive(7); document.getElementById('progressPercent').innerText = '87% Completed'; await sleep(600); setStepDone(7);
-                
-                setStepActive(8); 
-                document.getElementById('progressPercent').innerText = '100% Completed';
-                document.getElementById('statusIndicator').innerText = 'Done!';
-                document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800';
-                setStepDone(8);
+        gameData.dateien.forEach(f => { generatedFiles[f.pfad] = f.inhalt; });
+        document.getElementById('aiActiveWriting').classList.add('hidden');
+        setStepDone(4);
 
-                document.getElementById('gameOutputCard').classList.remove('hidden');
-                buildCodeTabs();
-                switchTab('play');
+        setStepActive(5); document.getElementById('progressPercent').innerText = '62% Completed'; await sleep(800); setStepDone(5);
+        setStepActive(6); document.getElementById('progressPercent').innerText = '75% Completed'; buildIframePreview(); await sleep(800); setStepDone(6);
+        setStepActive(7); document.getElementById('progressPercent').innerText = '87% Completed'; await sleep(600); setStepDone(7);
+        
+        setStepActive(8); 
+        document.getElementById('progressPercent').innerText = '100% Completed';
+        document.getElementById('statusIndicator').innerText = 'Done!';
+        document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800';
+        setStepDone(8);
+
+        document.getElementById('gameOutputCard').classList.remove('hidden');
+        buildCodeTabs();
+        switchTab('play');
+
+    } catch (error) {
+        document.getElementById('statusIndicator').innerText = 'Error';
+        document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-red-950 text-red-300 border border-red-800';
+        showAlert("Fehler bei Generierung: " + error.message);
+    }
+}
+
+async function callGeminiAPI(apiKey, promptText) {
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: { responseMimeType: "application/json" }
+        })
+    });
+    if (!response.ok) throw new Error("API Fehler: Status " + response.status);
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text.trim();
+}
+
 
             } catch (error) {
                 document.getElementById('statusIndicator').innerText = 'Error';
