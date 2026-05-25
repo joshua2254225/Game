@@ -28,7 +28,6 @@
         ::-webkit-scrollbar-track { background: #121215; }
         ::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #c084fc; }
-        
         @keyframes stepPulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 132, 252, 0.7); }
             70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(192, 132, 252, 0); }
@@ -56,9 +55,7 @@
     </header>
 
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
         <section class="lg:col-span-5 flex flex-col gap-6">
-            
             <div class="bg-darkCard border border-gray-800/80 rounded-2xl p-5 shadow-xl">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="toggleSettings()">
                     <h2 class="font-bold text-md text-white flex items-center gap-2">
@@ -66,7 +63,6 @@
                     </h2>
                     <i id="settingsChevron" class="fa-solid fa-chevron-up text-gray-400 transition-transform"></i>
                 </div>
-                
                 <div id="settingsContent" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Dein Gemini API Key</label>
@@ -76,7 +72,7 @@
                             </span>
                             <input type="password" id="geminiKey" oninput="saveKey()" class="w-full bg-darkInput border border-gray-800 focus:border-accentPurp rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none transition-all placeholder-gray-600" placeholder="Füge deinen AIzaSy... Key hier ein">
                         </div>
-                        <p class="text-[11px] text-gray-500 mt-1.5"><i class="fa-solid fa-shield-halved"></i> Wird nur lokal in deinem Browser gespeichert. Sicher vor GitHub-Leaks!</p>
+                        <p class="text-[11px] text-gray-500 mt-1.5"><i class="fa-solid fa-shield-halved"></i> Wird nur lokal in deinem Browser gespeichert.</p>
                     </div>
                 </div>
             </div>
@@ -86,9 +82,8 @@
                     <h2 class="font-bold text-md text-white flex items-center gap-2">
                         <i class="fa-solid fa-gamepad text-accentPurp"></i> Welches Spiel erstellen?
                     </h2>
-                    <textarea id="gamePrompt" class="w-full bg-darkInput border border-gray-800 focus:border-accentPurp rounded-xl p-4 text-sm text-white focus:outline-none transition-all placeholder-gray-600 min-h-[180px] flex-1" placeholder="z.B. Ein 2D Weltraum-Shooter mit HTML Canvas. Man fliegt ein Schiff mit den Pfeiltasten und schießt mit der Leertaste auf herabfallende Rote Kreise (Asteroiden). Wenn man getroffen wird, verliert man ein Leben..."></textarea>
+                    <textarea id="gamePrompt" class="w-full bg-darkInput border border-gray-800 focus:border-accentPurp rounded-xl p-4 text-sm text-white focus:outline-none transition-all placeholder-gray-600 min-h-[180px] flex-1" placeholder="Spielbeschreibung hier rein..."></textarea>
                 </div>
-
                 <div class="space-y-3">
                     <button id="generateBtn" onclick="startGeneration()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-darkBg font-bold py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 text-sm tracking-wide">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Spiel generieren
@@ -163,12 +158,10 @@
                         <i class="fa-solid fa-file-zipper"></i> ZIP herunterladen
                     </button>
                 </div>
-
                 <div class="flex border-b border-gray-800 text-xs">
                     <button id="tabBtnPlay" onclick="switchTab('play')" class="px-4 py-2 border-b-2 border-accentPurp text-white font-semibold">Live spielen</button>
                     <button id="tabBtnCode" onclick="switchTab('code')" class="px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white">Code ansehen</button>
                 </div>
-
                 <div>
                     <div id="tabContentPlay" class="w-full aspect-video bg-black rounded-xl overflow-hidden border border-gray-800">
                         <iframe id="gameIframe" class="w-full h-full bg-white" sandbox="allow-scripts"></iframe>
@@ -185,7 +178,6 @@
     <script>
         let generatedFiles = {}; 
 
-        // Beim Laden vorherigen Key wiederherstellen
         window.onload = function() {
             const savedKey = localStorage.getItem('my_gemini_key');
             if (savedKey) { document.getElementById('geminiKey').value = savedKey; }
@@ -197,7 +189,6 @@
 
         function toggleSettings() {
             document.getElementById('settingsContent').classList.toggle('hidden');
-            document.getElementById('settingsChevron').classList.toggle('rotate-180');
         }
 
         function showAlert(msg) {
@@ -218,7 +209,6 @@
             document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-darkInput text-gray-500 border border-gray-800';
             document.getElementById('aiActiveWriting').classList.add('hidden');
             document.getElementById('gameOutputCard').classList.add('hidden');
-            document.getElementById('gameTitleDisplay').innerText = 'Projekt-Status';
             generatedFiles = {};
             document.getElementById('customAlert').classList.add('hidden');
         }
@@ -250,15 +240,15 @@
             document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-purple-950 text-purple-300 border border-purple-800';
 
             try {
-                setStepActive(1); document.getElementById('progressPercent').innerText = '12% Completed'; await sleep(1000); setStepDone(1);
-                setStepActive(2); document.getElementById('progressPercent').innerText = '25% Completed'; await sleep(1000); setStepDone(2);
-                setStepActive(3); document.getElementById('progressPercent').innerText = '37% Completed'; await sleep(800); setStepDone(3);
+                setStepActive(1); document.getElementById('progressPercent').innerText = '12% Completed'; await sleep(800); setStepDone(1);
+                setStepActive(2); document.getElementById('progressPercent').innerText = '25% Completed'; await sleep(800); setStepDone(2);
+                setStepActive(3); document.getElementById('progressPercent').innerText = '37% Completed'; await sleep(600); setStepDone(3);
 
                 setStepActive(4); 
                 document.getElementById('progressPercent').innerText = '50% Completed';
                 document.getElementById('aiActiveWriting').classList.remove('hidden');
 
-                const systemPrompt = `Du bist ein präziser Bot, der Spieldateien schreibt. Generiere ein im Browser spielbares 2D Web-Spiel. Nutze HTML Canvas, CSS Styling und JavaScript. Nutze KEINE externen Bildlinks, zeichne Grafiken mit JavaScript Canvas/Emoji-Symbolen. Du musst AUSSCHLIESSLICH im folgenden JSON-Format antworten, ohne jeglichen Text davor/danach und ohne Markdown-Codeblöcke (\`\`\`json):
+                const systemPrompt = `Du bist ein präziser Bot, der Spieldateien schreibt. Generiere ein im Browser spielbares 2D Web-Spiel. Nutze HTML Canvas, CSS Styling und JavaScript. Nutze KEINE externen Bildlinks, zeichne Grafiken mit JavaScript Canvas/Emoji-Symbolen. Du musst AUSSCHLIESSLICH im folgenden JSON-Format antworten, ohne jeglichen Text davor/danach und ohne Markdown-Codeblöcke:
 {
   "dateien": [
     { "pfad": "index.html", "inhalt": "...vollständiges HTML..." },
@@ -272,7 +262,6 @@
                 try {
                     gameData = JSON.parse(responseText);
                 } catch(e) {
-                    // Falls die KI trotz Verbot Code-Blöcke genutzt hat, schneiden wir sie ab
                     const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
                     gameData = JSON.parse(cleaned);
                 }
@@ -281,9 +270,9 @@
                 document.getElementById('aiActiveWriting').classList.add('hidden');
                 setStepDone(4);
 
-                setStepActive(5); document.getElementById('progressPercent').innerText = '62% Completed'; await sleep(1000); setStepDone(5);
-                setStepActive(6); document.getElementById('progressPercent').innerText = '75% Completed'; buildIframePreview(); await sleep(1000); setStepDone(6);
-                setStepActive(7); document.getElementById('progressPercent').innerText = '87% Completed'; await sleep(800); setStepDone(7);
+                setStepActive(5); document.getElementById('progressPercent').innerText = '62% Completed'; await sleep(800); setStepDone(5);
+                setStepActive(6); document.getElementById('progressPercent').innerText = '75% Completed'; buildIframePreview(); await sleep(800); setStepDone(6);
+                setStepActive(7); document.getElementById('progressPercent').innerText = '87% Completed'; await sleep(600); setStepDone(7);
                 
                 setStepActive(8); 
                 document.getElementById('progressPercent').innerText = '100% Completed';
@@ -303,7 +292,8 @@
         }
 
         async function callGeminiAPI(apiKey, systemInstruction, promptText) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // Korrigierte URL auf das aktuelle v1 Model-Endpoint
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -322,10 +312,8 @@
             let html = generatedFiles['index.html'] || '<h1>Fehler</h1>';
             const css = generatedFiles['style.css'] || '';
             const js = generatedFiles['game.js'] || '';
-            
             html = html.includes('</head>') ? html.replace('</head>', `<style>${css}</style></head>`) : `<style>${css}</style>` + html;
             html = html.includes('</body>') ? html.replace('</body>', `<script>${js}<\/script></body>`) : html + `<script>${js}<\/script>`;
-            
             document.getElementById('gameIframe').srcdoc = html;
         }
 
