@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Game Maker Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0b0d',
+                        darkCard: '#121215',
+                        darkInput: '#1a1a1e',
+                        accentPurp: '#c084fc',
+                        accentPurpDark: '#a855f7',
+                        successGreen: '#4ade80'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #121215; }
+        ::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c084fc; }
+        
+        @keyframes stepPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 132, 252, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(192, 132, 252, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 132, 252, 0); }
+        }
+        .active-step-icon { animation: stepPulse 1.8s infinite; }
+    </style>
+</head>
+<body class="bg-darkBg text-gray-200 min-h-screen font-sans flex flex-col">
+
+    <header class="border-b border-gray-800 bg-darkCard px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-purple-600 to-pink-500 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide text-white">Plutus AI Game Studio</h1>
+                <p class="text-xs text-gray-400">Schritt-für-Schritt Spiele-Generator</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-darkInput px-3 py-1.5 rounded-lg border border-gray-800">
+            <span class="w-2.5 h-2.5 rounded-full bg-successGreen animate-pulse"></span>
+            <span class="text-xs font-semibold text-gray-300">Lokal aktiv</span>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <div class="bg-darkCard border border-gray-800/80 rounded-2xl p-5 shadow-xl">
+                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="toggleSettings()">
+                    <h2 class="font-bold text-md text-white flex items-center gap-2">
+                        <i class="fa-solid fa-lock text-accentPurp"></i> Key-Sicherheit (Geheim)
+                    </h2>
+                    <i id="settingsChevron" class="fa-solid fa-chevron-up text-gray-400 transition-transform"></i>
+                </div>
+                
+                <div id="settingsContent" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Dein Gemini API Key</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                                <i class="fa-solid fa-key"></i>
+                            </span>
+                            <input type="password" id="geminiKey" oninput="saveKey()" class="w-full bg-darkInput border border-gray-800 focus:border-accentPurp rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none transition-all placeholder-gray-600" placeholder="Füge deinen AIzaSy... Key hier ein">
+                        </div>
+                        <p class="text-[11px] text-gray-500 mt-1.5"><i class="fa-solid fa-shield-halved"></i> Wird nur lokal in deinem Browser gespeichert. Sicher vor GitHub-Leaks!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-darkCard border border-gray-800/80 rounded-2xl p-5 shadow-xl flex-1 flex flex-col justify-between gap-4">
+                <div class="space-y-4">
+                    <h2 class="font-bold text-md text-white flex items-center gap-2">
+                        <i class="fa-solid fa-gamepad text-accentPurp"></i> Welches Spiel erstellen?
+                    </h2>
+                    <textarea id="gamePrompt" class="w-full bg-darkInput border border-gray-800 focus:border-accentPurp rounded-xl p-4 text-sm text-white focus:outline-none transition-all placeholder-gray-600 min-h-[180px] flex-1" placeholder="z.B. Ein 2D Weltraum-Shooter mit HTML Canvas. Man fliegt ein Schiff mit den Pfeiltasten und schießt mit der Leertaste auf herabfallende Rote Kreise (Asteroiden). Wenn man getroffen wird, verliert man ein Leben..."></textarea>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="generateBtn" onclick="startGeneration()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-darkBg font-bold py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 text-sm tracking-wide">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Spiel generieren
+                    </button>
+                    <button id="resetBtn" onclick="resetAll()" class="w-full bg-darkInput hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 py-2 rounded-xl transition-all text-xs">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Zurücksetzen
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            <div id="customAlert" class="hidden bg-red-950/40 border border-red-800 text-red-300 px-4 py-3 rounded-xl flex items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-lg text-red-500"></i>
+                <div class="text-xs flex-1" id="alertText">Fehler</div>
+            </div>
+
+            <div class="bg-darkCard border border-gray-800/80 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-bold text-md text-white" id="gameTitleDisplay">Projekt-Status</h2>
+                        <p class="text-xs text-gray-400" id="progressPercent">0% Completed</p>
+                    </div>
+                    <div id="statusIndicator" class="text-xs px-3 py-1 rounded-full bg-darkInput text-gray-500 border border-gray-800">Ready</div>
+                </div>
+
+                <div class="relative pl-8 space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-800" id="timeline">
+                    <div class="relative flex flex-col gap-1 text-gray-600" id="step-1">
+                        <div class="absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold" id="step-icon-1">1</div>
+                        <h3 class="text-sm font-semibold">Getting started...</h3>
+                    </div>
+                    <div class="relative flex flex-col gap-1 text-gray-600" id="step-2">
+                        <div class="absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold" id="step-icon-2">2</div>
+                        <h3 class="text-sm font-semibold">Preparing your game</h3>
+                    </div>
+                    <div class="relative flex flex-col gap-1 text-gray-600" id="step-3">
+                        <div class="absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold" id="step-icon-3">3</div>
+                        <h3 class="text-sm font-semibold">Analyzing requirements</h3>
+                    </div>
+                    <div class="relative flex flex-col gap-1 text-gray-600" id="step-4">
+                        <div class="absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold" id="step-icon-4">4</div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-semibold">Building your game</h3>
+                            <span id="aiActiveWriting" class="text-[10px] text-accentPurp bg-purple-950/40 border border-purple-800 px-2 py-0.5 rounded hidden animate-pulse">Generiere...</span>
+                        </div>
+                    </div>
+                    <div class="relative flex flex-col gap-1 text-gray-600" id="step-5">
+                        <div class="absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold" id="step-icon-5">5</div>
+                        <h3 class="text-sm font-semibold">Processing files</h3>
+                    </div>
+                    <div class="relative flex flex-col gap-1 text-gray-600" id="step-6">
+                        <div class="absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold" id="step-icon-6">6</div>
+                        <h3 class="text-sm font-semibold">Almost there...</h3>
+                    </div>
+                    <div class="relative flex flex-col gap-1 text-gray-600" id="step-7">
+                        <div class="absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold" id="step-icon-7">7</div>
+                        <h3 class="text-sm font-semibold">Finishing up</h3>
+                    </div>
+                    <div class="relative flex flex-col gap-1 text-gray-600" id="step-8">
+                        <div class="absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold" id="step-icon-8"><i class="fa-solid fa-check text-[10px]"></i></div>
+                        <h3 class="text-sm font-semibold">All done!</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div id="gameOutputCard" class="hidden bg-darkCard border border-gray-800/80 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+                    <h2 class="font-bold text-md text-white flex items-center gap-2">
+                        <i class="fa-solid fa-circle-play text-successGreen"></i> Spiel bereit!
+                    </h2>
+                    <button onclick="downloadAsZip()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all font-bold">
+                        <i class="fa-solid fa-file-zipper"></i> ZIP herunterladen
+                    </button>
+                </div>
+
+                <div class="flex border-b border-gray-800 text-xs">
+                    <button id="tabBtnPlay" onclick="switchTab('play')" class="px-4 py-2 border-b-2 border-accentPurp text-white font-semibold">Live spielen</button>
+                    <button id="tabBtnCode" onclick="switchTab('code')" class="px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white">Code ansehen</button>
+                </div>
+
+                <div>
+                    <div id="tabContentPlay" class="w-full aspect-video bg-black rounded-xl overflow-hidden border border-gray-800">
+                        <iframe id="gameIframe" class="w-full h-full bg-white" sandbox="allow-scripts"></iframe>
+                    </div>
+                    <div id="tabContentCode" class="hidden flex flex-col gap-3">
+                        <div class="flex gap-2 text-xs" id="fileTabs"></div>
+                        <pre class="bg-black p-4 rounded-xl overflow-x-auto text-xs font-mono max-h-[300px] text-purple-300 border border-gray-800" id="codeViewer"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let generatedFiles = {}; 
+
+        // Beim Laden vorherigen Key wiederherstellen
+        window.onload = function() {
+            const savedKey = localStorage.getItem('my_gemini_key');
+            if (savedKey) { document.getElementById('geminiKey').value = savedKey; }
+        }
+
+        function saveKey() {
+            localStorage.setItem('my_gemini_key', document.getElementById('geminiKey').value.trim());
+        }
+
+        function toggleSettings() {
+            document.getElementById('settingsContent').classList.toggle('hidden');
+            document.getElementById('settingsChevron').classList.toggle('rotate-180');
+        }
+
+        function showAlert(msg) {
+            const alertBox = document.getElementById('customAlert');
+            document.getElementById('alertText').innerText = msg;
+            alertBox.classList.remove('hidden');
+        }
+
+        function resetAll() {
+            for (let i = 1; i <= 8; i++) {
+                document.getElementById(`step-${i}`).className = 'relative flex flex-col gap-1 text-gray-600';
+                const icon = document.getElementById(`step-icon-${i}`);
+                icon.className = 'absolute -left-8 top-0 w-6 h-6 rounded-full bg-darkInput border border-gray-800 flex items-center justify-center text-xs font-bold';
+                icon.innerHTML = i === 8 ? '<i class="fa-solid fa-check text-[10px]"></i>' : i;
+            }
+            document.getElementById('progressPercent').innerText = '0% Completed';
+            document.getElementById('statusIndicator').innerText = 'Ready';
+            document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-darkInput text-gray-500 border border-gray-800';
+            document.getElementById('aiActiveWriting').classList.add('hidden');
+            document.getElementById('gameOutputCard').classList.add('hidden');
+            document.getElementById('gameTitleDisplay').innerText = 'Projekt-Status';
+            generatedFiles = {};
+            document.getElementById('customAlert').classList.add('hidden');
+        }
+
+        function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+        function setStepActive(num) {
+            document.getElementById(`step-${num}`).className = 'relative flex flex-col gap-1 text-white font-semibold';
+            const icon = document.getElementById(`step-icon-${num}`);
+            icon.className = 'absolute -left-8 top-0 w-6 h-6 rounded-full bg-accentPurp border-accentPurp text-darkBg flex items-center justify-center text-xs font-bold active-step-icon';
+        }
+
+        function setStepDone(num) {
+            document.getElementById(`step-${num}`).className = 'relative flex flex-col gap-1 text-successGreen';
+            const icon = document.getElementById(`step-icon-${num}`);
+            icon.className = 'absolute -left-8 top-0 w-6 h-6 rounded-full bg-successGreen border-successGreen text-darkBg flex items-center justify-center text-xs font-bold';
+            icon.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
+        }
+
+        async function startGeneration() {
+            const geminiKey = document.getElementById('geminiKey').value.trim();
+            const prompt = document.getElementById('gamePrompt').value.trim();
+
+            if (!geminiKey) { showAlert("Trage bitte zuerst deinen API-Key ein!"); return; }
+            if (!prompt) { showAlert("Beschreibe zuerst das Spiel!"); return; }
+
+            resetAll();
+            document.getElementById('statusIndicator').innerText = 'Building...';
+            document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-purple-950 text-purple-300 border border-purple-800';
+
+            try {
+                setStepActive(1); document.getElementById('progressPercent').innerText = '12% Completed'; await sleep(1000); setStepDone(1);
+                setStepActive(2); document.getElementById('progressPercent').innerText = '25% Completed'; await sleep(1000); setStepDone(2);
+                setStepActive(3); document.getElementById('progressPercent').innerText = '37% Completed'; await sleep(800); setStepDone(3);
+
+                setStepActive(4); 
+                document.getElementById('progressPercent').innerText = '50% Completed';
+                document.getElementById('aiActiveWriting').classList.remove('hidden');
+
+                const systemPrompt = `Du bist ein präziser Bot, der Spieldateien schreibt. Generiere ein im Browser spielbares 2D Web-Spiel. Nutze HTML Canvas, CSS Styling und JavaScript. Nutze KEINE externen Bildlinks, zeichne Grafiken mit JavaScript Canvas/Emoji-Symbolen. Du musst AUSSCHLIESSLICH im folgenden JSON-Format antworten, ohne jeglichen Text davor/danach und ohne Markdown-Codeblöcke (\`\`\`json):
+{
+  "dateien": [
+    { "pfad": "index.html", "inhalt": "...vollständiges HTML..." },
+    { "pfad": "style.css", "inhalt": "...vollständiges CSS..." },
+    { "pfad": "game.js", "inhalt": "...vollständige JS Spiellogik..." }
+  ]
+}`;
+
+                const responseText = await callGeminiAPI(geminiKey, systemPrompt, prompt);
+                let gameData;
+                try {
+                    gameData = JSON.parse(responseText);
+                } catch(e) {
+                    // Falls die KI trotz Verbot Code-Blöcke genutzt hat, schneiden wir sie ab
+                    const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+                    gameData = JSON.parse(cleaned);
+                }
+
+                gameData.dateien.forEach(f => { generatedFiles[f.pfad] = f.inhalt; });
+                document.getElementById('aiActiveWriting').classList.add('hidden');
+                setStepDone(4);
+
+                setStepActive(5); document.getElementById('progressPercent').innerText = '62% Completed'; await sleep(1000); setStepDone(5);
+                setStepActive(6); document.getElementById('progressPercent').innerText = '75% Completed'; buildIframePreview(); await sleep(1000); setStepDone(6);
+                setStepActive(7); document.getElementById('progressPercent').innerText = '87% Completed'; await sleep(800); setStepDone(7);
+                
+                setStepActive(8); 
+                document.getElementById('progressPercent').innerText = '100% Completed';
+                document.getElementById('statusIndicator').innerText = 'Done!';
+                document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800';
+                setStepDone(8);
+
+                document.getElementById('gameOutputCard').classList.remove('hidden');
+                buildCodeTabs();
+                switchTab('play');
+
+            } catch (error) {
+                document.getElementById('statusIndicator').innerText = 'Error';
+                document.getElementById('statusIndicator').className = 'text-xs px-3 py-1 rounded-full bg-red-950 text-red-300 border border-red-800';
+                showAlert("Fehler bei Generierung: " + error.message);
+            }
+        }
+
+        async function callGeminiAPI(apiKey, systemInstruction, promptText) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptText }] }],
+                    systemInstruction: { parts: [{ text: systemInstruction }] },
+                    generationConfig: { responseMimeType: "application/json" }
+                })
+            });
+            if (!response.ok) throw new Error("API Fehler: Status " + response.status);
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text.trim();
+        }
+
+        function buildIframePreview() {
+            let html = generatedFiles['index.html'] || '<h1>Fehler</h1>';
+            const css = generatedFiles['style.css'] || '';
+            const js = generatedFiles['game.js'] || '';
+            
+            html = html.includes('</head>') ? html.replace('</head>', `<style>${css}</style></head>`) : `<style>${css}</style>` + html;
+            html = html.includes('</body>') ? html.replace('</body>', `<script>${js}<\/script></body>`) : html + `<script>${js}<\/script>`;
+            
+            document.getElementById('gameIframe').srcdoc = html;
+        }
+
+        function buildCodeTabs() {
+            const container = document.getElementById('fileTabs'); container.innerHTML = '';
+            Object.keys(generatedFiles).forEach((filename, i) => {
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-1.5 rounded-lg border text-xs transition-all ${i === 0 ? 'bg-accentPurp text-darkBg border-accentPurp font-bold' : 'bg-darkInput text-gray-400 border-gray-800 hover:text-white'}`;
+                btn.innerText = filename;
+                btn.onclick = () => {
+                    Array.from(container.children).forEach(c => c.className = 'px-3 py-1.5 rounded-lg border text-xs bg-darkInput text-gray-400 border-gray-800 hover:text-white transition-all');
+                    btn.className = 'px-3 py-1.5 rounded-lg border text-xs bg-accentPurp text-darkBg border-accentPurp font-bold transition-all';
+                    document.getElementById('codeViewer').textContent = generatedFiles[filename];
+                };
+                container.appendChild(btn);
+            });
+            if (Object.keys(generatedFiles).length > 0) document.getElementById('codeViewer').textContent = generatedFiles[Object.keys(generatedFiles)[0]];
+        }
+
+        function switchTab(tab) {
+            const playBtn = document.getElementById('tabBtnPlay'); const codeBtn = document.getElementById('tabBtnCode');
+            const playContent = document.getElementById('tabContentPlay'); const codeContent = document.getElementById('tabContentCode');
+            if (tab === 'play') {
+                playBtn.className = "px-4 py-2 border-b-2 border-accentPurp text-white font-semibold";
+                codeBtn.className = "px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white";
+                playContent.classList.remove('hidden'); codeContent.classList.add('hidden');
+                buildIframePreview();
+            } else {
+                codeBtn.className = "px-4 py-2 border-b-2 border-accentPurp text-white font-semibold";
+                playBtn.className = "px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white";
+                codeContent.classList.remove('hidden'); playContent.classList.add('hidden');
+            }
+        }
+
+        function downloadAsZip() {
+            const zip = new JSZip();
+            Object.keys(generatedFiles).forEach(path => zip.file(path, generatedFiles[path]));
+            zip.generateAsync({type: "blob"}).then(content => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = "ki_spiel.zip";
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
