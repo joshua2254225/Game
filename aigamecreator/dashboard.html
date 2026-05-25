@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plutus AI Game Studio</title>
+    <title>Plutus Studio (Groq Engine)</title>
     <style>
-        /* Unabhängiges, fest eingebautes CSS-Styling - Schützt vor Layout-Fehlern */
+        /* Unabhängiges, fest eingebautes CSS-Styling gegen Layout-Fehler auf Vercel */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0b0b0d; color: #e2e8f0; min-height: 100vh; display: flex; flex-col: column; display: -webkit-box; display: flex; flex-direction: column; }
+        body { background-color: #0b0b0d; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
         
-        header { background-color: #121215; border-b: 1px solid #2d3748; padding: 15px 25px; display: flex; justify-content: space-between; items-center: center; border-bottom: 1px solid #2a2a30; }
+        header { background-color: #121215; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a30; }
         .logo-area { display: flex; align-items: center; gap: 12px; }
-        .logo-icon { background: linear-gradient(135deg, #a855f7, #ec4899); width: 40px; h: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
+        .logo-icon { background: linear-gradient(135deg, #f97316, #ef4444); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
         .status-badge { background-color: #1a1a1e; border: 1px solid #2a2a30; padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; }
-        .status-dot { width: 10px; height: 10px; background-color: #4ade80; border-radius: 50%; display: inline-block; }
+        .status-dot { width: 10px; height: 10px; background-color: #4ade80; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        main { max-width: 1200px; width: 100%; mx-auto: auto; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr; gap: 25px; }
+        main { max-width: 1200px; width: 100%; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr; gap: 25px; flex: 1; }
         @media(min-width: 992px) { main { grid-template-columns: 5fr 7fr; } }
 
         .card { background-color: #121215; border: 1px solid #2a2a30; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); margin-bottom: 20px; }
@@ -23,28 +24,27 @@
         label { display: block; font-size: 11px; color: #a0aec0; text-transform: uppercase; tracking: 1px; margin-bottom: 8px; font-weight: 600; }
         
         input[type="password"], textarea { width: 100%; background-color: #1a1a1e; border: 1px solid #2a2a30; border-radius: 12px; padding: 12px; color: white; font-size: 14px; transition: all 0.3s; outline: none; }
-        input[type="password"]:focus, textarea:focus { border-color: #c084fc; }
+        input[type="password"]:focus, textarea:focus { border-color: #f97316; }
         textarea { min-height: 160px; resize: vertical; }
 
-        .btn-primary { width: 100%; background: linear-gradient(90deg, #a855f7, #ec4899); border: none; color: #0b0b0d; font-weight: bold; padding: 14px; border-radius: 12px; font-size: 14px; cursor: pointer; transition: all 0.3s; letter-spacing: 0.5px; }
+        .btn-primary { width: 100%; background: linear-gradient(90deg, #f97316, #ef4444); border: none; color: white; font-weight: bold; padding: 14px; border-radius: 12px; font-size: 14px; cursor: pointer; transition: all 0.3s; letter-spacing: 0.5px; }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-secondary { width: 100%; background-color: #1a1a1e; border: 1px solid #2a2a30; color: #a0aec0; padding: 8px; border-radius: 12px; font-size: 12px; cursor: pointer; margin-top: 10px; }
         .btn-secondary:hover { color: white; background-color: #2a2a30; }
 
-        .alert-box { background-color: rgba(153, 27, 27, 0.4); border: 1px solid #991b1b; color: #fca5a5; padding: 12px; border-radius: 12px; font-size: 13px; margin-bottom: 15px; display: none; }
+        .alert-box { background-color: rgba(153, 27, 27, 0.4); border: 1px solid #991b1b; color: #fca5a5; padding: 12px; border-radius: 12px; font-size: 13px; margin-bottom: 15px; display: none; word-break: break-all; }
         
         .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #2a2a30; padding-bottom: 10px; }
         .badge-info { font-size: 12px; padding: 4px 10px; border-radius: 20px; background-color: #1a1a1e; color: #a0aec0; border: 1px solid #2a2a30; }
 
-        /* Timeline-Design */
+        /* Timeline Tracker */
         .timeline { position: relative; padding-left: 35px; }
         .timeline::before { content: ''; position: absolute; left: 12px; top: 5px; bottom: 5px; width: 2px; background-color: #2a2a30; }
         .step { position: relative; margin-bottom: 20px; color: #4a5568; font-size: 14px; transition: color 0.3s; }
         .step-icon { position: absolute; left: -35px; top: -2px; width: 26px; height: 26px; border-radius: 50%; background-color: #1a1a1e; border: 2px solid #2a2a30; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #4a5568; transition: all 0.3s; }
         
-        /* Aktive & Erledigte Schritte */
         .step.active { color: white; font-weight: 600; }
-        .step.active .step-icon { background-color: #c084fc; border-color: #c084fc; color: #0b0b0d; box-shadow: 0 0 10px rgba(192, 132, 252, 0.5); }
+        .step.active .step-icon { background-color: #f97316; border-color: #f97316; color: white; box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); }
         .step.done { color: #4ade80; }
         .step.done .step-icon { background-color: #4ade80; border-color: #4ade80; color: #0b0b0d; }
 
@@ -57,31 +57,31 @@
 
     <header>
         <div class="logo-area">
-            <div class="logo-custom logo-icon">✨</div>
+            <div class="logo-icon">⚡</div>
             <div>
-                <h1 style="font-size: 16px; color: white; font-weight: bold;">Plutus AI Game Studio</h1>
-                <p style="font-size: 11px; color: #a0aec0;">Schritt-für-Schritt Spiele-Generator</p>
+                <h1 style="font-size: 16px; color: white; font-weight: bold;">Plutus Studio (Groq Engine)</h1>
+                <p style="font-size: 11px; color: #a0aec0;">High-Speed HTML5 Spiele-Generator</p>
             </div>
         </div>
         <div class="status-badge">
             <span class="status-dot"></span>
-            <span style="color: #e2e8f0;">Studio Online</span>
+            <span style="color: #e2e8f0;">Groq Engine Online</span>
         </div>
     </header>
 
     <main>
         <section>
             <div class="card">
-                <h2>🔑 API-Key Konfiguration</h2>
-                <label>Dein Gemini API Key</label>
-                <input type="password" id="geminiKey" oninput="saveKey()" placeholder="Füge deinen AIzaSy... Key hier ein">
-                <p style="font-size: 11px; color: #718096; mt-2; margin-top: 6px;">Wird absolut sicher nur lokal in deinem Browser gesichert.</p>
+                <h2>🔑 Groq API-Schnittstelle</h2>
+                <label>Dein API Key</label>
+                <input type="password" id="groqKey" oninput="saveKey()" placeholder="Füge deinen gsk_... Key hier ein">
+                <p style="font-size: 11px; color: #718096; margin-top: 6px;">Der Key wird sicher und nur lokal in DEINEM Browser gespeichert.</p>
             </div>
 
             <div class="card">
                 <h2>🎮 Welches Spiel erstellen?</h2>
-                <textarea id="gamePrompt" placeholder="z.B. Ein 2D Weltraum-Shooter mit HTML Canvas. Man fliegt ein Schiff mit den Pfeiltasten und schießt mit der Leertaste auf herabfallende Rote Kreise..."></textarea>
-                <button id="generateBtn" onclick="startGeneration()" class="btn-primary" style="margin-top: 15px;">Spiel generieren</button>
+                <textarea id="gamePrompt" placeholder="z.B. Ein 2D Weltraum-Shooter mit HTML Canvas. Man fliegt ein Schiff mit den Pfeiltasten und schießt mit der Leertaste auf herabfallende rote Kreise. Wenn man getroffen wird, verliert man ein Leben..."></textarea>
+                <button id="generateBtn" onclick="startGeneration()" class="btn-primary" style="margin-top: 15px;">Spiel mit Groq generieren</button>
                 <button onclick="resetAll()" class="btn-secondary">Zurücksetzen</button>
             </div>
         </section>
@@ -99,40 +99,38 @@
                 </div>
 
                 <div class="timeline">
-                    <div class="step" id="step-1"><div class="step-icon" id="step-icon-1">1</div>Studio wird gestartet...</div>
-                    <div class="step" id="step-2"><div class="step-icon" id="step-icon-2">2</div>Umgebung wird vorbereitet</div>
-                    <div class="step" id="step-3"><div class="step-icon" id="step-icon-3">3</div>Anforderungen werden analysiert</div>
+                    <div class="step" id="step-1"><div class="step-icon" id="step-icon-1">1</div>Verbindung zu Groq prüfen...</div>
+                    <div class="step" id="step-2"><div class="step-icon" id="step-icon-2">2</div>Sandbox-Umgebung initialisieren</div>
+                    <div class="step" id="step-3"><div class="step-icon" id="step-icon-3">3</div>Logik und Canvas-Struktur analysieren</div>
                     <div class="step" id="step-4">
                         <div class="step-icon" id="step-icon-4">4</div>
-                        Code-Generierung läuft... <span id="writingTag" style="color: #c084fc; font-size: 10px; margin-left: 10px; display: none;">[KI schreibt...]</span>
+                        Groq generiert das Spiel... <span id="writingTag" style="color: #f97316; font-size: 10px; margin-left: 10px; display: none;">[KI schreibt...]</span>
                     </div>
-                    <div class="step" id="step-5"><div class="step-icon" id="step-icon-5">5</div>Dateistrukturen verarbeiten</div>
+                    <div class="step" id="step-5"><div class="step-icon" id="step-icon-5">5</div>Code-Integrität verifizieren</div>
                     <div class="step" id="step-6"><div class="step-icon" id="step-icon-6">6</div>Live-Vorschau rendern</div>
-                    <div class="step" id="step-7"><div class="step-icon" id="step-icon-7">7</div>Optimierungen abschließen</div>
-                    <div class="step" id="step-8"><div class="step-icon" id="step-icon-8">✓</div>Fertiggestellt!</div>
+                    <div class="step" id="step-7"><div class="step-icon" id="step-icon-7">7</div>Code sauber finalisieren</div>
+                    <div class="step" id="step-8"><div class="step-icon" id="step-icon-8">✓</div>Einsatzbereit!</div>
                 </div>
             </div>
 
             <div id="gameOutputCard" class="card hidden">
-                <h2 style="color: #4ade80;">🎮 Dein Spiel ist live spielbar!</h2>
+                <h2 style="color: #4ade80;">🎮 Dein Spiel ist live! Teste es direkt:</h2>
                 <div class="preview-box">
                     <iframe id="gameIframe" sandbox="allow-scripts"></iframe>
                 </div>
-                <p style="font-size: 12px; color: #a0aec0; margin-top: 10px; text-align: center;">Hinweis: Du kannst das Spiel direkt im obigen Fenster testen!</p>
+                <p style="font-size: 12px; color: #a0aec0; margin-top: 10px; text-align: center;">Klicke einmal in das Spielfeld, um die Tastatur-Steuerung zu starten.</p>
             </div>
         </section>
     </main>
 
     <script>
-        let generatedFiles = {};
-
         window.onload = function() {
-            const savedKey = localStorage.getItem('my_gemini_key');
-            if (savedKey) { document.getElementById('geminiKey').value = savedKey; }
+            const savedKey = localStorage.getItem('my_groq_key');
+            if (savedKey) { document.getElementById('groqKey').value = savedKey; }
         }
 
         function saveKey() {
-            localStorage.setItem('my_gemini_key', document.getElementById('geminiKey').value.trim());
+            localStorage.setItem('my_groq_key', document.getElementById('groqKey').value.trim());
         }
 
         function showAlert(msg) {
@@ -154,93 +152,92 @@
                 const icon = document.getElementById(`step-icon-${i}`);
                 icon.innerText = i === 8 ? '✓' : i;
             }
-            generatedFiles = {};
         }
 
         function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
-
-        function setStepActive(num) {
-            document.getElementById(`step-${num}`).className = 'step active';
-        }
-
-        function setStepDone(num) {
-            document.getElementById(`step-${num}`).className = 'step done';
-        }
+        function setStepActive(num) { document.getElementById(`step-${num}`).className = 'step active'; }
+        function setStepDone(num) { document.getElementById(`step-${num}`).className = 'step done'; }
 
         async function startGeneration() {
-            const geminiKey = document.getElementById('geminiKey').value.trim();
+            const groqKey = document.getElementById('groqKey').value.trim();
             const prompt = document.getElementById('gamePrompt').value.trim();
 
-            if (!geminiKey) { showAlert("Bitte gib zuerst deinen Gemini API-Key ein!"); return; }
-            if (!prompt) { showAlert("Bitte beschreibe zuerst das gewünschte Spiel!"); return; }
+            if (!groqKey) { showAlert("Bitte gib deinen Groq API-Key ein!"); return; }
+            if (!prompt) { showAlert("Bitte beschreibe zuerst dein Spiel!"); return; }
 
             resetAll();
-            document.getElementById('statusIndicator').innerText = 'Generiere...';
+            document.getElementById('statusIndicator').innerText = 'Verbinde...';
 
             try {
-                setStepActive(1); document.getElementById('progressPercent').innerText = '12%'; await sleep(600); setStepDone(1);
-                setStepActive(2); document.getElementById('progressPercent').innerText = '25%'; await sleep(600); setStepDone(2);
-                setStepActive(3); document.getElementById('progressPercent').innerText = '37%'; await sleep(500); setStepDone(3);
+                setStepActive(1); document.getElementById('progressPercent').innerText = '12%'; await sleep(400); setStepDone(1);
+                setStepActive(2); document.getElementById('progressPercent').innerText = '25%'; await sleep(400); setStepDone(2);
+                setStepActive(3); document.getElementById('progressPercent').innerText = '37%'; await sleep(300); setStepDone(3);
 
                 setStepActive(4);
                 document.getElementById('progressPercent').innerText = '50%';
                 document.getElementById('writingTag').style.display = 'inline';
+                document.getElementById('statusIndicator').innerText = 'Generiere...';
 
-                // Robuster System-Befehl für reinen HTML-Code
-                const vollerPrompt = `Erstelle ein vollständiges, im Browser spielbares 2D Mini-Spiel basierend auf dieser Idee: "${prompt}". 
-Gib mir als Antwort AUSSCHLIESSLICH den fertigen, lauffähigen HTML-Code (inklusive Styles in <style> und JavaScript Logik in <script>). Schreibe KEINE Erklärungen, KEIN Markdown und keine Code-Blöcke (keine \`\`\`html Umrandungen). Beginne direkt mit <!DOCTYPE html>`;
+                const systemPrompt = `Du bist ein erfahrener Spieleentwickler. Erstelle ein vollständiges, im Browser spielbares 2D Mini-Spiel basierend auf den Wünschen des Users.
+Gib mir als Antwort AUSSCHLIESSLICH den fertigen, lauffähigen HTML-Code zurück (inklusive Styles in <style> und JavaScript Logik in <script>). Schreibe absolut KEINEN Text davor oder danach, keine Erklärungen und KEINE Markdown-Umrandungen (keine \`\`\`html Tags). Beginne deine Antwort direkt mit <!DOCTYPE html> und beende sie mit </html>. Zeichne alle Spielelemente mittels HTML5 Canvas.`;
 
-                const responseText = await callGeminiAPI(geminiKey, vollerPrompt);
+                const responseText = await callGroqAPI(groqKey, systemPrompt, prompt);
                 
-                // Bereinigung falls doch Code-Tags mitgeliefert wurden
                 let saubererCode = responseText.replace(/```html/g, "").replace(/```/g, "").trim();
-                generatedFiles['index.html'] = saubererCode;
 
                 document.getElementById('writingTag').style.display = 'none';
                 setStepDone(4);
 
-                setStepActive(5); document.getElementById('progressPercent').innerText = '65%'; await sleep(500); setStepDone(5);
+                setStepActive(5); document.getElementById('progressPercent').innerText = '65%'; await sleep(300); setStepDone(5);
                 setStepActive(6); document.getElementById('progressPercent').innerText = '78%'; 
                 
-                // Spiel in das Iframe einspeisen
-                document.getElementById('gameIframe').srcdoc = generatedFiles['index.html'];
+                document.getElementById('gameIframe').srcdoc = saubererCode;
                 
-                await sleep(600); setStepDone(6);
-                setStepActive(7); document.getElementById('progressPercent').innerText = '90%'; await sleep(400); setStepDone(7);
+                await sleep(400); setStepDone(6);
+                setStepActive(7); document.getElementById('progressPercent').innerText = '90%'; await sleep(300); setStepDone(7);
                 
                 setStepActive(8);
                 document.getElementById('progressPercent').innerText = '100% Fertig!';
-                document.getElementById('statusIndicator').innerText = 'Abgeschlossen!';
+                document.getElementById('statusIndicator').innerText = 'Erfolgreich!';
                 setStepDone(8);
 
                 document.getElementById('gameOutputCard').classList.remove('hidden');
 
             } catch (error) {
                 document.getElementById('statusIndicator').innerText = 'Fehler';
-                showAlert("Generierungs-Fehler: " + error.message);
+                showAlert("Groq Cloud Fehler: " + error.message);
             }
         }
 
-        // Krisensichere API-Schnittstellen-Ansteuerung
-        async function callGeminiAPI(apiKey, promptText) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        async function callGroqAPI(apiKey, systemPrompt, userPrompt) {
+            const url = "https://api.groq.com/openai/v1/chat/completions";
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }]
+                    model: "openai/gpt-oss-120b", 
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature: 0.2
                 })
             });
             
             if (!response.ok) {
-                throw new Error(`Schnittstelle antwortet mit Status ${response.status}. Prüfe den Key oder versuche es gleich erneut.`);
+                const errorData = await response.json().catch(() => ({}));
+                const details = errorData.error ? errorData.error.message : `Status ${response.status}`;
+                throw new Error(details);
             }
             
             const data = await response.json();
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                return data.candidates[0].content.parts[0].text.trim();
+            if (data.choices && data.choices[0].message) {
+                return data.choices[0].message.content.trim();
             }
-            throw new Error("Unerwartete API-Antwortstruktur.");
+            throw new Error("Ungültige Antwortstruktur von den Groq-Servern erhalten.");
         }
     </script>
 </body>
