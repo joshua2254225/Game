@@ -328,8 +328,8 @@ html,body{
 <div id="leaderboardModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10002; align-items:center; justify-content:center;">
   <div style="background:#1e1e1e; width:90%; max-width:500px; border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5); position:relative; display:flex; flex-direction:column; max-height:85vh;">
     
-    <div style="background:#0b74de; color:white; padding:15px; display:flex; justify-content:between; align-items:center;">
-      <h2 style="margin:0; font-size:20px;">🏆 Global Highscores</h2>
+    <div style="background:#0b74de; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="margin:0; font-size:20px;">🏆 Global Highscores</h2>
       <button id="closeLeaderboardBtn" style="background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height:1;">&times;</button>
     </div>
 
@@ -394,18 +394,31 @@ document.addEventListener("click", e=>{
   }
 });
 
+// DIESEN NEUEN BLOCK EINSETZEN:
 onAuthStateChanged(auth, user => {
+  const minecraftCard = document.getElementById("minecraftCard");
+  
   if (user) {
     const name = user.displayName || user.email.split("@")[0] || "User";
     userBox.textContent = name;
     loginBtn.style.display = "none";
     userBox.style.display = "block";
+
+    // Schaltet Minecraft frei, wenn die gesperrte Kachel existiert
+    if (minecraftCard) {
+      minecraftCard.outerHTML = `
+        <a href="minecraft.html" class="game-card">
+          <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
+        </a>
+      `;
+    }
   } else {
     userBox.textContent = "Guest";
     userBox.style.display = "none";
     loginBtn.style.display = "block";
   }
 });
+
 
 document.getElementById("logoutBtn").onclick = ()=>signOut(auth).then(()=>location.reload());
 
@@ -419,17 +432,7 @@ document.getElementById("saveUsernameBtn").onclick = ()=>{
   }
 };
 
-const minecraftCard = document.getElementById("minecraftCard");
 
-onAuthStateChanged(auth, user => {
-  if(user){
-    minecraftCard.outerHTML = `
-      <a href="minecraft.html" class="game-card">
-        <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
-      </a>
-    `;
-  }
-});
 
 // --- LEADERBOARD POP-UP LOGIK ---
 const leaderboardModal = document.getElementById("leaderboardModal");
