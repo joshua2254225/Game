@@ -321,6 +321,27 @@ html,body{
 
 </div>
 
+<button id="openLeaderboardBtn" style="position:fixed; bottom:20px; left:20px; z-index:999; background:#0b74de; color:white; border:none; padding:12px 20px; border-radius:30px; font-weight:bold; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+  🏆 Leaderboard
+</button>
+
+<div id="leaderboardModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10002; align-items:center; justify-content:center;">
+  <div style="background:#1e1e1e; width:90%; max-width:500px; border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5); position:relative; display:flex; flex-direction:column; max-height:85vh;">
+    
+    <div style="background:#0b74de; color:white; padding:15px; display:flex; justify-content:between; align-items:center;">
+      <h2 style="margin:0; font-size:20px;">🏆 Global Highscores</h2>
+      <button id="closeLeaderboardBtn" style="background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+
+    <iframe id="leaderboardIframe" src="" style="width:100%; height:60vh; border:none; background:#1e1e1e;"></iframe>
+
+  </div>
+</div>
+
+
+
+
+  
 </main>
 
 <footer class="footer-bar">
@@ -409,6 +430,38 @@ onAuthStateChanged(auth, user => {
     `;
   }
 });
+
+// --- LEADERBOARD POP-UP LOGIK ---
+const leaderboardModal = document.getElementById("leaderboardModal");
+const leaderboardIframe = document.getElementById("leaderboardIframe");
+const openLeaderboardBtn = document.getElementById("openLeaderboardBtn");
+const closeLeaderboardBtn = document.getElementById("closeLeaderboardBtn");
+
+// Öffnen: Zeigt das Modal und lädt erst DANN die HTML-Datei ins Iframe
+openLeaderboardBtn.onclick = () => {
+  leaderboardIframe.src = "leaderboard.html"; // Hier wird die Datei geladen
+  leaderboardModal.style.display = "flex";
+};
+
+// Schließen: Versteckt das Modal und leert das Iframe (spart Ressourcen)
+closeLeaderboardBtn.onclick = () => {
+  leaderboardModal.style.display = "none";
+  leaderboardIframe.src = ""; 
+};
+
+// Schließen, wenn man außerhalb des Pop-ups auf den dunklen Hintergrund klickt
+leaderboardModal.onclick = (e) => {
+  if (e.target === leaderboardModal) {
+    leaderboardModal.style.display = "none";
+    leaderboardIframe.src = "";
+  }
+};
+
+
+
+
+
+  
 </script>
 
 </body>
