@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Leaderboard</title>
+  <style>
+    body {
+      background: #1e1e1e;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+    }
+
+    /* LADE INDIKATOR */
+    #loading {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #0b74de;
+      padding: 20px;
+      letter-spacing: 2px;
+    }
+
+    /* TABELLEN DESIGN */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #252525;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .leaderboard-table th {
+      background: #2d2d2d;
+      color: #0b74de;
+      text-align: left;
+      padding: 14px 16px;
+      font-size: 14px;
+      text-transform: uppercase;
+      font-weight: 800;
+      border-bottom: 2px solid #3d3d3d;
+    }
+
+    .leaderboard-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #333;
+      font-size: 15px;
+    }
+
+    /* HIGHLIGHT FÜR DEN EIGENEN ACCOUNT */
+    .current-user-row {
+      background: rgba(11, 116, 222, 0.18) !important;
+      border-left: 4px solid #0b74de;
+      font-weight: bold;
+    }
+
+    /* TOP 3 STYLING */
+    .rank-1 { color: #ffd700; font-weight: bold; }
+    .rank-2 { color: #c0c0c0; font-weight: bold; }
+    .rank-3 { color: #cd7f32; font-weight: bold; }
+
+    /* BUTTONS */
+    .btn {
+      background: #0b74de;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s, transform 0.1s;
+      display: block;
+      margin: 20px auto;
+    }
+
+    .btn:hover {
+      background: #0a66c2;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    /* FLOATING SCROLL TO ME BUTTON */
+    #scrollToMeBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #ff9800;
+      color: #000;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      margin: 0;
+      display: none; /* Wird erst eingeblendet, wenn der User in der Liste existiert */
+    }
+    
+    #scrollToMeBtn:hover {
+      background: #ffc107;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="scrollToMeBtn" class="btn">🎯 Find Me</button>
+
+  <table class="leaderboard-table">
+    <thead>
+      <tr>
+        <th style="width: 70px;">Rank</th>
+        <th>Username</th>
+        <th style="text-align: right;">Score</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboardBody">
+      </tbody>
+  </table>
+
+  <div id="loading">LOADING...</div>
+  
+  <button id="loadMoreBtn" class="btn" style="display: none;">Load More (100+)</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      query, 
+      orderBy, 
+      limit, 
+      startAfter, 
+      getDocs 
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    // Firebase Config (Exakt identisch mit deiner Hauptseite)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
+      authDomain: "arcadeowl.firebaseapp.com",
+      projectId: "arcadeowl",
+      appId: "1:604579422254:web:19ecace88992c998efffbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Variablen für Pagination & Zustand
+    let lastVisibleDoc = null;
+    let currentRank = 1;
+    let currentUserEmail = null;
+    let myRowElement = null;
+
+    const leaderboardBody = document.getElementById("leaderboardBody");
+    const loadingDiv = document.getElementById("loading");
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    const scrollToMeBtn = document.getElementById("scrollToMeBtn");
+
+    // HTML-Schutz gegen bösartige Usernamen (XSS Protection)
+    const escapeHtml = (str) => {
+      if (!str) return "Player";
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    };
+
+    // Hauptfunktion zum Laden der Highscores
+    async function loadScores(countToLoad) {
+      loadingDiv.style.display = "block";
+      loadMoreBtn.style.display = "none";
+
+      try {
+        let scoreQuery;
+        
+        if (!lastVisibleDoc) {
+          // Erster Aufruf: Lade die Top 25
+          scoreQuery = query(collection(db, "highscores"), orderBy("score", "desc"), limit(countToLoad));
+        } else {
+          // Nachfolgende Aufrufe: Lade ab dem letzten bekannten Dokument weiter
+          scoreQuery = query(collection(db, "highscores"), orderBy("score", "desc"), startAfter(lastVisibleDoc), limit(countToLoad));
+        }
+
+        const querySnapshot = await getDocs(scoreQuery);
+        
+        if (querySnapshot.empty) {
+          loadingDiv.textContent = currentRank === 1 ? "No highscores found yet!" : "End of leaderboard.";
+          loadMoreBtn.style.display = "none";
+          return;
+        }
+
+        // Speicher den letzten Eintrag für das nächste "Load More"
+        lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const tr = document.createElement("tr");
+
+          // Interne Identifikation via E-Mail (wird NIGHT im HTML ausgegeben!)
+          if (currentUserEmail && data.email === currentUserEmail) {
+            tr.classList.add("current-user-row");
+            myRowElement = tr; // Referenz für den Scroll-Button merken
+            scrollToMeBtn.style.display = "block";
+          }
+
+          // Schönere Zahlen-Medaillen für die Top 3
+          let rankDisplay = currentRank;
+          if (currentRank === 1) rankDisplay = '<span class="rank-1">🥇 1</span>';
+          else if (currentRank === 2) rankDisplay = '<span class="rank-2">🥈 2</span>';
+          else if (currentRank === 3) rankDisplay = '<span class="rank-3">🥉 3</span>';
+
+          tr.innerHTML = `
+            <td>${rankDisplay}</td>
+            <td>${escapeHtml(data.username)}</td>
+            <td style="text-align: right; font-weight: bold; color: #0b74de;">${data.score || 0}</td>
+          `;
+
+          leaderboardBody.appendChild(tr);
+          currentRank++;
+        });
+
+        loadingDiv.style.display = "none";
+        // Zeige den "Load More"-Button wieder an, falls potenziell noch mehr Einträge existieren
+        if (querySnapshot.docs.length === countToLoad) {
+          loadMoreBtn.style.display = "block";
+        }
+
+      } catch (error) {
+        console.error("Error loading scores:", error);
+        loadingDiv.textContent = "Error loading data.";
+      }
+    }
+
+    // Prüfe Login-Status vor dem ersten Laden, damit die Zeilen-Hervorhebung klappt
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUserEmail = user.email;
+      }
+      // Starte das initiale Laden der ersten 25 User
+      loadScores(25);
+    });
+
+    // Event-Listener für "Load More" (lädt vereinbart 100 weitere Einträge)
+    loadMoreBtn.onclick = () => {
+      loadScores(100);
+    };
+
+    // Event-Listener für das smarte Herunterscrollen zum eigenen Score
+    scrollToMeBtn.onclick = () => {
+      if (myRowElement) {
+        myRowElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+  </script>
+</body>
+</html>
