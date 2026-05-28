@@ -431,30 +431,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// DOM ELEMENTE RECOGNITION
 const userBox = document.getElementById("userBox");
-const settingsPopup = document.getElementById("settingsPopup");
 const loginBtn = document.getElementById("loginBtn");
-
-
-
-    // Schaltet Minecraft frei, wenn die gesperrte Kachel existiert
-    if (minecraftCard) {
-      minecraftCard.outerHTML = `
-        <a href="minecraft.html" class="game-card">
-          <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
-        </a>
-      `;
-    }
-  } else {
-    userBox.textContent = "Guest";
-    userBox.style.display = "none";
-    loginBtn.style.display = "block";
-  }
-});
-
-
-
-// --- UNIFIZIERTE GRAND MODAL LOGIK ---
 const grandModal = document.getElementById("grandModal");
 const closeGrandModalBtn = document.getElementById("closeGrandModalBtn");
 const tabSettings = document.getElementById("tabSettings");
@@ -463,7 +442,7 @@ const panelSettings = document.getElementById("panelSettings");
 const panelLeaderboard = document.getElementById("panelLeaderboard");
 const grandLeaderboardIframe = document.getElementById("grandLeaderboardIframe");
 
-// Elemente aus den Optionen
+// EINSTELLUNGEN ELEMENTE
 const systemDefaultToggle = document.getElementById("systemDefaultToggle");
 const themeRadioGroup = document.getElementById("themeRadioGroup");
 const darkModeRadio = document.getElementById("darkModeRadio");
@@ -472,27 +451,65 @@ const leaderboardToggle = document.getElementById("leaderboardToggle");
 const leaderboardToggleSection = document.getElementById("leaderboardToggleSection");
 const leaderboardNotice = document.getElementById("leaderboardNotice");
 
-// 1. Modal öffnen beim Klick auf das User-Feld
+// 1. ZENTRALE AUTH-STEUERUNG (Firebase Status-Check)
+onAuthStateChanged(auth, user => {
+  const minecraftCard = document.getElementById("minecraftCard");
+  
+  if (user) {
+    const name = user.displayName || user.email.split("@")[0] || "User";
+    userBox.textContent = name;
+    loginBtn.style.display = "none";
+    userBox.style.display = "block";
+
+    // Minecraft Kachel freischalten
+    if (minecraftCard) {
+      minecraftCard.outerHTML = `
+        <a href="minecraft.html" class="game-card">
+          <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
+        </a>
+      `;
+    }
+
+    // Leaderboard Optionen aktivieren
+    leaderboardToggle.disabled = false;
+    leaderboardToggleSection.style.opacity = "1";
+    leaderboardNotice.style.display = "none";
+  } else {
+    // Gast Modus
+    userBox.textContent = "Guest";
+    userBox.style.display = "none";
+    loginBtn.style.display = "block";
+
+    // Leaderboard Optionen sperren & Reiter ausblenden
+    leaderboardToggle.checked = false;
+    leaderboardToggle.disabled = true;
+    leaderboardToggleSection.style.opacity = "0.5";
+    leaderboardNotice.style.display = "block";
+    tabLeaderboard.style.display = "none";
+    switchTab("settings");
+  }
+});
+
+// 2. OPEN & CLOSE MODAL LOGIK
 userBox.addEventListener("click", e => {
   e.stopPropagation();
   grandModal.style.display = "flex";
 });
 
-// 2. Modal schließen & aufräumen (Iframe leeren spart Datenvolumen!)
 const closeGrandModal = () => {
   grandModal.style.display = "none";
   grandLeaderboardIframe.src = "";
-  switchTab("settings"); // Setzt die Ansicht beim nächsten Öffnen auf Settings zurück
+  switchTab("settings"); 
 };
 closeGrandModalBtn.onclick = closeGrandModal;
 grandModal.onclick = (e) => { if (e.target === grandModal) closeGrandModal(); };
 
-// 3. Tab-Wechsel Logik
+// 3. TAB-WECHSEL STEUERUNG
 const switchTab = (tab) => {
   if (tab === "settings") {
     panelSettings.style.display = "block";
     panelLeaderboard.style.display = "none";
-    grandLeaderboardIframe.src = ""; // Stoppt das Iframe im Hintergrund
+    grandLeaderboardIframe.src = ""; 
     tabSettings.style.borderBottomColor = "#0b74de";
     tabSettings.style.color = "white";
     tabLeaderboard.style.borderBottomColor = "transparent";
@@ -500,7 +517,8 @@ const switchTab = (tab) => {
   } else if (tab === "leaderboard") {
     panelSettings.style.display = "none";
     panelLeaderboard.style.display = "block";
-    // ERST JETZT laden wir die Datei ins Iframe!
+    
+    // Iframe Inhalt erst beim Klick anfordern
     if (!grandLeaderboardIframe.src.includes("leaderboard.html")) {
       grandLeaderboardIframe.src = "leaderboard.html";
     }
@@ -513,7 +531,7 @@ const switchTab = (tab) => {
 tabSettings.onclick = () => switchTab("settings");
 tabLeaderboard.onclick = () => switchTab("leaderboard");
 
-// 4. Personalisierung: System-Default schaltet Radio-Buttons frei/starr
+// 4. PERSONALISIERUNG (System Default Logik)
 systemDefaultToggle.onchange = () => {
   const isDefault = systemDefaultToggle.checked;
   darkModeRadio.disabled = isDefault;
@@ -525,60 +543,46 @@ systemDefaultToggle.onchange = () => {
   }
 };
 
-// 5. Leaderboard Schalter steuert Sichtbarkeit des Tabs oben
+// 5. LEADERBOARD TOGGLE (Schalter blendet Reiter ein/aus)
 leaderboardToggle.onchange = () => {
   if (leaderboardToggle.checked) {
     tabLeaderboard.style.display = "block";
   } else {
     tabLeaderboard.style.display = "none";
-    switchTab("settings"); // Falls man im Leaderboard war und ausschaltet
+    switchTab("settings");
   }
 };
 
-// 6. Account-Buttons verlinken & absichern
+// 6. ACCOUNT OPTIONEN (Aktionen)
+document.getElementById("saveUsernameBtn").onclick = () => {
+  const newName = document.getElementById("usernameInput").value.trim();
+  if (newName && auth.currentUser) {
+    updateProfile(auth.currentUser, { displayName: newName }).then(() => {
+      userBox.textContent = newName;
+      alert("Username updated successfully!");
+    }).catch(err => alert(err.message));
+  }
+};
+
 document.getElementById("switchAccountBtn").onclick = () => {
   window.location.href = "login.html";
 };
+
+document.getElementById("logoutBtn").onclick = () => signOut(auth).then(() => location.reload());
 
 document.getElementById("deleteAccountBtn").onclick = () => {
   if (auth.currentUser) {
     if (confirm("⚠️ Are you sure you want to permanently DELETE your account? This cannot be undone!")) {
       auth.currentUser.delete()
         .then(() => location.reload())
-        .catch(err => alert("Error: Please log in again before deleting your account.\n" + err.message));
+        .catch(err => alert("Error: Please log in again before trying to delete your account.\n" + err.message));
     }
   } else {
     alert("You are not logged in!");
   }
 };
-
-// 7. Synchronisation mit dem Firebase-Login-Status (Erweitere dein bestehendes onAuthStateChanged!)
-onAuthStateChanged(auth, user => {
-  if (user) {
-    // Eingeloggt -> Leaderboard Optionen freischalten
-    leaderboardToggle.disabled = false;
-    leaderboardToggleSection.style.opacity = "1";
-    leaderboardNotice.style.display = "none";
-  } else {
-    // Gast -> Leaderboard sperren und wegschalten
-    leaderboardToggle.checked = false;
-    leaderboardToggle.disabled = true;
-    leaderboardToggleSection.style.opacity = "0.5";
-    leaderboardNotice.style.display = "block";
-    tabLeaderboard.style.display = "none";
-    switchTab("settings");
-  }
-});
-
-
-
-
-
-
-
-
-  
 </script>
+
 
 </body>
 </html>
