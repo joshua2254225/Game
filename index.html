@@ -263,11 +263,13 @@ html,body{
 
   
 
-<div class="game-card" style="display: block; min-height: 150px; background: #1e1e1e; overflow: hidden; position: relative;">
+<div class="game-card monetag-container" style="display: block; min-height: 150px; background: #1e1e1e; overflow: hidden; position: relative;">
   <script>(function(s){s.dataset.zone='11026762',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
   <style>
-    /* Zwingt das Monetag-Element, sich exakt in deine Kachel zu setzen */
-    div[id^="pro_"], div[class^="pro_"], iframe {
+    /* Zwingt das Monetag-Element, sich NUR innerhalb dieser einen Kachel zu strecken */
+    .monetag-container div[id^="pro_"], 
+    .monetag-container div[class^="pro_"], 
+    .monetag-container iframe {
       width: 100% !important;
       height: 100% !important;
       position: absolute !important;
@@ -276,6 +278,7 @@ html,body{
     }
   </style>
 </div>
+
 
 
 
