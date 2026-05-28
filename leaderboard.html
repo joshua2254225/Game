@@ -122,134 +122,129 @@
   
   <button id="loadMoreBtn" class="btn" style="display: none;">Load More (100+)</button>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      query, 
-      orderBy, 
-      limit, 
-      startAfter, 
-      getDocs 
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-    // Firebase Config (Exakt identisch mit deiner Hauptseite)
-    const firebaseConfig = {
-      apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
-      authDomain: "arcadeowl.firebaseapp.com",
-      projectId: "arcadeowl",
-      appId: "1:604579422254:web:19ecace88992c998efffbf"
-    };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
 
-    // Variablen für Pagination & Zustand
-    let lastVisibleDoc = null;
-    let currentRank = 1;
-    let currentUserEmail = null;
-    let myRowElement = null;
 
-    const leaderboardBody = document.getElementById("leaderboardBody");
-    const loadingDiv = document.getElementById("loading");
-    const loadMoreBtn = document.getElementById("loadMoreBtn");
-    const scrollToMeBtn = document.getElementById("scrollToMeBtn");
 
-    // HTML-Schutz gegen bösartige Usernamen (XSS Protection)
-    const escapeHtml = (str) => {
-      if (!str) return "Player";
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    };
+  
+          <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  import { 
+    getFirestore, 
+    collection, 
+    query, 
+    orderBy, 
+    limit, 
+    startAfter, 
+    getDocs 
+  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-    // Hauptfunktion zum Laden der Highscores
-    async function loadScores(countToLoad) {
-      loadingDiv.style.display = "block";
-      loadMoreBtn.style.display = "none";
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2tHsWgZjPuGXdD90THTbwA_mRLt4D8Q8",
+    authDomain: "arcadeowl.firebaseapp.com",
+    projectId: "arcadeowl",
+    appId: "1:604579422254:web:19ecace88992c998efffbf"
+  };
 
-      try {
-        let scoreQuery;
-        
-        if (!lastVisibleDoc) {
-          // Erster Aufruf: Lade die Top 25
-          scoreQuery = query(collection(db, "highscores"), orderBy("score", "desc"), limit(countToLoad));
-        } else {
-          // Nachfolgende Aufrufe: Lade ab dem letzten bekannten Dokument weiter
-          scoreQuery = query(collection(db, "highscores"), orderBy("score", "desc"), startAfter(lastVisibleDoc), limit(countToLoad));
-        }
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-        const querySnapshot = await getDocs(scoreQuery);
-        
-        if (querySnapshot.empty) {
-          loadingDiv.textContent = currentRank === 1 ? "No highscores found yet!" : "End of leaderboard.";
-          loadMoreBtn.style.display = "none";
-          return;
-        }
+  let lastVisibleDoc = null;
+  let currentRank = 1;
+  let currentUserEmail = null;
+  let myRowElement = null;
 
-        // Speicher den letzten Eintrag für das nächste "Load More"
-        lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+  const leaderboardBody = document.getElementById("leaderboardBody");
+  const loadingDiv = document.getElementById("loading");
+  const loadMoreBtn = document.getElementById("loadMoreBtn");
+  const scrollToMeBtn = document.getElementById("scrollToMeBtn");
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const tr = document.createElement("tr");
+  const escapeHtml = (str) => {
+    if (!str) return "Player";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  };
 
-          // Interne Identifikation via E-Mail (wird NIGHT im HTML ausgegeben!)
-          if (currentUserEmail && data.email === currentUserEmail) {
-            tr.classList.add("current-user-row");
-            myRowElement = tr; // Referenz für den Scroll-Button merken
-            scrollToMeBtn.style.display = "block";
-          }
+  async function loadScores(countToLoad) {
+    loadingDiv.style.display = "block";
+    loadingDiv.textContent = "LOADING...";
+    loadMoreBtn.style.display = "none";
 
-          // Schönere Zahlen-Medaillen für die Top 3
-          let rankDisplay = currentRank;
-          if (currentRank === 1) rankDisplay = '<span class="rank-1">🥇 1</span>';
-          else if (currentRank === 2) rankDisplay = '<span class="rank-2">🥈 2</span>';
-          else if (currentRank === 3) rankDisplay = '<span class="rank-3">🥉 3</span>';
-
-          tr.innerHTML = `
-            <td>${rankDisplay}</td>
-            <td>${escapeHtml(data.username)}</td>
-            <td style="text-align: right; font-weight: bold; color: #0b74de;">${data.score || 0}</td>
-          `;
-
-          leaderboardBody.appendChild(tr);
-          currentRank++;
-        });
-
-        loadingDiv.style.display = "none";
-        // Zeige den "Load More"-Button wieder an, falls potenziell noch mehr Einträge existieren
-        if (querySnapshot.docs.length === countToLoad) {
-          loadMoreBtn.style.display = "block";
-        }
-
-      } catch (error) {
-        console.error("Error loading scores:", error);
-        loadingDiv.textContent = "Error loading data.";
+    try {
+      let scoreQuery;
+      // Wir greifen explizit auf die Sammlung "highscores" zu
+      const collectionRef = collection(db, "highscores");
+      
+      if (!lastVisibleDoc) {
+        scoreQuery = query(collectionRef, orderBy("score", "desc"), limit(countToLoad));
+      } else {
+        scoreQuery = query(collectionRef, orderBy("score", "desc"), startAfter(lastVisibleDoc), limit(countToLoad));
       }
+
+      const querySnapshot = await getDocs(scoreQuery);
+      
+      if (querySnapshot.empty) {
+        loadingDiv.style.display = "block";
+        loadingDiv.textContent = currentRank === 1 ? "No highscores found yet!" : "End of leaderboard.";
+        loadMoreBtn.style.display = "none";
+        return;
+      }
+
+      lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const tr = document.createElement("tr");
+
+        if (currentUserEmail && data.email === currentUserEmail) {
+          tr.classList.add("current-user-row");
+          myRowElement = tr;
+          scrollToMeBtn.style.display = "block";
+        }
+
+        let rankDisplay = currentRank;
+        if (currentRank === 1) rankDisplay = '<span class="rank-1">🥇 1</span>';
+        else if (currentRank === 2) rankDisplay = '<span class="rank-2">🥈 2</span>';
+        else if (currentRank === 3) rankDisplay = '<span class="rank-3">🥉 3</span>';
+
+        tr.innerHTML = `
+          <td>${rankDisplay}</td>
+          <td>${escapeHtml(data.username)}</td>
+          <td style="text-align: right; font-weight: bold; color: #0b74de;">${data.score || 0}</td>
+        `;
+
+        leaderboardBody.appendChild(tr);
+        currentRank++;
+      });
+
+      loadingDiv.style.display = "none";
+      if (querySnapshot.docs.length === countToLoad) {
+        loadMoreBtn.style.display = "block";
+      }
+
+    } catch (error) {
+      console.error("Detailed error info:", error);
+      loadingDiv.textContent = "Error loading data. Check console.";
     }
+  }
 
-    // Prüfe Login-Status vor dem ersten Laden, damit die Zeilen-Hervorhebung klappt
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        currentUserEmail = user.email;
-      }
-      // Starte das initiale Laden der ersten 25 User
-      loadScores(25);
-    });
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      currentUserEmail = user.email;
+    }
+    loadScores(25);
+  });
 
-    // Event-Listener für "Load More" (lädt vereinbart 100 weitere Einträge)
-    loadMoreBtn.onclick = () => {
-      loadScores(100);
-    };
+  loadMoreBtn.onclick = () => loadScores(100);
 
-    // Event-Listener für das smarte Herunterscrollen zum eigenen Score
-    scrollToMeBtn.onclick = () => {
-      if (myRowElement) {
-        myRowElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    };
-  </script>
+  scrollToMeBtn.onclick = () => {
+    if (myRowElement) {
+      myRowElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+</script>
+
 </body>
 </html>
