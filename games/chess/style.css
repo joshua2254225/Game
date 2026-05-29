@@ -17,18 +17,27 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   min-height: 100%;
-  background: radial-gradient(1200px 700px at 20% 0%, rgba(124, 92, 255, 0.14), transparent 50%),
-              radial-gradient(900px 500px at 100% 10%, rgba(45, 212, 191, 0.12), transparent 45%),
-              var(--bg);
+  background:
+    radial-gradient(1200px 700px at 20% 0%, rgba(124, 92, 255, 0.14), transparent 50%),
+    radial-gradient(900px 500px at 100% 10%, rgba(45, 212, 191, 0.12), transparent 45%),
+    var(--bg);
   color: var(--text);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-button, select {
+button,
+select {
   font: inherit;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
 }
 
 .app-shell {
@@ -109,12 +118,13 @@ button, select {
 .layout {
   margin-top: 22px;
   display: grid;
-  grid-template-columns: minmax(320px, 1.1fr) minmax(290px, 0.7fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.7fr);
   gap: 22px;
   align-items: start;
 }
 
-.board-panel, .side-panel .card {
+.board-panel,
+.side-panel .card {
   background: rgba(23, 26, 33, 0.85);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -124,32 +134,46 @@ button, select {
 
 .board-panel {
   padding: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
+/* Wichtig: Board bleibt immer exakt quadratisch */
 .board {
-  width: min(86vw, 760px);
-  max-width: 100%;
+  width: min(100%, 760px);
   aspect-ratio: 1 / 1;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr));
   border-radius: 18px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex: 0 0 auto;
 }
 
 .square {
   position: relative;
   border: 0;
   padding: 0;
+  min-width: 0;
+  min-height: 0;
   display: grid;
   place-items: center;
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-size: clamp(1.55rem, 4vw, 3rem);
+  line-height: 1;
   cursor: pointer;
   user-select: none;
+  aspect-ratio: 1 / 1;
 }
 
-.square.light { background: var(--light-square); }
-.square.dark { background: var(--dark-square); }
+.square.light {
+  background: var(--light-square);
+}
+
+.square.dark {
+  background: var(--dark-square);
+}
 
 .square .coord {
   position: absolute;
@@ -161,7 +185,7 @@ button, select {
 }
 
 .square .piece {
-  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.24));
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.24));
 }
 
 .square.white-piece .piece {
@@ -184,7 +208,7 @@ button, select {
 
 .square.selected::after {
   border: 4px solid rgba(124, 92, 255, 0.9);
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.15);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
 .square.move-target::before {
@@ -263,27 +287,55 @@ button, select {
 }
 
 .note code {
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
   padding: 2px 6px;
   border-radius: 8px;
   color: #dbeafe;
 }
 
 @media (max-width: 980px) {
-  .topbar, .layout {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-  }
-
   .topbar {
     align-items: stretch;
+    flex-direction: column;
   }
 
   .toolbar {
     justify-content: flex-start;
   }
 
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .board-panel {
+    padding: 14px;
+  }
+
+  .board {
+    width: min(100%, 760px);
+  }
+}
+
+@media (max-width: 540px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .topbar,
+  .board-panel,
+  .card {
+    border-radius: 18px;
+  }
+
   .board {
     width: 100%;
   }
-}
+
+  .square {
+    font-size: clamp(1.2rem, 5vw, 2.2rem);
+  }
+
+  .square.selected::after {
+    border-width: 3px;
+  }
+  }
