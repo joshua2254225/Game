@@ -53,7 +53,7 @@ function toggleFlip() {
 // CLICK HANDLING
 // ----------------------
 function handleSquareClick(r, c) {
-  const moveResult = game.handleClick(r, c);
+  const moveResult = game.selectSquare(r, c);
 
   if (!moveResult) {
     render();
