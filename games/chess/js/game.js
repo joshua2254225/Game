@@ -611,3 +611,8 @@ export class ChessGame {
     return notation;
   }
 }
+
+
+export function createGame() {
+  return new ChessGame();
+}
