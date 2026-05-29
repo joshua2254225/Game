@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arcade Chess</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>Arcade Chess</h1>
+        <p>Modularer Chess-Startpunkt mit AI- und Multiplayer-Hooks.</p>
+      </div>
+
+      <div class="toolbar">
+        <button id="newGameBtn" class="btn primary">New Game</button>
+        <button id="flipBtn" class="btn">Flip Board</button>
+
+        <label class="field">
+          <span>Mode</span>
+          <select id="modeSelect">
+            <option value="local">Local 2P</option>
+            <option value="ai">vs AI</option>
+            <option value="online" disabled>Online (soon)</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>AI Color</span>
+          <select id="aiColorSelect">
+            <option value="b">Black</option>
+            <option value="w">White</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="board-panel">
+        <div id="board" class="board" aria-label="Chess board"></div>
+      </section>
+
+      <aside class="side-panel">
+        <div class="card">
+          <h2>Status</h2>
+          <p id="statusText">Loading...</p>
+        </div>
+
+        <div class="card">
+          <h2>Captured</h2>
+          <div class="captured-block">
+            <div>
+              <h3>White captured</h3>
+              <div id="capturedWhite" class="captured-list"></div>
+            </div>
+            <div>
+              <h3>Black captured</h3>
+              <div id="capturedBlack" class="captured-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Move History</h2>
+          <ol id="historyList" class="history"></ol>
+        </div>
+
+        <div class="card note">
+          <h2>Roadmap</h2>
+          <p>AI: <code>js/ai.js</code></p>
+          <p>Multiplayer/Firebase: <code>js/multiplayer.js</code></p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
