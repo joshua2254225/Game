@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Lava Jump 🌋</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ══ ROTATE OVERLAY ════════════════════════════════════════════════════ -->
+  <div id="rotate-overlay">
+    <div class="rotate-content">
+      <div class="rotate-icon">📱</div>
+      <h2>Rotate Your Device!</h2>
+      <p>Lava Jump requires landscape mode to play.</p>
+    </div>
+  </div>
+
+  <!-- ══ MAIN MENU ══════════════════════════════════════════════════════════ -->
+  <div id="main-menu" class="screen">
+    <div class="lava-bg-anim"></div>
+    <div class="menu-inner">
+      <div class="game-logo">
+        <h1 class="title-text">LAVA<br>JUMP</h1>
+        <div class="title-sub">🌋 Don't Fall In!</div>
+      </div>
+      <div class="menu-buttons">
+        <button class="btn btn-play"   id="btn-play">▶ PLAY</button>
+        <button class="btn btn-levels" id="btn-levels">⭐ LEVELS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LEVEL SELECT ═══════════════════════════════════════════════════════ -->
+  <div id="level-select" class="screen hidden">
+    <div class="menu-inner">
+      <h2 class="screen-title">SELECT LEVEL</h2>
+      <div class="levels-grid" id="levels-grid"></div>
+      <button class="btn btn-back" id="btn-back-from-levels">◀ BACK</button>
+    </div>
+  </div>
+
+  <!-- ══ GAME HUD ════════════════════════════════════════════════════════════ -->
+  <div id="game-hud" class="hidden">
+    <div class="hud-topleft">
+      <div class="hud-pill">Lvl <span id="hud-level-num">1</span></div>
+    </div>
+    <div class="hud-topcenter">
+      <div class="hud-timer" id="hud-timer">01:30</div>
+    </div>
+    <div class="hud-topright">
+      <div class="hud-coins">🪙 <span id="hud-coins">0/3</span></div>
+      <button class="btn-pause-hud" id="btn-pause">⏸</button>
+    </div>
+    <div class="camera-panel">
+      <button class="cam-btn active" data-cam="0" title="Third Person">👁</button>
+      <button class="cam-btn"        data-cam="1" title="Isometric">🔭</button>
+      <button class="cam-btn"        data-cam="2" title="Top Down">⬇</button>
+    </div>
+  </div>
+
+  <!-- ══ TOUCH CONTROLS ═════════════════════════════════════════════════════ -->
+  <div id="touch-controls" class="hidden">
+    <div id="joystick-zone">
+      <div id="joystick-base">
+        <div id="joystick-thumb"></div>
+      </div>
+    </div>
+    <div id="jump-btn"><span>JUMP</span></div>
+  </div>
+
+  <!-- ══ COUNTDOWN ══════════════════════════════════════════════════════════ -->
+  <div id="countdown-overlay" class="hidden">
+    <div class="countdown-box">
+      <div class="countdown-label">GET READY!</div>
+      <div class="countdown-num" id="countdown-num">5</div>
+      <button class="btn btn-cancel" id="btn-cancel-countdown">✕ Cancel</button>
+    </div>
+  </div>
+
+  <!-- ══ PAUSE MENU ══════════════════════════════════════════════════════════ -->
+  <div id="pause-menu" class="screen hidden">
+    <div class="menu-inner">
+      <h2 class="screen-title">⏸ PAUSED</h2>
+      <div class="menu-buttons">
+        <button class="btn btn-play"   id="btn-resume">▶ RESUME</button>
+        <button class="btn btn-levels" id="btn-restart-from-pause">↺ RESTART</button>
+        <button class="btn btn-back"   id="btn-menu-from-pause">⌂ MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LEVEL COMPLETE ══════════════════════════════════════════════════════ -->
+  <div id="level-complete" class="screen hidden">
+    <div class="menu-inner">
+      <h2 class="screen-title complete-title">LEVEL COMPLETE!</h2>
+      <div class="stars-row"    id="stars-display"></div>
+      <div class="score-details" id="score-details"></div>
+      <div class="menu-buttons">
+        <button class="btn btn-play"   id="btn-next-level">▶▶ NEXT LEVEL</button>
+        <button class="btn btn-levels" id="btn-retry-from-complete">↺ RETRY</button>
+        <button class="btn btn-back"   id="btn-menu-from-complete">⌂ MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GAME OVER ═══════════════════════════════════════════════════════════ -->
+  <div id="game-over" class="screen hidden">
+    <div class="menu-inner">
+      <h2 class="screen-title over-title">GAME OVER</h2>
+      <p class="over-sub" id="over-reason">You fell into the lava! 🌋</p>
+      <div class="menu-buttons">
+        <button class="btn btn-play" id="btn-retry-from-over">↺ TRY AGAIN</button>
+        <button class="btn btn-back" id="btn-menu-from-over">⌂ MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CANVAS ══════════════════════════════════════════════════════════════ -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- ══ SCRIPTS ════════════════════════════════════════════════════════════ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+    </html>
