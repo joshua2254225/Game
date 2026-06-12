@@ -30,6 +30,8 @@ class App {
     this.elements.gameScreen = document.getElementById("game-screen");
     this.elements.gameCanvas = document.getElementById("game-canvas");
 
+    this.elements.pauseMenu = document.getElementById("pause-menu");
+
     this.elements.btnNewGame = document.getElementById("btn-new-game");
     this.elements.btnContinue = document.getElementById("btn-continue");
     this.elements.btnSettings = document.getElementById("btn-settings");
@@ -270,7 +272,7 @@ class App {
 
   handleKeyDown(event) {
     if (event.key === "Escape" && this.isGameStarted) {
-      const pauseMenu = document.getElementById("pause-menu");
+      const pauseMenu = this.elements.pauseMenu;
       if (!pauseMenu) return;
 
       const isHidden = pauseMenu.classList.contains("hidden");
