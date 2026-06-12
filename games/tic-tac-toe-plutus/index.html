@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcadeOwl Player</title>
+    <style>
+        /* Verhindert Scrollbalken auf der Hauptseite */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Der blaue Banner oben */
+        .banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #007bff; /* Schönes Standard-Blau */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Das Schließen-X oben links */
+        .close-btn {
+            position: absolute;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        .close-btn:hover {
+            opacity: 0.7;
+        }
+
+        /* Der Titel in der Mitte */
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Container für das Iframe unter dem Banner */
+        .iframe-container {
+            position: absolute;
+            top: 50px; /* Höhe des Banners */
+            left: 0;
+            width: 100%;
+            height: calc(100% - 50px);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="banner">
+        <a href="https://arcadeowl.vercel.app/index.html" class="close-btn" title="Schließen">&times;</a>
+        <div class="title">ARCADEOWL</div>
+    </div>
+
+    <div class="iframe-container">
+        <iframe src="https://www.plutus.gg/aigame?g=6a14883ed6d8ea0022fa3226" allowfullscreen></iframe>
+    </div>
+
+</body>
+</html>
