@@ -1,0 +1,1222 @@
+/* ============================================================================
+   CITY RACER — hud.css
+   All in-game HUD elements:
+   speedometer, minimap, money, damage, gear, compass, wanted stars,
+   race overlay, taxi timer, boost bar, touch controls, pause button.
+   Assumes style.css custom properties are already loaded.
+   ============================================================================ */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HUD ROOT CONTAINER
+   Covers the full viewport but passes pointer events through by default.
+   Individual interactive children re-enable pointer events as needed.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#hud {
+  position:         fixed;
+  inset:            0;
+  z-index:          var(--z-hud);
+  pointer-events:   none;
+  font-family:      var(--font-ui);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CORNER ANCHORS
+   Four fixed anchor points for HUD panels.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.hud-tl { position: absolute; top: 16px; left:  16px; }   /* top-left     */
+.hud-tr { position: absolute; top: 16px; right: 16px; }   /* top-right    */
+.hud-bl { position: absolute; bottom: 24px; left:  16px; }/* bottom-left  */
+.hud-br { position: absolute; bottom: 24px; right: 16px; }/* bottom-right */
+.hud-tc { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); }  /* top-center */
+.hud-bc { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); }/* bot-center */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PAUSE BUTTON  (top-right corner)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#btn-pause-hud {
+  pointer-events:  all;
+  width:           42px;
+  height:          42px;
+  border-radius:   var(--r-md);
+  background:      rgba(10,12,16,0.75);
+  border:          1px solid var(--glass-border);
+  color:           var(--clr-light-2);
+  font-size:       18px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  cursor:          pointer;
+  transition:
+    background     var(--dur-fast),
+    color          var(--dur-fast),
+    transform      var(--dur-fast);
+  backdrop-filter: blur(6px);
+}
+
+#btn-pause-hud:hover  { background: rgba(255,102,0,0.2); color: var(--clr-accent); }
+#btn-pause-hud:active { transform: scale(0.90); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SPEEDOMETER CLUSTER  (bottom-right)
+   Contains: speed reading, unit label, gear indicator, boost bar
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#speedo-cluster {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     flex-end;
+  gap:             var(--sp-2);
+}
+
+/* Main speed number */
+.speedo-value {
+  font-family:     var(--font-display);
+  font-size:       clamp(2.8rem, 5vw, 4rem);
+  font-weight:     900;
+  line-height:     1;
+  color:           var(--clr-white);
+  letter-spacing:  -0.02em;
+  text-shadow:     0 2px 12px rgba(0,0,0,0.8);
+  transition:      color var(--dur-mid);
+}
+
+.speedo-value.overspeed { color: var(--clr-red); animation: glowPulse 0.6s var(--ease-in-out) infinite; }
+
+/* km/h label */
+.speedo-unit {
+  font-size:       var(--fs-sm);
+  font-weight:     700;
+  letter-spacing:  0.14em;
+  color:           var(--clr-light-1);
+  text-transform:  uppercase;
+  margin-top:      -4px;
+  text-align:      right;
+}
+
+/* Speedo arc bar — visual arc behind the number */
+.speedo-arc-wrap {
+  position:        relative;
+  width:           110px;
+  height:          56px;
+  overflow:        hidden;
+}
+
+.speedo-arc-bg,
+.speedo-arc-fill {
+  position:        absolute;
+  bottom:          0;
+  left:            0;
+  width:           110px;
+  height:          110px;
+  border-radius:   50%;
+  border:          5px solid transparent;
+  box-sizing:      border-box;
+}
+
+.speedo-arc-bg {
+  border-color:    var(--clr-dark-4);
+}
+
+.speedo-arc-fill {
+  border-color:    var(--clr-accent) transparent transparent transparent;
+  transform-origin: center bottom;
+  transition:      transform 0.15s var(--ease-out);
+}
+
+/* ── Gear indicator ───────────────────────────────────────────────────── */
+.gear-indicator {
+  font-family:     var(--font-display);
+  font-size:       var(--fs-xl);
+  font-weight:     900;
+  color:           var(--clr-accent);
+  background:      rgba(10,12,16,0.75);
+  border:          1px solid rgba(255,102,0,0.3);
+  border-radius:   var(--r-sm);
+  width:           36px;
+  height:          36px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  letter-spacing:  0;
+  transition:      color var(--dur-fast), border-color var(--dur-fast);
+}
+
+.gear-indicator.reverse { color: var(--clr-red);  border-color: rgba(255,34,34,0.4); }
+.gear-indicator.neutral { color: var(--clr-light-1); border-color: var(--glass-border); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BOOST / TURBO BAR  (above speedometer)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#boost-bar-wrap {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     flex-end;
+  gap:             4px;
+  opacity:         0;
+  transform:       translateX(10px);
+  transition:
+    opacity   var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+
+/* Shown only when car has turbo upgrade */
+#boost-bar-wrap.visible {
+  opacity:   1;
+  transform: translateX(0);
+}
+
+.boost-label {
+  font-size:       var(--fs-xs);
+  font-weight:     700;
+  letter-spacing:  0.1em;
+  color:           var(--clr-light-1);
+  text-transform:  uppercase;
+}
+
+.boost-track {
+  width:           90px;
+  height:          5px;
+  background:      var(--clr-dark-4);
+  border-radius:   var(--r-full);
+  overflow:        hidden;
+}
+
+.boost-fill {
+  height:          100%;
+  width:           100%;
+  border-radius:   var(--r-full);
+  background:      linear-gradient(90deg, #0088FF, #00DDFF);
+  box-shadow:      0 0 8px rgba(0,200,255,0.6);
+  transition:      width 0.1s linear;
+}
+
+.boost-fill.depleted { background: var(--clr-dark-4); box-shadow: none; }
+.boost-fill.ready    { animation: glowPulse 1s var(--ease-in-out) infinite; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DAMAGE BAR  (bottom-left, above minimap)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#damage-wrap {
+  display:         flex;
+  flex-direction:  column;
+  gap:             4px;
+  width:           150px;
+}
+
+.damage-label-row {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+}
+
+.damage-label {
+  font-size:       var(--fs-xs);
+  font-weight:     700;
+  letter-spacing:  0.10em;
+  color:           var(--clr-light-1);
+  text-transform:  uppercase;
+}
+
+.damage-pct {
+  font-size:       var(--fs-xs);
+  font-weight:     700;
+  color:           var(--clr-green);
+  transition:      color var(--dur-mid);
+}
+
+.damage-pct.warn   { color: var(--clr-gold);  }
+.damage-pct.danger { color: var(--clr-red);   }
+
+.damage-track {
+  width:           100%;
+  height:          6px;
+  background:      var(--clr-dark-4);
+  border-radius:   var(--r-full);
+  overflow:        hidden;
+}
+
+.damage-fill {
+  height:          100%;
+  border-radius:   var(--r-full);
+  background:      linear-gradient(90deg, var(--clr-green-dark), var(--clr-green));
+  transition:
+    width     0.4s var(--ease-out),
+    background 0.4s var(--ease-out);
+}
+
+.damage-fill.warn {
+  background: linear-gradient(90deg, #CC8800, var(--clr-gold));
+}
+
+.damage-fill.danger {
+  background:  linear-gradient(90deg, var(--clr-red-dark), var(--clr-red));
+  animation:   glowPulse 0.8s var(--ease-in-out) infinite;
+  box-shadow:  0 0 8px rgba(255,34,34,0.5);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MONEY DISPLAY  (top-left)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#hud-money-wrap {
+  display:         flex;
+  flex-direction:  column;
+  gap:             2px;
+}
+
+#hud-money {
+  font-family:     var(--font-display);
+  font-size:       var(--fs-xl);
+  font-weight:     700;
+  color:           var(--clr-cash);
+  letter-spacing:  0.04em;
+  text-shadow:     0 2px 10px rgba(0,0,0,0.7);
+  transition:      color var(--dur-mid);
+}
+
+#hud-money::before {
+  content:         '$';
+  font-size:       0.72em;
+  opacity:         0.65;
+  margin-right:    2px;
+}
+
+.money-delta {
+  position:        absolute;
+  font-family:     var(--font-display);
+  font-size:       var(--fs-md);
+  font-weight:     700;
+  pointer-events:  none;
+  white-space:     nowrap;
+  animation:       moneyFloat 1.6s var(--ease-out) forwards;
+}
+
+.money-delta.gain { color: var(--clr-cash);  }
+.money-delta.loss { color: var(--clr-red);   }
+
+@keyframes moneyFloat {
+  0%   { opacity: 0; transform: translateY(0)   scale(0.85); }
+  20%  { opacity: 1; transform: translateY(-8px) scale(1.05); }
+  80%  { opacity: 1; transform: translateY(-28px) scale(1.0);  }
+  100% { opacity: 0; transform: translateY(-44px) scale(0.95); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WANTED STARS  (top-left, below money)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#hud-wanted {
+  display:         flex;
+  flex-direction:  column;
+  gap:             4px;
+  margin-top:      var(--sp-2);
+  opacity:         0;
+  transition:      opacity var(--dur-mid);
+}
+
+#hud-wanted.visible { opacity: 1; }
+
+.wanted-label {
+  font-size:       var(--fs-xs);
+  font-weight:     700;
+  letter-spacing:  0.12em;
+  color:           var(--clr-red);
+  text-transform:  uppercase;
+  animation:       wrongWay 0.9s ease-in-out infinite;
+}
+
+/* Inherits .wanted-stars and .wanted-star from style.css */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MINIMAP  (bottom-left)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#minimap-wrap {
+  display:         flex;
+  flex-direction:  column;
+  gap:             6px;
+}
+
+#minimap {
+  width:           160px;
+  height:          160px;
+  border-radius:   var(--r-lg);
+  background:      rgba(10,12,16,0.80);
+  border:          1px solid var(--glass-border);
+  overflow:        hidden;
+  position:        relative;
+  box-shadow:      var(--shadow-md);
+  backdrop-filter: blur(4px);
+}
+
+/* The <canvas> inside the minimap div */
+#minimap-canvas {
+  width:  100%;
+  height: 100%;
+  display: block;
+}
+
+/* Player dot on minimap */
+.minimap-player {
+  position:        absolute;
+  top:             50%;
+  left:            50%;
+  transform:       translate(-50%, -50%);
+  width:           8px;
+  height:          8px;
+  background:      #FFFF00;
+  border-radius:   50%;
+  box-shadow:      0 0 6px #FFFF00, 0 0 12px rgba(255,255,0,0.5);
+  pointer-events:  none;
+}
+
+/* Heading arrow inside minimap */
+.minimap-arrow {
+  position:        absolute;
+  top:             50%;
+  left:            50%;
+  width:           0;
+  height:          0;
+  border-left:     4px solid transparent;
+  border-right:    4px solid transparent;
+  border-bottom:   10px solid #FFFF00;
+  transform:       translate(-50%, -100%);
+  transform-origin: bottom center;
+  pointer-events:  none;
+  filter:          drop-shadow(0 0 4px #FFFF00);
+}
+
+/* Compass rose labels */
+.minimap-compass {
+  position:        absolute;
+  inset:           4px;
+  pointer-events:  none;
+  font-size:       8px;
+  font-weight:     700;
+  color:           rgba(255,255,255,0.35);
+  letter-spacing:  0.02em;
+}
+
+.minimap-compass span {
+  position: absolute;
+}
+
+.compass-n { top:  1px; left: 50%; transform: translateX(-50%); }
+.compass-s { bottom: 1px; left: 50%; transform: translateX(-50%); }
+.compass-e { right: 3px; top: 50%; transform: translateY(-50%); }
+.compass-w { left:  3px; top: 50%; transform: translateY(-50%); }
+
+/* Minimap legend row (G = garage, D = dealer, etc.) */
+.minimap-legend {
+  display:         flex;
+  gap:             var(--sp-3);
+  flex-wrap:       wrap;
+}
+
+.legend-item {
+  display:         flex;
+  align-items:     center;
+  gap:             4px;
+  font-size:       var(--fs-xs);
+  color:           var(--clr-light-1);
+}
+
+.legend-dot {
+  width:           8px;
+  height:          8px;
+  border-radius:   50%;
+  flex-shrink:     0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COMPASS / HEADING BAR  (top-center, below objective text)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#compass-bar {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             4px;
+}
+
+.compass-tape-wrap {
+  width:           240px;
+  overflow:        hidden;
+  position:        relative;
+}
+
+/* Centre notch */
+.compass-tape-wrap::after {
+  content:         '';
+  position:        absolute;
+  bottom:          0;
+  left:            50%;
+  transform:       translateX(-50%);
+  width:           2px;
+  height:          100%;
+  background:      var(--clr-accent);
+  z-index:         2;
+}
+
+.compass-tape {
+  display:         flex;
+  gap:             0;
+  transition:      transform 0.08s linear;
+}
+
+.compass-tick {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  flex-shrink:     0;
+  width:           24px;
+}
+
+.compass-tick-line {
+  width:           1px;
+  background:      rgba(255,255,255,0.25);
+}
+
+.compass-tick-line.major { height: 10px; background: rgba(255,255,255,0.55); }
+.compass-tick-line.minor { height:  6px; }
+
+.compass-tick-label {
+  font-size:       8px;
+  font-weight:     700;
+  color:           rgba(255,255,255,0.5);
+  margin-top:      2px;
+  letter-spacing:  0;
+}
+
+.compass-tick-label.cardinal {
+  color:           var(--clr-white);
+  font-size:       9px;
+}
+
+.compass-heading {
+  font-family:     var(--font-display);
+  font-size:       var(--fs-sm);
+  font-weight:     700;
+  color:           var(--clr-accent);
+  letter-spacing:  0.1em;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   OBJECTIVE / MISSION TEXT  (top-center)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#hud-objective {
+  text-align:      center;
+  pointer-events:  none;
+}
+
+.obj-label {
+  font-size:       var(--fs-xs);
+  font-weight:     700;
+  letter-spacing:  0.14em;
+  color:           var(--clr-light-1);
+  text-transform:  uppercase;
+}
+
+.obj-text {
+  font-size:       var(--fs-lg);
+  font-weight:     700;
+  color:           var(--clr-white);
+  text-shadow:     0 2px 10px rgba(0,0,0,0.8);
+  transition:      opacity var(--dur-mid);
+}
+
+.obj-dist {
+  font-size:       var(--fs-sm);
+  color:           var(--clr-accent-bright);
+  letter-spacing:  0.06em;
+  margin-top:      2px;
+}
+
+/* Arrow pointing toward objective */
+.obj-arrow {
+  display:         inline-block;
+  font-size:       22px;
+  color:           var(--clr-accent);
+  filter:          drop-shadow(0 0 6px var(--clr-accent));
+  transition:      transform 0.12s linear;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RACE HUD OVERLAY  (shown only during race events)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#race-hud {
+  position:        fixed;
+  top:             16px;
+  left:            50%;
+  transform:       translateX(-50%);
+  z-index:         var(--z-hud);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             var(--sp-2);
+  pointer-events:  none;
+  opacity:         0;
+  transition:      opacity var(--dur-slow) var(--ease-out);
+}
+
+#race-hud.active { opacity: 1; }
+
+/* Race timer */
+.race-timer {
+  font-family:     var(--font-display);
+  font-size:       var(--fs-2xl);
+  font-weight:     700;
+  letter-spacing:  0.08em;
+  color:           var(--clr-white);
+  background:      rgba(10,12,16,0.82);
+  border:          1px solid var(--glass-border);
+  border-radius:   var(--r-lg);
+  padding:         var(--sp-2) var(--sp-6);
+  text-shadow:     0 2px 12px rgba(0,0,0,0.9);
+  backdrop-filter: blur(6px);
+  min-width:       160px;
+  text-align:      center;
+  transition:      color var(--dur-mid), border-color var(--dur-mid);
+}
+
+.race-timer.warn   { color: var(--clr-gold);  border-color: rgba(255,215,0,0.4); }
+.race-timer.danger { color: var(--clr-red);   border-color: rgba(255,34,34,0.4); animation: glowPulse 0.5s infinite; }
+
+/* Position indicator */
+.race-position {
+  font-family:     var(--font-display);
+  font-size:       var(--fs-3xl);
+  font-weight:     900;
+  color:           var(--clr-white);
+  line-height:     1;
+  letter-spacing:  -0.02em;
+}
+
+.race-position-total {
+  font-size:       var(--fs-lg);
+  color:           var(--clr-light-1);
+  font-weight:     600;
+}
+
+.race-position-badge {
+  display:         flex;
+  align-items:     baseline;
+  gap:             4px;
+  background:      rgba(10,12,16,0.82);
+  border:          1px solid var(--glass-border);
+  border-radius:   var(--r-lg);
+  padding:         var(--sp-2) var(--sp-5);
+  backdrop-filter: blur(6px);
+}
+
+/* 1st place — golden */
+.race-position-badge.p1 {
+  border-color: rgba(255,215,0,0.5);
+  box-shadow:   0 0 16px rgba(255,215,0,0.2);
+}
+.race-position-badge.p1 .race-position { color: var(--clr-gold); }
+
+/* Lap counter */
+.race-lap {
+  font-size:       var(--fs-base);
+  font-weight:     700;
+  color:           var(--clr-light-2);
+  letter-spacing:  0.08em;
+  text-transform:  uppercase;
+  background:      rgba(10,12,16,0.75);
+  border:          1px solid var(--glass-border);
+  border-radius:   var(--r-full);
+  padding:         var(--sp-1) var(--sp-4);
+  backdrop-filter: blur(4px);
+}
+
+.race-lap strong { color: var(--clr-white); }
+
+/* Checkpoint flash banner */
+.race-checkpoint-banner {
+  position:         fixed;
+  top:              50%;
+  left:             50%;
+  transform:        translate(-50%, -50%);
+  font-family:      var(--font-display);
+  font-size:        var(--fs-3xl);
+  font-weight:      900;
+  color:            var(--clr-gold);
+  letter-spacing:   0.14em;
+  text-transform:   uppercase;
+  text-shadow:      0 0 30px rgba(255,215,0,0.8), 0 4px 20px rgba(0,0,0,0.9);
+  pointer-events:   none;
+  z-index:          var(--z-overlay);
+  animation:        cpBanner 1.2s var(--ease-out) forwards;
+}
+
+@keyframes cpBanner {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  70%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+  100% { opacity: 0; transform: translate(-50%, -60%) scale(0.95); }
+}
+
+/* Race result banner */
+.race-result-banner {
+  position:        fixed;
+  top:             50%;
+  left:            50%;
+  transform:       translate(-50%, -50%);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             var(--sp-3);
+  z-index:         var(--z-overlay);
+  pointer-events:  none;
+  animation:       scaleIn 0.5s var(--ease-spring) forwards;
+}
+
+.race-result-place {
+  font-family:     var(--font-display);
+  font-size:       clamp(3rem, 8vw, 5.5rem);
+  font-weight:     900;
+  line-height:     1;
+  letter-spacing:  0.05em;
+}
+
+.result-1st { color: var(--clr-gold);  text-shadow: 0 0 40px rgba(255,215,0,0.7); }
+.result-2nd { color: var(--clr-light-3); }
+.result-3rd { color: #CD7F32; }
+.result-dnf { color: var(--clr-red); }
+
+.race-result-prize {
+  font-family:     var(--font-display);
+  font-size:       var(--fs-2xl);
+  font-weight:     700;
+  color:           var(--clr-cash);
+  letter-spacing:  0.06em;
+}
+
+/* Countdown for race start (3-2-1-GO) */
+#race-countdown {
+  position:        fixed;
+  top:             50%;
+  left:            50%;
+  transform:       translate(-50%, -50%);
+  font-family:     var(--font-display);
+  font-size:       clamp(6rem, 15vw, 11rem);
+  font-weight:     900;
+  letter-spacing:  0.02em;
+  pointer-events:  none;
+  z-index:         var(--z-overlay);
+  display:         none;
+}
+
+#race-countdown.show    { display: block; }
+#race-countdown.num     { color: var(--clr-white); animation: cdNum 0.9s var(--ease-spring); }
+#race-countdown.go      { color: var(--clr-green); animation: cdNum 1.2s var(--ease-spring); }
+
+@keyframes cdNum {
+  0%   { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+  30%  { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+  80%  { transform: translate(-50%, -50%) scale(1.0);  opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.9);  opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TAXI / PASSENGER HUD  (shown only during taxi missions)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#taxi-hud {
+  position:        fixed;
+  top:             16px;
+  right:           72px;       /* leave room for pause button */
+  z-index:         var(--z-hud);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     flex-end;
+  gap:             var(--sp-2);
+  pointer-events:  none;
+  opacity:         0;
+  transition:      opacity var(--dur-slow);
+}
+
+#taxi-hud.active { opacity: 1; }
+
+.taxi-panel {
+  background:      rgba(10,12,16,0.85);
+  border:          1px solid rgba(255,238,0,0.3);
+  border-radius:   var(--r-lg);
+  padding:         var(--sp-3) var(--sp-5);
+  backdrop-filter: blur(8px);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     flex-end;
+  gap:             6px;
+  min-width:       180px;
+  box-shadow:      0 4px 16px rgba(0,0,0,0.5);
+}
+
+.taxi-icon-row {
+  display:         flex;
+  align-items:     center;
+  gap:             var(--sp-2);
+}
+
+.taxi-icon {
+  font-size:       22px;
+  filter:          drop-shadow(0 0 6px rgba(255,238,0,0.8));
+}
+
+.taxi-mission-name {
+  font-size:       var(--fs-base);
+  font-weight:     700;
+  color:           var(--clr-gold);
+  letter-spacing:  0.04em;
+}
+
+.taxi-dest {
+  font-size:       var(--fs-sm);
+  color:           var(--clr-light-2);
+  text-align:      right;
+}
+
+/* Time remaining bar */
+.taxi-timer-track {
+  width:           100%;
+  height:          4px;
+  background:      var(--clr-dark-4);
+  border-radius:   var(--r-full);
+  overflow:        hidden;
+}
+
+.taxi-timer-fill {
+  height:          100%;
+  border-radius:   var(--r-full);
+  background:      linear-gradient(90deg, var(--clr-green-dark), var(--clr-green));
+  transition:      width 0.5s linear, background 0.5s;
+}
+
+.taxi-timer-fill.warn   { background: linear-gradient(90deg, #CC8800, var(--clr-gold)); }
+.taxi-timer-fill.danger { background: linear-gradient(90deg, var(--clr-red-dark), var(--clr-red)); animation: glowPulse 0.6s infinite; }
+
+.taxi-fare {
+  font-family:     var(--font-display);
+  font-size:       var(--fs-xl);
+  font-weight:     700;
+  color:           var(--clr-cash);
+  letter-spacing:  0.04em;
+}
+
+.taxi-fare::before { content: '$'; font-size: 0.7em; opacity: 0.65; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NOTIFICATIONS / TOAST POPUPS  (bottom-center)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#toast-container {
+  position:        fixed;
+  bottom:          100px;
+  left:            50%;
+  transform:       translateX(-50%);
+  z-index:         var(--z-toast);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             var(--sp-2);
+  pointer-events:  none;
+  width:           max-content;
+  max-width:       90vw;
+}
+
+.toast {
+  display:         flex;
+  align-items:     center;
+  gap:             var(--sp-3);
+  padding:         var(--sp-3) var(--sp-5);
+  background:      rgba(10,12,16,0.92);
+  border-radius:   var(--r-lg);
+  border-left:     3px solid var(--clr-accent);
+  box-shadow:      var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  font-size:       var(--fs-base);
+  font-weight:     600;
+  color:           var(--clr-white);
+  white-space:     nowrap;
+  animation:       toastIn var(--dur-slow) var(--ease-spring) forwards;
+  max-width:       360px;
+}
+
+.toast.removing {
+  animation: toastOut var(--dur-slow) var(--ease-in-out) forwards;
+}
+
+.toast-icon  { font-size: 20px; flex-shrink: 0; }
+.toast-text  { flex: 1; white-space: normal; }
+
+/* Toast colour variants */
+.toast.info    { border-left-color: var(--clr-blue);  }
+.toast.success { border-left-color: var(--clr-green); }
+.toast.warn    { border-left-color: var(--clr-gold);  }
+.toast.danger  { border-left-color: var(--clr-red);   }
+.toast.money   { border-left-color: var(--clr-cash);  }
+.toast.police  { border-left-color: var(--clr-police);}
+
+@keyframes toastIn {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.9);  }
+  60%  { opacity: 1; transform: translateY(-4px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0)    scale(1.0);  }
+}
+
+@keyframes toastOut {
+  0%   { opacity: 1; transform: translateY(0)   scale(1.0); }
+  100% { opacity: 0; transform: translateY(-16px) scale(0.92); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TOUCH CONTROLS  (mobile only — bottom corners)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#touch-controls {
+  position:        fixed;
+  inset:           0;
+  z-index:         calc(var(--z-hud) + 1);
+  pointer-events:  none;
+}
+
+/* ── Virtual joystick (bottom-left) ─────────────────────────────────────── */
+
+#joystick-zone {
+  position:        absolute;
+  bottom:          24px;
+  left:            20px;
+  width:           140px;
+  height:          140px;
+  pointer-events:  all;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+}
+
+#joystick-base {
+  width:           130px;
+  height:          130px;
+  border-radius:   50%;
+  background:      radial-gradient(circle, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  border:          2px solid rgba(255,255,255,0.12);
+  position:        relative;
+  opacity:         0.55;
+  transition:      opacity var(--dur-mid);
+}
+
+#joystick-base.active { opacity: 0.88; }
+
+#joystick-thumb {
+  width:           52px;
+  height:          52px;
+  border-radius:   50%;
+  background:      radial-gradient(circle, rgba(255,170,60,0.80), rgba(255,90,10,0.65));
+  border:          2px solid rgba(255,200,100,0.45);
+  box-shadow:      0 0 14px rgba(255,120,0,0.4);
+  position:        absolute;
+  top:             50%;
+  left:            50%;
+  transform:       translate(-50%, -50%);
+  pointer-events:  none;
+  transition:      box-shadow var(--dur-fast);
+}
+
+/* ── Action buttons (bottom-right) ─────────────────────────────────────── */
+
+#action-buttons {
+  position:        absolute;
+  bottom:          24px;
+  right:           20px;
+  display:         flex;
+  flex-direction:  column;
+  align-items:     flex-end;
+  gap:             var(--sp-3);
+  pointer-events:  all;
+}
+
+.action-btn {
+  border-radius:   50%;
+  border:          none;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  cursor:          pointer;
+  transition:
+    opacity      var(--dur-fast),
+    transform    var(--dur-fast),
+    box-shadow   var(--dur-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Primary action — Nitro / Handbrake */
+#btn-action-primary {
+  width:           80px;
+  height:          80px;
+  background:      radial-gradient(circle, rgba(255,80,0,0.55), rgba(180,20,0,0.45));
+  border:          2px solid rgba(255,120,50,0.45);
+  opacity:         0.55;
+  font-family:     var(--font-display);
+  font-size:       var(--fs-xs);
+  font-weight:     700;
+  letter-spacing:  0.10em;
+  color:           rgba(255,220,180,0.9);
+}
+
+#btn-action-primary.active {
+  opacity:    0.92;
+  transform:  scale(0.92);
+  box-shadow: 0 0 20px rgba(255,80,0,0.5);
+}
+
+/* Secondary action — Horn */
+#btn-action-secondary {
+  width:           56px;
+  height:          56px;
+  background:      rgba(255,255,255,0.07);
+  border:          2px solid rgba(255,255,255,0.12);
+  opacity:         0.52;
+  font-size:       22px;
+}
+
+#btn-action-secondary.active {
+  opacity:   0.85;
+  transform: scale(0.92);
+}
+
+/* Camera toggle button */
+#btn-cam-toggle {
+  width:           48px;
+  height:          48px;
+  background:      rgba(255,255,255,0.07);
+  border:          2px solid rgba(255,255,255,0.12);
+  opacity:         0.52;
+  font-size:       18px;
+  position:        absolute;
+  top:             16px;
+  right:           16px;
+  pointer-events:  all;
+}
+
+/* ── On-screen D-pad overlay (visible on touch devices) ─────────────────── */
+
+#dpad {
+  display:         none;    /* shown by JS on touch devices */
+  position:        absolute;
+  bottom:          28px;
+  left:            28px;
+  width:           120px;
+  height:          120px;
+  pointer-events:  all;
+}
+
+.dpad-btn {
+  position:        absolute;
+  width:           36px;
+  height:          36px;
+  background:      rgba(255,255,255,0.08);
+  border:          1px solid rgba(255,255,255,0.12);
+  border-radius:   var(--r-sm);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       14px;
+  color:           rgba(255,255,255,0.55);
+  opacity:         0.6;
+  cursor:          pointer;
+  transition:      opacity var(--dur-fast), transform var(--dur-fast);
+}
+
+.dpad-btn:active  { opacity: 1; transform: scale(0.88); }
+.dpad-up          { top:  0;   left:  42px; }
+.dpad-down        { bottom:0;  left:  42px; }
+.dpad-left        { left:  0;  top:   42px; }
+.dpad-right       { right: 0;  top:   42px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SPEED-LIMIT SIGN (appears when entering new zone)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#speed-limit-sign {
+  position:        fixed;
+  top:             80px;
+  right:           16px;
+  width:           56px;
+  height:          56px;
+  border-radius:   50%;
+  background:      #FFFFFF;
+  border:          4px solid var(--clr-red);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  font-family:     var(--font-display);
+  font-size:       var(--fs-sm);
+  font-weight:     900;
+  color:           var(--clr-dark-1);
+  line-height:     1;
+  box-shadow:      var(--shadow-md);
+  pointer-events:  none;
+  opacity:         0;
+  transform:       scale(0.7) translateX(30px);
+  transition:
+    opacity   var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+  z-index:         var(--z-hud);
+}
+
+#speed-limit-sign.visible {
+  opacity:   1;
+  transform: scale(1) translateX(0);
+}
+
+#speed-limit-sign .sign-label {
+  font-size:  7px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  opacity:    0.55;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DISTRICT NAME TOAST  (fades in center when entering new zone)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#district-banner {
+  position:        fixed;
+  top:             38%;
+  left:            50%;
+  transform:       translateX(-50%);
+  z-index:         var(--z-overlay);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             4px;
+  pointer-events:  none;
+  opacity:         0;
+  transition:      opacity var(--dur-slow);
+}
+
+#district-banner.show { opacity: 1; }
+
+.district-banner-label {
+  font-size:       var(--fs-xs);
+  font-weight:     700;
+  letter-spacing:  0.22em;
+  color:           var(--clr-light-1);
+  text-transform:  uppercase;
+}
+
+.district-banner-name {
+  font-family:     var(--font-display);
+  font-size:       var(--fs-2xl);
+  font-weight:     900;
+  color:           var(--clr-white);
+  letter-spacing:  0.10em;
+  text-transform:  uppercase;
+  text-shadow:     0 2px 20px rgba(0,0,0,0.9);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERACTION PROMPT  (press E / tap to enter garage, dealer, etc.)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#interaction-prompt {
+  position:        fixed;
+  bottom:          200px;
+  left:            50%;
+  transform:       translateX(-50%);
+  z-index:         var(--z-hud);
+  display:         flex;
+  align-items:     center;
+  gap:             var(--sp-3);
+  padding:         var(--sp-3) var(--sp-6);
+  background:      rgba(10,12,16,0.88);
+  border:          1px solid var(--glass-border);
+  border-radius:   var(--r-xl);
+  backdrop-filter: blur(8px);
+  pointer-events:  none;
+  opacity:         0;
+  transform:       translateX(-50%) translateY(10px);
+  transition:
+    opacity   var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+  white-space:     nowrap;
+}
+
+#interaction-prompt.visible {
+  opacity:   1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.prompt-key {
+  width:           32px;
+  height:          32px;
+  border-radius:   var(--r-sm);
+  background:      var(--clr-dark-4);
+  border:          2px solid var(--clr-light-1);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-family:     var(--font-display);
+  font-size:       var(--fs-base);
+  font-weight:     700;
+  color:           var(--clr-white);
+  flex-shrink:     0;
+  box-shadow:      0 3px 0 rgba(0,0,0,0.5);
+}
+
+.prompt-text {
+  font-size:       var(--fs-base);
+  font-weight:     600;
+  color:           var(--clr-white);
+}
+
+.prompt-place {
+  font-weight:     700;
+  color:           var(--clr-accent-bright);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Tablet — scale minimap down slightly */
+@media (max-width: 768px) {
+  #minimap { width: 130px; height: 130px; }
+
+  .speedo-value { font-size: 2.4rem; }
+
+  #race-hud { top: 8px; }
+  .race-timer { font-size: var(--fs-xl); padding: var(--sp-2) var(--sp-4); }
+}
+
+/* Mobile landscape — compact everything */
+@media (max-height: 480px) {
+  #minimap { width: 110px; height: 110px; }
+
+  .hud-bl { bottom: 12px; }
+  .hud-br { bottom: 12px; }
+
+  #joystick-zone { bottom: 10px; left: 12px; width: 110px; height: 110px; }
+  #joystick-base { width: 105px; height: 105px; }
+
+  #action-buttons { bottom: 10px; right: 12px; }
+  #btn-action-primary  { width: 66px; height: 66px; }
+  #btn-action-secondary { width: 46px; height: 46px; }
+
+  .speedo-value { font-size: 2rem; }
+  #damage-wrap  { width: 120px; }
+}
+
+/* Very small screens — hide less-critical HUD elements */
+@media (max-width: 360px) {
+  #compass-bar    { display: none; }
+  #district-banner { display: none; }
+}
