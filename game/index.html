@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chicken Farm Tycoon | Realistic 3D Simulator</title>
+    
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <div id="ui-layer">
+        
+        <header id="hud">
+            <div class="hud-stat" id="stat-budget">
+                <span class="label">Budget:</span> 
+                <span class="value" id="val-budget">$5,000.00</span>
+            </div>
+            <div class="hud-stat" id="stat-date">
+                <span class="label">Date:</span> 
+                <span class="value" id="val-date">Spring, Day 1</span>
+            </div>
+            <div class="hud-stat" id="stat-time">
+                <span class="label">Time:</span> 
+                <span class="value" id="val-time">06:00 AM</span>
+            </div>
+            <div class="hud-stat" id="stat-pop">
+                <span class="label">Flock Size:</span> 
+                <span class="value" id="val-pop">0</span>
+            </div>
+        </header>
+
+        <aside id="sidebar">
+            <button id="btn-shop" class="ui-button">Marketplace</button>
+            <button id="btn-finance" class="ui-button">Finances</button>
+            <button id="btn-build" class="ui-button">Construction</button>
+        </aside>
+
+        <div id="details-panel" class="hidden">
+            <h2 id="details-title">Entity Status</h2>
+            <div id="details-content">
+                </div>
+        </div>
+
+        <div id="modal-container" class="modal-overlay hidden">
+            <div class="modal-window">
+                <header class="modal-header">
+                    <h2 id="modal-title">Menu</h2>
+                    <button id="btn-close-modal" class="close-btn">&times;</button>
+                </header>
+                <div id="modal-content-area">
+                    </div>
+            </div>
+        </div>
+
+        <div id="loading-screen">
+            <div class="loader-content">
+                <h1>Chicken Farm Tycoon</h1>
+                <p>Simulating Environment...</p>
+                <div class="progress-bar-bg">
+                    <div id="loading-bar-fill"></div>
+                </div>
+                <p id="loading-text">0%</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
