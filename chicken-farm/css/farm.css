@@ -1,0 +1,347 @@
+/* css/farm.css */
+
+:root {
+  --grass-1: #315c2f;
+  --grass-2: #224120;
+  --soil-1: #6e5234;
+  --soil-2: #4f3824;
+  --wood-1: #8b643f;
+  --wood-2: #5d4129;
+  --fence-1: #c9b08a;
+  --fence-2: #9d7a55;
+  --roof-1: #7a2424;
+  --roof-2: #561919;
+  --metal-1: #b9c2c7;
+  --metal-2: #79868d;
+}
+
+.farm-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.farm-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mix-blend-mode: screen;
+}
+
+.farm-horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18%;
+  height: 30%;
+  background:
+    radial-gradient(circle at 15% 100%, rgba(0, 0, 0, 0.16), transparent 36%),
+    radial-gradient(circle at 40% 100%, rgba(0, 0, 0, 0.12), transparent 34%),
+    radial-gradient(circle at 75% 100%, rgba(0, 0, 0, 0.14), transparent 40%);
+  opacity: 0.5;
+}
+
+.farm-ground {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 36%;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.04), transparent 10%),
+    radial-gradient(circle at 60% 30%, rgba(255, 255, 255, 0.03), transparent 12%),
+    linear-gradient(180deg, var(--grass-1) 0%, var(--grass-2) 55%, #1c311a 100%);
+  box-shadow: inset 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.farm-path {
+  position: absolute;
+  left: 18%;
+  bottom: 0;
+  width: 24%;
+  height: 28%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
+    linear-gradient(180deg, var(--soil-1), var(--soil-2));
+  clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%);
+  filter: saturate(0.95);
+}
+
+.farm-fence {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 18%;
+  height: 10%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 26px,
+      rgba(201, 176, 138, 0.95) 26px 30px,
+      transparent 30px 56px
+    );
+  opacity: 0.9;
+}
+
+.farm-fence::before,
+.farm-fence::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: linear-gradient(180deg, var(--fence-1), var(--fence-2));
+  border-radius: 999px;
+}
+
+.farm-fence::before {
+  top: 22%;
+}
+
+.farm-fence::after {
+  bottom: 18%;
+}
+
+.coop-silhouette {
+  position: absolute;
+  left: 58%;
+  bottom: 22%;
+  width: 14%;
+  height: 18%;
+  background: linear-gradient(180deg, var(--wood-1), var(--wood-2));
+  border-radius: 10px 10px 6px 6px;
+  box-shadow:
+    inset 0 6px 0 rgba(255, 255, 255, 0.06),
+    0 18px 28px rgba(0, 0, 0, 0.18);
+}
+
+.coop-silhouette::before {
+  content: "";
+  position: absolute;
+  top: -34%;
+  left: -6%;
+  width: 112%;
+  height: 42%;
+  background: linear-gradient(180deg, var(--roof-1), var(--roof-2));
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.coop-silhouette::after {
+  content: "";
+  position: absolute;
+  bottom: 12%;
+  left: 18%;
+  width: 18%;
+  height: 38%;
+  background: linear-gradient(180deg, var(--metal-1), var(--metal-2));
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.barn-silhouette {
+  position: absolute;
+  left: 72%;
+  bottom: 20%;
+  width: 19%;
+  height: 24%;
+  background: linear-gradient(180deg, #9a6b42, #6a4528);
+  border-radius: 10px 10px 8px 8px;
+  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.22);
+}
+
+.barn-silhouette::before {
+  content: "";
+  position: absolute;
+  top: -28%;
+  left: -5%;
+  width: 110%;
+  height: 38%;
+  background: linear-gradient(180deg, #8d2d2d, #5c1818);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.barn-silhouette::after {
+  content: "";
+  position: absolute;
+  left: 42%;
+  bottom: 0;
+  width: 16%;
+  height: 46%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tree-cluster {
+  position: absolute;
+  left: 10%;
+  bottom: 24%;
+  width: 18%;
+  height: 28%;
+  opacity: 0.95;
+}
+
+.tree-cluster .tree {
+  position: absolute;
+  bottom: 0;
+  width: 28%;
+  height: 82%;
+  background: linear-gradient(180deg, #5a3f26, #3e2816);
+  border-radius: 999px;
+}
+
+.tree-cluster .tree::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -46%;
+  width: 180%;
+  height: 82%;
+  background: radial-gradient(circle at 50% 45%, #456e33 0%, #305126 60%, #22381d 100%);
+  border-radius: 50%;
+}
+
+.tree-cluster .tree:nth-child(1) {
+  left: 10%;
+  height: 68%;
+}
+
+.tree-cluster .tree:nth-child(2) {
+  left: 40%;
+  height: 88%;
+}
+
+.tree-cluster .tree:nth-child(3) {
+  left: 72%;
+  height: 74%;
+}
+
+.silo {
+  position: absolute;
+  left: 86%;
+  bottom: 22%;
+  width: 6%;
+  height: 24%;
+  background: linear-gradient(180deg, #d4dbe0, #8e9aa2);
+  border-radius: 16px 16px 8px 8px;
+  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.18);
+}
+
+.silo::before {
+  content: "";
+  position: absolute;
+  top: -10%;
+  left: 14%;
+  width: 72%;
+  height: 14%;
+  background: linear-gradient(180deg, #e8edf0, #b8c2c8);
+  border-radius: 999px 999px 0 0;
+}
+
+.windmill {
+  position: absolute;
+  left: 48%;
+  bottom: 28%;
+  width: 2%;
+  height: 22%;
+  background: linear-gradient(180deg, var(--metal-1), var(--metal-2));
+  border-radius: 999px;
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+.windmill::before,
+.windmill::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  width: 220%;
+  height: 6px;
+  background: linear-gradient(90deg, var(--metal-1), var(--metal-2));
+  transform-origin: center center;
+  border-radius: 999px;
+}
+
+.windmill::before {
+  transform: translateX(-50%) rotate(32deg);
+}
+
+.windmill::after {
+  transform: translateX(-50%) rotate(-32deg);
+}
+
+.sky-haze {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255, 236, 180, 0.14), transparent 16%),
+    radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.05), transparent 14%),
+    radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.05), transparent 12%);
+  opacity: 0.65;
+}
+
+/* Ambient weather helpers */
+.weather-rain,
+.weather-snow,
+.weather-fog {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.weather-rain {
+  opacity: 0.28;
+  background-image: linear-gradient(
+    115deg,
+    transparent 0 46%,
+    rgba(190, 214, 255, 0.55) 46% 48%,
+    transparent 48% 100%
+  );
+  background-size: 18px 18px;
+  animation: weather-move 0.5s linear infinite;
+}
+
+.weather-snow {
+  opacity: 0.22;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.9) 1px, transparent 2px);
+  background-size: 22px 22px;
+  animation: weather-fall 4s linear infinite;
+}
+
+.weather-fog {
+  background: linear-gradient(180deg, rgba(220, 232, 225, 0.08), rgba(220, 232, 225, 0.2));
+  backdrop-filter: blur(2px);
+}
+
+@keyframes weather-move {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 18px 18px;
+  }
+}
+
+@keyframes weather-fall {
+  from {
+    background-position: 0 -60px;
+  }
+  to {
+    background-position: 0 60px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .tree-cluster {
+    left: 4%;
+  }
+
+  .barn-silhouette {
+    left: 68%;
+  }
+
+  .silo {
+    left: 88%;
+  }
+}
