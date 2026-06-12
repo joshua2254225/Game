@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="description" content="Chicken Farm 3D - a realistic desktop farm simulation game." />
+  <title>Chicken Farm 3D</title>
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/menu.css" />
+  <link rel="stylesheet" href="css/farm.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body>
+  <div id="desktop-warning" class="desktop-warning" aria-hidden="true">
+    <div class="desktop-warning__card">
+      <h1>Chicken Farm 3D</h1>
+      <p>This game is made for desktop screens only.</p>
+      <p>Please open it on a laptop or computer with a larger screen.</p>
+    </div>
+  </div>
+
+  <div id="game-app" class="game-app">
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-screen__content">
+        <h1>Chicken Farm 3D</h1>
+        <p>Loading farm systems...</p>
+        <div class="loading-bar">
+          <div id="loading-bar-fill" class="loading-bar__fill"></div>
+        </div>
+        <span id="loading-text">Initializing...</span>
+      </div>
+    </div>
+
+    <div id="main-menu" class="main-menu hidden">
+      <div class="main-menu__panel">
+        <h1>Chicken Farm 3D</h1>
+        <p>Build, manage, and grow a realistic poultry farm.</p>
+
+        <div class="main-menu__buttons">
+          <button id="btn-new-game" class="menu-button">New Game</button>
+          <button id="btn-continue" class="menu-button">Continue</button>
+          <button id="btn-settings" class="menu-button">Settings</button>
+          <button id="btn-credits" class="menu-button">Credits</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-screen" class="game-screen hidden">
+      <canvas id="game-canvas"></canvas>
+
+      <div id="hud" class="hud">
+        <div class="hud__topbar">
+          <div class="hud__stat"><span>Money:</span> <strong id="money-value">$0</strong></div>
+          <div class="hud__stat"><span>Day:</span> <strong id="day-value">1</strong></div>
+          <div class="hud__stat"><span>Time:</span> <strong id="time-value">06:00</strong></div>
+          <div class="hud__stat"><span>Chickens:</span> <strong id="chicken-count">0</strong></div>
+        </div>
+
+        <div id="notification-area" class="notification-area"></div>
+
+        <div class="hud__bottom">
+          <div id="build-menu" class="build-menu"></div>
+          <div id="info-panel" class="info-panel"></div>
+        </div>
+      </div>
+
+      <div id="pause-menu" class="pause-menu hidden">
+        <div class="pause-menu__panel">
+          <h2>Paused</h2>
+          <button id="btn-resume" class="menu-button">Resume</button>
+          <button id="btn-save" class="menu-button">Save Game</button>
+          <button id="btn-load" class="menu-button">Load Game</button>
+          <button id="btn-exit" class="menu-button">Exit to Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
