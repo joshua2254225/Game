@@ -1,0 +1,251 @@
+/* =========================================
+   Variables & Theming
+========================================= */
+:root {
+    --primary-color: #2c3e50;
+    --accent-color: #e67e22;
+    --text-light: #ecf0f1;
+    --text-dark: #2c3e50;
+    --panel-bg: rgba(44, 62, 80, 0.85);
+    --panel-border: rgba(255, 255, 255, 0.1);
+    --hud-bg: rgba(0, 0, 0, 0.6);
+    --danger-color: #e74c3c;
+    --success-color: #2ecc71;
+    --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* =========================================
+   Global Reset & Game Canvas Container
+========================================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none; /* Prevents accidentally highlighting text while playing */
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* No scrollbars in a desktop game */
+    background-color: #000; /* Black background before 3D loads */
+    font-family: var(--font-main);
+    color: var(--text-light);
+}
+
+#game-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1; /* Sits at the bottom */
+}
+
+/* =========================================
+   UI Layer & Pointer Event Management
+========================================= */
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10; /* Sits on top of the 3D canvas */
+    pointer-events: none; /* Crucial: Lets clicks pass through to the 3D world */
+}
+
+/* Re-enable pointer events ONLY for interactive UI elements */
+#hud, #sidebar, .ui-button, #details-panel, #modal-container, #loading-screen {
+    pointer-events: auto; 
+}
+
+/* =========================================
+   HUD (Heads Up Display)
+========================================= */
+#hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--hud-bg);
+    padding: 10px 20px;
+    border-bottom: 2px solid var(--accent-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.hud-stat {
+    display: flex;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.hud-stat .label {
+    color: #bdc3c7;
+}
+
+.hud-stat .value {
+    color: var(--success-color);
+}
+
+/* =========================================
+   Sidebar & Buttons
+========================================= */
+#sidebar {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ui-button {
+    background: var(--panel-bg);
+    color: var(--text-light);
+    border: 1px solid var(--accent-color);
+    padding: 15px 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    text-transform: uppercase;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+}
+
+.ui-button:hover {
+    background: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+}
+
+.ui-button:active {
+    transform: translateY(1px);
+}
+
+/* =========================================
+   Entity Details Panel
+========================================= */
+#details-panel {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 20px;
+    min-width: 250px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+#details-title {
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--accent-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* =========================================
+   Modal Windows (Shop/Finances)
+========================================= */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal-window {
+    background: var(--primary-color);
+    width: 60vw;
+    max-width: 800px;
+    height: 70vh;
+    border-radius: 10px;
+    border: 2px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: var(--danger-color);
+}
+
+#modal-content-area {
+    padding: 20px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* =========================================
+   Loading Screen
+========================================= */
+#loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999; /* Highest priority */
+}
+
+.loader-content {
+    text-align: center;
+    width: 400px;
+}
+
+.loader-content h1 {
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 20px;
+    background: #333;
+    border-radius: 10px;
+    margin: 20px 0;
+    overflow: hidden;
+    border: 1px solid var(--panel-border);
+}
+
+#loading-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--success-color);
+    transition: width 0.2s ease;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
