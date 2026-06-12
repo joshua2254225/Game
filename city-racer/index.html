@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ══════════════════════════════════════════════════════════════════════
+       CITY RACER — index.html
+       Main entry point. All game logic lives in /js, styles in /css.
+       No inline scripts or styles — everything is in separate files.
+  ══════════════════════════════════════════════════════════════════════════ -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,
+                 maximum-scale=1.0, user-scalable=no,
+                 viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- ── SEO & Description ─────────────────────────────────────────────── -->
+  <title>City Racer</title>
+  <meta name="description"
+        content="Open-world 3D city driving game. Race, taxi passengers,
+                 upgrade your car, and own the streets.">
+  <meta name="author" content="City Racer">
+
+  <!-- ── PWA / Mobile Web App ──────────────────────────────────────────── -->
+  <meta name="mobile-web-app-capable"          content="yes">
+  <meta name="apple-mobile-web-app-capable"    content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title"      content="City Racer">
+  <meta name="theme-color"                     content="#040608">
+
+  <!-- ── Open Graph ────────────────────────────────────────────────────── -->
+  <meta property="og:title"       content="City Racer">
+  <meta property="og:description" content="Open-world 3D city driving game.">
+  <meta property="og:type"        content="website">
+
+  <!-- ── Favicons (inline SVG data-URI) ────────────────────────────────── -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'
+             viewBox='0 0 32 32'><rect width='32' height='32' rx='6'
+             fill='%23040608'/><text y='24' x='4' font-size='22'>🏎</text></svg>">
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       STYLESHEETS  (load order matters — style.css defines custom properties
+       that hud.css and menus.css consume)
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/hud.css">
+  <link rel="stylesheet" href="css/menus.css">
+
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       THREE.JS RENDER CANVAS
+       Sits at z-index 0; everything else overlays on top.
+  ════════════════════════════════════════════════════════════════════════ -->
+  <canvas id="game-canvas" aria-hidden="true"></canvas>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       LOADING SCREEN
+       Shown while Three.js scene and assets are being built.
+       JS calls LoadingScreen.finish() to fade it out.
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="loading-screen" role="status" aria-live="polite">
+
+    <!-- Animated road stripes (purely decorative) -->
+    <div class="loader-road" aria-hidden="true"></div>
+
+    <!-- Logo -->
+    <div class="loader-logo" aria-label="City Racer">CITY RACER</div>
+    <div class="loader-subtitle">Open World Driving</div>
+
+    <!-- Progress bar -->
+    <div class="loader-bar-wrap">
+      <div class="loader-bar-track">
+        <div class="loader-bar-fill" id="loader-bar" role="progressbar"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+      </div>
+      <div class="loader-status" id="loader-status">Initialising engine…</div>
+    </div>
+
+  </div><!-- /#loading-screen -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       ORIENTATION GUARD
+       Shown on portrait-mode phones. JS shows/hides based on window size.
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="rotate-guard" role="alert" aria-live="assertive">
+    <div class="rotate-icon-wrap" aria-hidden="true">📱</div>
+    <div class="rotate-title">Rotate Your Device</div>
+    <p class="rotate-body">
+      City Racer plays best in landscape mode.<br>
+      Please rotate your phone to continue.
+    </p>
+  </div><!-- /#rotate-guard -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       ██  MENUS  ██
+       All full-screen overlay menus. Hidden by default via .hidden class.
+       MenuManager.js controls visibility.
+  ════════════════════════════════════════════════════════════════════════ -->
+
+  <!-- ── MAIN MENU ───────────────────────────────────────────────────── -->
+  <div id="screen-main" class="screen" role="main">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="main-city-bg" aria-hidden="true"></div>
+
+    <div class="main-menu-inner">
+
+      <!-- Logo -->
+      <div class="main-logo-block">
+        <span class="main-logo-eyebrow">Open World</span>
+        <h1 class="main-logo-title">CITY<br>RACER</h1>
+        <p  class="main-logo-sub">Drive. Race. Own the Streets.</p>
+      </div>
+
+      <!-- Navigation buttons -->
+      <nav class="main-nav" aria-label="Main menu">
+        <button class="btn btn-primary btn-xl btn-full"
+                id="btn-main-play"
+                data-action="continue">
+          🏎 DRIVE
+        </button>
+        <button class="btn btn-secondary btn-xl btn-full"
+                id="btn-main-newgame"
+                data-action="new-game">
+          ✦ NEW GAME
+        </button>
+        <button class="btn btn-ghost btn-xl btn-full"
+                id="btn-main-settings"
+                data-action="settings">
+          ⚙ SETTINGS
+        </button>
+      </nav>
+
+    </div><!-- /.main-menu-inner -->
+
+    <div class="main-footer">v1.0.0 &nbsp;·&nbsp; All graphics procedurally generated</div>
+
+  </div><!-- /#screen-main -->
+
+
+  <!-- ── SAVE SLOT SELECTION ─────────────────────────────────────────── -->
+  <div id="screen-saves" class="screen hidden" role="dialog"
+       aria-modal="true" aria-labelledby="saves-heading">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel">
+      <div class="saves-card">
+
+        <h2 class="saves-title" id="saves-heading">SELECT SAVE</h2>
+
+        <div class="save-slots" id="save-slots-list"
+             aria-label="Save slot list">
+          <!-- Slots injected by SaveSystem.js -->
+          <!-- Example structure (repeated × 3):
+          <div class="save-slot" data-slot="0" tabindex="0" role="button">
+            <div class="save-slot-num">1</div>
+            <div class="save-slot-info">
+              <div class="save-slot-name">My City</div>
+              <div class="save-slot-meta">Downtown · 3h 14m played</div>
+            </div>
+            <div class="save-slot-money">$48,200</div>
+            <div class="save-slot-actions">
+              <button class="btn btn-danger btn-sm btn-icon"
+                      data-delete title="Delete save">✕</button>
+            </div>
+          </div>
+          -->
+        </div>
+
+        <button class="btn btn-ghost btn-full"
+                id="btn-saves-back">◀ Back</button>
+
+      </div>
+    </div>
+  </div><!-- /#screen-saves -->
+
+
+  <!-- ── PAUSE MENU ──────────────────────────────────────────────────── -->
+  <div id="screen-pause" class="screen hidden" role="dialog"
+       aria-modal="true" aria-labelledby="pause-heading">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel">
+      <div class="pause-card">
+
+        <h2 class="pause-title" id="pause-heading">⏸ PAUSED</h2>
+
+        <!-- Live session stats -->
+        <div class="pause-stats-row" aria-label="Session statistics">
+          <div class="pause-stat">
+            <span class="pause-stat-value" id="pause-stat-money">$0</span>
+            <span class="pause-stat-label">Money</span>
+          </div>
+          <div class="pause-stat">
+            <span class="pause-stat-value" id="pause-stat-speed">0</span>
+            <span class="pause-stat-label">km/h</span>
+          </div>
+          <div class="pause-stat">
+            <span class="pause-stat-value" id="pause-stat-damage">0%</span>
+            <span class="pause-stat-label">Damage</span>
+          </div>
+        </div>
+
+        <nav class="pause-nav" aria-label="Pause menu options">
+          <button class="btn btn-primary btn-full"
+                  id="btn-pause-resume">▶ RESUME</button>
+          <button class="btn btn-secondary btn-full"
+                  id="btn-pause-garage"
+                  data-action="open-garage">🔧 GARAGE</button>
+          <button class="btn btn-secondary btn-full"
+                  id="btn-pause-races"
+                  data-action="open-races">🏁 RACES</button>
+          <button class="btn btn-ghost btn-full"
+                  id="btn-pause-settings"
+                  data-action="open-settings">⚙ SETTINGS</button>
+          <button class="btn btn-danger btn-full"
+                  id="btn-pause-quit"
+                  data-action="quit-to-menu">⌂ MAIN MENU</button>
+        </nav>
+
+      </div>
+    </div>
+  </div><!-- /#screen-pause -->
+
+
+  <!-- ── RACE SELECTION ──────────────────────────────────────────────── -->
+  <div id="screen-races" class="screen hidden" role="dialog"
+       aria-modal="true" aria-labelledby="races-heading">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel">
+
+      <!-- Header row -->
+      <div class="screen-header">
+        <div>
+          <h2 class="screen-header-title" id="races-heading">🏁 RACES</h2>
+          <p  class="screen-header-subtitle">Choose an event to enter</p>
+        </div>
+        <div class="screen-header-money">
+          <span class="screen-header-money-label">Wallet</span>
+          <span class="screen-header-money-value"
+                id="races-wallet">$0</span>
+        </div>
+      </div>
+
+      <div class="races-layout">
+
+        <!-- Left: scrollable race list -->
+        <div class="race-list-panel" id="race-list"
+             aria-label="Available races">
+          <div class="panel-title">Events</div>
+          <!-- Race cards injected by RaceSystem.js -->
+        </div>
+
+        <!-- Right: selected race detail -->
+        <div class="race-detail-panel" id="race-detail"
+             aria-live="polite" aria-atomic="true">
+
+          <p class="race-detail-desc"
+             style="color:var(--clr-light-1); text-align:center; margin:auto;">
+            Select a race on the left to see details.
+          </p>
+
+          <!-- Populated by JS when a race is selected:
+          <div class="race-detail-name">Downtown Sprint</div>
+          <p   class="race-detail-desc">…</p>
+          <div class="race-detail-stats">…</div>
+          <div class="prize-breakdown">…</div>
+          <div class="race-entry-fee-row">…</div>
+          <button class="btn btn-primary btn-full" id="btn-race-enter">
+            ENTER RACE — $50
+          </button>
+          -->
+
+        </div>
+
+      </div><!-- /.races-layout -->
+
+      <div style="margin-top: var(--sp-4);">
+        <button class="btn btn-ghost" id="btn-races-back">◀ Back</button>
+      </div>
+
+    </div><!-- /.screen-panel -->
+  </div><!-- /#screen-races -->
+
+
+  <!-- ── GARAGE ───────────────────────────────────────────────────────── -->
+  <div id="screen-garage" class="screen hidden" role="dialog"
+       aria-modal="true" aria-labelledby="garage-heading">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel">
+
+      <!-- Header row -->
+      <div class="screen-header">
+        <div>
+          <h2 class="screen-header-title" id="garage-heading">🔧 GARAGE</h2>
+          <p  class="screen-header-subtitle" id="garage-name">Downtown Auto</p>
+        </div>
+        <div class="screen-header-money">
+          <span class="screen-header-money-label">Wallet</span>
+          <span class="screen-header-money-value"
+                id="garage-wallet">$0</span>
+        </div>
+      </div>
+
+      <div class="garage-layout">
+
+        <!-- Sidebar tabs -->
+        <aside class="garage-sidebar" role="tablist"
+               aria-label="Garage services">
+          <div class="garage-logo">AUTO</div>
+
+          <button class="garage-tab active" role="tab"
+                  aria-selected="true" aria-controls="garage-pane-repair"
+                  data-tab="repair" id="tab-repair">
+            <span class="garage-tab-icon">🛠</span> Repair
+          </button>
+          <button class="garage-tab" role="tab"
+                  aria-selected="false" aria-controls="garage-pane-upgrades"
+                  data-tab="upgrades" id="tab-upgrades">
+            <span class="garage-tab-icon">⚙️</span> Upgrades
+          </button>
+          <button class="garage-tab" role="tab"
+                  aria-selected="false" aria-controls="garage-pane-paint"
+                  data-tab="paint" id="tab-paint">
+            <span class="garage-tab-icon">🎨</span> Paint
+          </button>
+
+          <!-- Back button at bottom of sidebar -->
+          <div style="margin-top:auto; padding-top: var(--sp-4);">
+            <button class="btn btn-ghost btn-full btn-sm"
+                    id="btn-garage-back">◀ Leave</button>
+          </div>
+        </aside>
+
+        <!-- Main content (tab panes) -->
+        <div class="garage-content">
+
+          <!-- ── Repair pane ──────────────────────────────────────── -->
+          <div id="garage-pane-repair" role="tabpanel"
+               aria-labelledby="tab-repair">
+
+            <div class="repair-status">
+              <div class="repair-car-name" id="repair-car-name">
+                City Hatch
+              </div>
+
+              <div>
+                <div class="repair-damage-row">
+                  <span class="repair-label">Vehicle condition</span>
+                  <span class="repair-damage-pct ok"
+                        id="repair-damage-pct">100%</span>
+                </div>
+                <div class="progress-bar" style="margin-top:var(--sp-2);">
+                  <div class="progress-fill success"
+                       id="repair-bar" style="width:100%;"></div>
+                </div>
+              </div>
+
+              <div class="repair-cost-row">
+                <span class="repair-cost-label">Repair cost</span>
+                <span class="repair-cost-value"
+                      id="repair-cost">$0</span>
+              </div>
+            </div>
+
+            <button class="btn btn-success btn-full"
+                    id="btn-repair-now"
+                    disabled>
+              🛠 REPAIR NOW
+            </button>
+
+            <p style="font-size:var(--fs-xs); color:var(--clr-light-1);
+                      text-align:center; line-height:1.6;">
+              Drive into a garage marker on the map to repair your vehicle.
+              Cost scales with damage sustained.
+            </p>
+
+          </div><!-- /#garage-pane-repair -->
+
+
+          <!-- ── Upgrades pane ────────────────────────────────────── -->
+          <div id="garage-pane-upgrades" role="tabpanel"
+               aria-labelledby="tab-upgrades" class="hidden">
+
+            <div class="upgrade-list" id="upgrade-list"
+                 aria-label="Upgrade options">
+              <!-- Rows injected by Garage.js based on CONFIG.UPGRADES -->
+              <!--
+              <div class="upgrade-row" data-upgrade="engine">
+                <span class="upgrade-icon">⚙️</span>
+                <div class="upgrade-info">
+                  <span class="upgrade-name">Engine</span>
+                  <span class="upgrade-desc">
+                    Increases top speed and acceleration.
+                  </span>
+                  <div class="upgrade-pips">
+                    <div class="upgrade-pip filled"></div>
+                    <div class="upgrade-pip"></div>
+                    <div class="upgrade-pip"></div>
+                    <div class="upgrade-pip"></div>
+                    <div class="upgrade-pip"></div>
+                  </div>
+                </div>
+                <div class="upgrade-buy-col">
+                  <span class="upgrade-next-cost">$1,600</span>
+                  <button class="btn btn-primary btn-sm">
+                    UPGRADE
+                  </button>
+                </div>
+              </div>
+              -->
+            </div>
+
+          </div><!-- /#garage-pane-upgrades -->
+
+
+          <!-- ── Paint pane ────────────────────────────────────────── -->
+          <div id="garage-pane-paint" role="tabpanel"
+               aria-labelledby="tab-paint" class="hidden">
+
+            <!-- Mini 3D preview -->
+            <div class="paint-preview" aria-label="Car colour preview">
+              <canvas id="paint-preview-canvas"
+                      aria-hidden="true"></canvas>
+            </div>
+
+            <!-- Colour swatches -->
+            <p class="paint-section-label">Colour</p>
+            <div class="color-grid" id="paint-color-grid"
+                 role="radiogroup" aria-label="Choose body colour">
+              <!-- Swatches injected by Garage.js from CONFIG.PAINT.COLORS -->
+            </div>
+
+            <!-- Finish type -->
+            <p class="paint-section-label"
+               style="margin-top:var(--sp-4);">Finish</p>
+            <div class="paint-finish-row" id="paint-finish-row"
+                 role="radiogroup" aria-label="Choose paint finish">
+              <button class="finish-btn active"
+                      data-finish="standard">Standard</button>
+              <button class="finish-btn"
+                      data-finish="metallic">Metallic +$300</button>
+              <button class="finish-btn"
+                      data-finish="matte">Matte +$400</button>
+              <button class="finish-btn"
+                      data-finish="chrome">Chrome +$900</button>
+            </div>
+
+            <!-- Total & confirm -->
+            <div class="paint-total-row"
+                 style="margin-top:var(--sp-4);">
+              <span class="paint-total-label">Total cost</span>
+              <span class="paint-total-value"
+                    id="paint-total">$500</span>
+            </div>
+
+            <button class="btn btn-primary btn-full"
+                    id="btn-paint-apply"
+                    style="margin-top:var(--sp-3);">
+              🎨 APPLY PAINT JOB
+            </button>
+
+          </div><!-- /#garage-pane-paint -->
+
+        </div><!-- /.garage-content -->
+
+      </div><!-- /.garage-layout -->
+
+    </div><!-- /.screen-panel -->
+  </div><!-- /#screen-garage -->
+
+
+  <!-- ── CAR DEALER ──────────────────────────────────────────────────── -->
+  <div id="screen-dealer" class="screen hidden" role="dialog"
+       aria-modal="true" aria-labelledby="dealer-heading">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel">
+
+      <!-- Header -->
+      <div class="screen-header">
+        <div>
+          <h2 class="screen-header-title" id="dealer-heading">🚗 SHOWROOM</h2>
+          <p  class="screen-header-subtitle" id="dealer-name">
+            City Auto Gallery
+          </p>
+        </div>
+        <div class="screen-header-money">
+          <span class="screen-header-money-label">Wallet</span>
+          <span class="screen-header-money-value"
+                id="dealer-wallet">$0</span>
+        </div>
+      </div>
+
+      <div class="dealer-layout">
+
+        <!-- Car list grid -->
+        <div class="car-grid" id="car-grid" aria-label="Available cars">
+          <!-- Car cards injected by CarDealer.js -->
+        </div>
+
+        <!-- Selected car detail -->
+        <aside class="car-detail-panel" id="car-detail-panel"
+               aria-live="polite" aria-atomic="true">
+
+          <!-- 3D car preview canvas -->
+          <div id="dealer-preview-wrap">
+            <canvas id="dealer-preview-canvas"
+                    aria-label="3D car preview"></canvas>
+          </div>
+
+          <!-- Placeholder — overwritten by JS -->
+          <p style="color:var(--clr-light-1); font-size:var(--fs-sm);
+                    text-align:center;">
+            Select a car to see details.
+          </p>
+
+        </aside>
+
+      </div><!-- /.dealer-layout -->
+
+      <div style="margin-top:var(--sp-4);">
+        <button class="btn btn-ghost" id="btn-dealer-back">◀ Leave</button>
+      </div>
+
+    </div><!-- /.screen-panel -->
+  </div><!-- /#screen-dealer -->
+
+
+  <!-- ── RACE RESULTS ─────────────────────────────────────────────────── -->
+  <div id="screen-results" class="screen hidden" role="dialog"
+       aria-modal="true" aria-labelledby="results-heading"
+       aria-live="polite">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel">
+      <div class="results-card">
+
+        <!-- Finishing position (1ST / 2ND / DNF etc.) -->
+        <div class="results-place-display place-1st"
+             id="results-place"
+             aria-label="Finishing position">
+          1ST
+        </div>
+
+        <p class="results-race-name" id="results-race-name">
+          Downtown Sprint
+        </p>
+
+        <!-- Stats grid -->
+        <div class="results-stats-grid" id="results-stats"
+             aria-label="Race statistics">
+          <div class="results-stat">
+            <span class="results-stat-value"
+                  id="results-time">0:00</span>
+            <span class="results-stat-label">Race Time</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-value"
+                  id="results-top-speed">0</span>
+            <span class="results-stat-label">Top Speed</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-value"
+                  id="results-damage">0%</span>
+            <span class="results-stat-label">Damage</span>
+          </div>
+        </div>
+
+        <!-- Prize -->
+        <div class="results-prize-row" id="results-prize-row">
+          <span class="results-prize-label">Prize Money</span>
+          <span class="results-prize-amount"
+                id="results-prize">500</span>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex; gap:var(--sp-3); width:100%;">
+          <button class="btn btn-primary" style="flex:1;"
+                  id="btn-results-retry">↺ RETRY</button>
+          <button class="btn btn-ghost" style="flex:1;"
+                  id="btn-results-done">✓ DONE</button>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /#screen-results -->
+
+
+  <!-- ── GAME OVER ────────────────────────────────────────────────────── -->
+  <div id="screen-gameover" class="screen hidden" role="alertdialog"
+       aria-modal="true" aria-labelledby="gameover-heading">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel">
+      <div class="gameover-card">
+
+        <div class="gameover-icon" aria-hidden="true">💥</div>
+        <h2 class="gameover-title" id="gameover-heading">GAME OVER</h2>
+        <p  class="gameover-reason" id="gameover-reason">
+          Your car was destroyed.
+        </p>
+
+        <div class="gameover-stats" id="gameover-stats"
+             aria-label="Session summary">
+          <div class="results-stat">
+            <span class="results-stat-value"
+                  id="go-money-earned">$0</span>
+            <span class="results-stat-label">Earned</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-value"
+                  id="go-races-won">0</span>
+            <span class="results-stat-label">Races Won</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-value"
+                  id="go-passengers">0</span>
+            <span class="results-stat-label">Passengers</span>
+          </div>
+          <div class="results-stat">
+            <span class="results-stat-value"
+                  id="go-wanted">★0</span>
+            <span class="results-stat-label">Wanted</span>
+          </div>
+        </div>
+
+        <div class="gameover-nav">
+          <button class="btn btn-primary btn-full"
+                  id="btn-go-respawn">🏥 RESPAWN ($200)</button>
+          <button class="btn btn-ghost btn-full"
+                  id="btn-go-menu">⌂ MAIN MENU</button>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /#screen-gameover -->
+
+
+  <!-- ── TAXI MISSION ACCEPT ──────────────────────────────────────────── -->
+  <div id="screen-mission" class="screen hidden" role="dialog"
+       aria-modal="true" aria-labelledby="mission-heading">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel" style="max-width:440px; margin:0 auto;">
+      <div class="mission-card">
+
+        <div class="mission-type-badge">
+          <span class="mission-type-icon" aria-hidden="true">🚕</span>
+          <span class="mission-type-label">Taxi Request</span>
+        </div>
+
+        <h2 class="mission-name" id="mission-heading">
+          Late for Work
+        </h2>
+
+        <!-- Route display -->
+        <div class="mission-route" aria-label="Pickup and dropoff">
+          <div class="route-point">
+            <span class="route-point-label">Pickup</span>
+            <span class="route-point-name"
+                  id="mission-pickup">City Square</span>
+          </div>
+          <span class="route-arrow" aria-hidden="true">→</span>
+          <div class="route-point">
+            <span class="route-point-label">Destination</span>
+            <span class="route-point-name"
+                  id="mission-dest">Downtown Office</span>
+          </div>
+        </div>
+
+        <!-- Reward breakdown -->
+        <div class="mission-rewards" aria-label="Mission rewards">
+          <div class="reward-item">
+            <span class="reward-value" id="mission-base-pay">$150</span>
+            <span class="reward-label">Base Pay</span>
+          </div>
+          <div class="reward-item">
+            <span class="reward-value time"
+                  id="mission-time-bonus">+$250</span>
+            <span class="reward-label">Time Bonus</span>
+          </div>
+          <div class="reward-item">
+            <span class="reward-value dist"
+                  id="mission-distance">1.2 km</span>
+            <span class="reward-label">Distance</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mission-actions">
+          <button class="btn btn-primary"
+                  id="btn-mission-accept">✓ ACCEPT</button>
+          <button class="btn btn-ghost"
+                  id="btn-mission-decline">✕ DECLINE</button>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /#screen-mission -->
+
+
+  <!-- ── SETTINGS ─────────────────────────────────────────────────────── -->
+  <div id="screen-settings" class="screen hidden" role="dialog"
+       aria-modal="true" aria-labelledby="settings-heading">
+    <div class="screen-backdrop" aria-hidden="true"></div>
+
+    <div class="screen-panel">
+      <div class="settings-card">
+
+        <h2 class="saves-title" id="settings-heading">⚙ SETTINGS</h2>
+
+        <!-- ── Audio ──────────────────────────────────────────────── -->
+        <p class="settings-section-title">Audio</p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Master Volume</span>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" class="setting-slider"
+                   id="setting-master-vol"
+                   min="0" max="100" value="80"
+                   aria-label="Master volume">
+            <span class="slider-value" id="val-master-vol">80</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Engine & SFX</span>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" class="setting-slider"
+                   id="setting-sfx-vol"
+                   min="0" max="100" value="70"
+                   aria-label="SFX volume">
+            <span class="slider-value" id="val-sfx-vol">70</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">City Ambience</span>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" class="setting-slider"
+                   id="setting-amb-vol"
+                   min="0" max="100" value="30"
+                   aria-label="Ambient volume">
+            <span class="slider-value" id="val-amb-vol">30</span>
+          </div>
+        </div>
+
+        <!-- ── Graphics ────────────────────────────────────────────── -->
+        <p class="settings-section-title">Graphics</p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Quality</span>
+            <span class="setting-desc">
+              Affects shadows, draw distance, and traffic density.
+            </span>
+          </div>
+          <div class="quality-select" role="radiogroup"
+               aria-label="Graphics quality" id="quality-select">
+            <button class="quality-btn"        data-quality="low">Low</button>
+            <button class="quality-btn active" data-quality="med">Med</button>
+            <button class="quality-btn"        data-quality="high">High</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Shadows</span>
+          </div>
+          <label class="toggle-wrap" aria-label="Toggle shadows">
+            <input type="checkbox" class="toggle-input"
+                   id="setting-shadows" checked>
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Day/Night Cycle</span>
+            <span class="setting-desc">Disabling locks time to midday.</span>
+          </div>
+          <label class="toggle-wrap" aria-label="Toggle day/night cycle">
+            <input type="checkbox" class="toggle-input"
+                   id="setting-daycycle" checked>
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <!-- ── Gameplay ─────────────────────────────────────────────── -->
+        <p class="settings-section-title">Gameplay</p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Camera Mode</span>
+            <span class="setting-desc">Default camera on spawn.</span>
+          </div>
+          <div class="quality-select" role="radiogroup"
+               aria-label="Camera mode" id="cam-mode-select">
+            <button class="quality-btn active" data-cam="follow">Follow</button>
+            <button class="quality-btn"        data-cam="hood">Hood</button>
+            <button class="quality-btn"        data-cam="orbit">Orbit</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Invert Camera Y</span>
+          </div>
+          <label class="toggle-wrap" aria-label="Invert camera Y axis">
+            <input type="checkbox" class="toggle-input"
+                   id="setting-invert-y">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Show Traffic</span>
+          </div>
+          <label class="toggle-wrap" aria-label="Toggle traffic">
+            <input type="checkbox" class="toggle-input"
+                   id="setting-traffic" checked>
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Police</span>
+          </div>
+          <label class="toggle-wrap" aria-label="Toggle police system">
+            <input type="checkbox" class="toggle-input"
+                   id="setting-police" checked>
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <!-- ── Misc ─────────────────────────────────────────────────── -->
+        <p class="settings-section-title">Controls</p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Touch Controls</span>
+            <span class="setting-desc">Show on-screen joystick &amp; buttons.</span>
+          </div>
+          <label class="toggle-wrap" aria-label="Show touch controls">
+            <input type="checkbox" class="toggle-input"
+                   id="setting-touch" checked>
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Controller Vibration</span>
+          </div>
+          <label class="toggle-wrap" aria-label="Toggle controller vibration">
+            <input type="checkbox" class="toggle-input"
+                   id="setting-vibration" checked>
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <button class="btn btn-ghost btn-full"
+                id="btn-settings-back">◀ Back</button>
+
+      </div>
+    </div>
+  </div><!-- /#screen-settings -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       ██  IN-GAME HUD  ██
+       Always present in DOM; visibility controlled by HUD.js.
+       z-index: var(--z-hud)
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="hud" class="hidden" aria-hidden="true">
+
+    <!-- ── Pause button (top-right) ──────────────────────────────────── -->
+    <button id="btn-pause-hud"
+            class="hud-tr"
+            title="Pause (Esc)"
+            aria-label="Pause game"
+            style="pointer-events:all;">
+      ⏸
+    </button>
+
+    <!-- ── Money (top-left) ──────────────────────────────────────────── -->
+    <div class="hud-tl" id="hud-money-wrap">
+      <div id="hud-money" aria-label="Current money">2,500</div>
+
+      <!-- Wanted stars (below money, hidden until wanted > 0) -->
+      <div id="hud-wanted">
+        <div class="wanted-label">WANTED</div>
+        <div class="wanted-stars" id="wanted-stars" role="img"
+             aria-label="Wanted level: 0 stars">
+          <div class="wanted-star" data-star="1"></div>
+          <div class="wanted-star" data-star="2"></div>
+          <div class="wanted-star" data-star="3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Objective / compass (top-centre) ──────────────────────────── -->
+    <div class="hud-tc" id="hud-objective">
+      <div class="obj-label">OBJECTIVE</div>
+      <div class="obj-text" id="obj-text">Explore the city</div>
+      <div class="obj-dist" id="obj-dist"></div>
+      <div class="obj-arrow" id="obj-arrow" aria-hidden="true">↑</div>
+    </div>
+
+    <!-- ── Speedometer cluster (bottom-right) ────────────────────────── -->
+    <div class="hud-br" id="speedo-cluster">
+
+      <!-- Boost bar (shown only with turbo upgrade) -->
+      <div id="boost-bar-wrap">
+        <span class="boost-label">BOOST</span>
+        <div  class="boost-track">
+          <div class="boost-fill ready" id="boost-fill"></div>
+        </div>
+      </div>
+
+      <!-- Speed number + unit -->
+      <div style="display:flex; align-items:baseline; gap:6px;
+                  justify-content:flex-end;">
+        <div class="speedo-value" id="speedo-value"
+             aria-label="Speed">0</div>
+        <div class="speedo-unit">km/h</div>
+      </div>
+
+      <!-- Gear indicator -->
+      <div style="display:flex; justify-content:flex-end;">
+        <div class="gear-indicator" id="gear-indicator"
+             aria-label="Current gear">1</div>
+      </div>
+
+    </div><!-- /#speedo-cluster -->
+
+    <!-- ── Damage bar (bottom-left, above minimap) ────────────────────── -->
+    <div class="hud-bl" style="display:flex; flex-direction:column; gap:8px;">
+
+      <div id="damage-wrap">
+        <div class="damage-label-row">
+          <span class="damage-label">Vehicle</span>
+          <span class="damage-pct" id="damage-pct">100%</span>
+        </div>
+        <div class="damage-track">
+          <div class="damage-fill" id="damage-fill"
+               style="width:100%;"></div>
+        </div>
+      </div>
+
+      <!-- Minimap -->
+      <div id="minimap-wrap">
+        <div id="minimap" role="img" aria-label="City minimap">
+          <canvas id="minimap-canvas"
+                  width="160" height="160"></canvas>
+
+          <!-- Compass labels -->
+          <div class="minimap-compass" aria-hidden="true">
+            <span class="compass-n">N</span>
+            <span class="compass-s">S</span>
+            <span class="compass-e">E</span>
+            <span class="compass-w">W</span>
+          </div>
+        </div>
+
+        <!-- Legend row -->
+        <div class="minimap-legend" aria-label="Map legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#FF6600;"></div>
+            <span>Garage</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#FFD700;"></div>
+            <span>Dealer</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#FF1111;"></div>
+            <span>Race</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#FFEE00;"></div>
+            <span>Taxi</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.hud-bl -->
+
+    <!-- ── Speed limit sign (top-right, below pause) ─────────────────── -->
+    <div id="speed-limit-sign" aria-label="Speed limit">
+      <span id="speed-limit-num">50</span>
+      <span class="sign-label">km/h</span>
+    </div>
+
+    <!-- ── District banner (centre screen, fades in on zone entry) ───── -->
+    <div id="district-banner">
+      <span class="district-banner-label">Entering</span>
+      <span class="district-banner-name" id="district-name">Downtown</span>
+    </div>
+
+    <!-- ── Interaction prompt (bottom-centre, near map markers) ─────── -->
+    <div id="interaction-prompt">
+      <div class="prompt-key">E</div>
+      <span class="prompt-text">
+        Enter <span class="prompt-place"
+                    id="prompt-place-name">Garage</span>
+      </span>
+    </div>
+
+  </div><!-- /#hud -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       RACE HUD OVERLAY  (separate from #hud — shown during races)
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="race-hud" aria-hidden="true">
+
+    <!-- Race timer -->
+    <div class="race-timer" id="race-timer"
+         aria-label="Race time remaining">0:00</div>
+
+    <!-- Position badge -->
+    <div class="race-position-badge" id="race-pos-badge">
+      <span class="race-position"    id="race-pos">1</span>
+      <span class="race-position-total" id="race-pos-total">/4</span>
+    </div>
+
+    <!-- Lap counter -->
+    <div class="race-lap" id="race-lap-display"
+         aria-label="Current lap">
+      Lap <strong id="race-lap-cur">1</strong>
+      / <span id="race-lap-total">2</span>
+    </div>
+
+  </div><!-- /#race-hud -->
+
+
+  <!-- Countdown (3-2-1-GO) -->
+  <div id="race-countdown" aria-live="assertive"></div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       TAXI HUD  (shown during taxi missions)
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="taxi-hud" aria-hidden="true">
+    <div class="taxi-panel">
+      <div class="taxi-icon-row">
+        <span class="taxi-icon" aria-hidden="true">🚕</span>
+        <span class="taxi-mission-name"
+              id="taxi-mission-name">Late for Work</span>
+      </div>
+      <span class="taxi-dest" id="taxi-dest">Downtown Office</span>
+      <div class="taxi-timer-track">
+        <div class="taxi-timer-fill"
+             id="taxi-timer-fill" style="width:100%;"></div>
+      </div>
+      <span class="taxi-fare" id="taxi-fare">400</span>
+    </div>
+  </div><!-- /#taxi-hud -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       TOUCH CONTROLS  (mobile — always in DOM, toggled by settings)
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="touch-controls" class="hidden" aria-hidden="true">
+
+    <!-- Joystick (bottom-left) -->
+    <div id="joystick-zone">
+      <div id="joystick-base">
+        <div id="joystick-thumb"></div>
+      </div>
+    </div>
+
+    <!-- Action buttons (bottom-right) -->
+    <div id="action-buttons">
+      <button id="btn-action-primary"
+              class="action-btn"
+              aria-label="Handbrake / Nitro">
+        NITRO
+      </button>
+      <button id="btn-action-secondary"
+              class="action-btn"
+              aria-label="Horn">
+        📯
+      </button>
+    </div>
+
+    <!-- Camera toggle (top-right corner) -->
+    <button id="btn-cam-toggle"
+            class="action-btn"
+            aria-label="Switch camera">
+      📷
+    </button>
+
+  </div><!-- /#touch-controls -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       TOAST NOTIFICATION CONTAINER
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="toast-container"
+       role="region"
+       aria-live="polite"
+       aria-label="Notifications">
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       GENERIC MODAL  (confirm dialogs, bribe, etc.)
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="modal-overlay" class="hidden" role="dialog"
+       aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box" id="modal-box">
+
+      <div class="modal-icon" id="modal-icon"
+           aria-hidden="true">⚠️</div>
+      <h3 class="modal-title" id="modal-title">Confirm</h3>
+      <p  class="modal-body"  id="modal-body">Are you sure?</p>
+
+      <div class="modal-actions" id="modal-actions">
+        <button class="btn btn-danger"
+                id="btn-modal-confirm">Confirm</button>
+        <button class="btn btn-ghost"
+                id="btn-modal-cancel">Cancel</button>
+      </div>
+
+    </div>
+  </div><!-- /#modal-overlay -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SCRIPTS
+       Load order:
+         1. Three.js CDN
+         2. CONFIG (all constants)
+         3. Utilities (math, textures, save)
+         4. Core engine (renderer, camera, input)
+         5. World (map, roads, buildings, props, water, bridges, sky)
+         6. Vehicles (base, player, traffic, police)
+         7. Systems (traffic, police, economy, passengers, races)
+         8. Locations (markers, garage, dealer)
+         9. UI (minimap, hud, notifications, menus)
+        10. Game (master loop + state machine)
+        11. main.js (boot)
+  ════════════════════════════════════════════════════════════════════════ -->
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- 1. Config -->
+  <script src="js/config.js"></script>
+
+  <!-- 2. Utilities -->
+  <script src="js/utils/MathUtils.js"></script>
+  <script src="js/utils/ProceduralTextures.js"></script>
+  <script src="js/utils/SaveSystem.js"></script>
+
+  <!-- 3. Core -->
+  <script src="js/core/Renderer.js"></script>
+  <script src="js/core/Camera.js"></script>
+  <script src="js/core/InputManager.js"></script>
+
+  <!-- 4. World -->
+  <script src="js/world/Sky.js"></script>
+  <script src="js/world/CityMap.js"></script>
+  <script src="js/world/RoadBuilder.js"></script>
+  <script src="js/world/BuildingGenerator.js"></script>
+  <script src="js/world/Props.js"></script>
+  <script src="js/world/Water.js"></script>
+  <script src="js/world/Bridges.js"></script>
+
+  <!-- 5. Vehicles -->
+  <script src="js/vehicles/Vehicle.js"></script>
+  <script src="js/vehicles/PlayerCar.js"></script>
+  <script src="js/vehicles/TrafficCar.js"></script>
+  <script src="js/vehicles/PoliceCar.js"></script>
+
+  <!-- 6. Systems -->
+  <script src="js/systems/TrafficSystem.js"></script>
+  <script src="js/systems/PoliceSystem.js"></script>
+  <script src="js/systems/EconomySystem.js"></script>
+  <script src="js/systems/PassengerSystem.js"></script>
+  <script src="js/systems/RaceSystem.js"></script>
+
+  <!-- 7. Locations -->
+  <script src="js/locations/Markers.js"></script>
+  <script src="js/locations/Garage.js"></script>
+  <script src="js/locations/CarDealer.js"></script>
+
+  <!-- 8. UI -->
+  <script src="js/ui/Minimap.js"></script>
+  <script src="js/ui/HUD.js"></script>
+  <script src="js/ui/Notifications.js"></script>
+  <script src="js/ui/MenuManager.js"></script>
+
+  <!-- 9. Master game loop -->
+  <script src="js/core/Game.js"></script>
+
+  <!-- 10. Boot -->
+  <script src="js/main.js"></script>
+
+</body>
+</html>
