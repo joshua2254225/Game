@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Canvas Endless Runner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #111;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none; /* Prevent browser scrolling/zooming */
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Overlays */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #ffcc00;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            pointer-events: auto;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px #ff3366, -2px -2px 0px #00ccff;
+        }
+
+        p { color: #ccc; font-size: 16px; margin-bottom: 30px; line-height: 1.5; }
+        
+        .score-text { color: #ffcc00; font-size: 24px; font-weight: bold; margin: 10px 0; }
+
+        button {
+            background: linear-gradient(to bottom, #ffcc00, #ff9900);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+            transition: transform 0.1s;
+        }
+
+        button:active { transform: scale(0.95); }
+
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        .coin-icon { color: #ffcc00; }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="hud" style="display: none;">
+        <div id="scoreDisplay">Score: 0</div>
+        <div id="highScoreDisplay">Best: 0</div>
+    </div>
+
+    <div id="ui-layer">
+        <div id="startScreen" class="screen" style="display: flex;">
+            <h1>City Runner</h1>
+            <p>Swipe Left/Right to switch lanes<br>Swipe Up to Jump<br>Swipe Down to Duck</p>
+            <button id="startBtn">Tap to Play</button>
+        </div>
+
+        <div id="gameOverScreen" class="screen">
+            <h1>Game Over</h1>
+            <div id="finalScore" class="score-text">Score: 0</div>
+            <p>You hit an obstacle!</p>
+            <button id="restartBtn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Setup & Config ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        // UI Elements
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const hud = document.getElementById('hud');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const finalScore = document.getElementById('finalScore');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // Pseudo-3D Camera constants
+        const FOCAL_LENGTH = 300;
+        let CAM_HEIGHT = 150;
+        let VP_Y = 0; // Horizon Y position
+        const LANE_WIDTH = 220; // 3D width of a lane
+        const MAX_DEPTH = 2000;
+
+        // Game State
+        let state = 'START'; // START, PLAYING, GAMEOVER
+        let score = 0;
+        let highScore = localStorage.getItem('runnerHighScore') || 0;
+        let distanceTraveled = 0;
+        let baseSpeed = 15;
+        let currentSpeed = 0;
+        let frameCount = 0;
+
+        highScoreDisplay.innerText = `Best: ${Math.floor(highScore)}`;
+
+        // Player Object
+        const player = {
+            lane: 0,         // -1 (Left), 0 (Middle), 1 (Right)
+            visualLane: 0,   // For smooth lane changing animation
+            z: 20,           // Fixed Z position relative to camera
+            y: 0,            // Jump height
+            vy: 0,           // Vertical velocity
+            gravity: -2.5,
+            jumpPower: 35,
+            isDucking: false,
+            duckTimer: 0,
+            width: 80,
+            height: 120,
+            color: '#00ccff'
+        };
+
+        // Entities arrays
+        let entities = [];
+
+        // --- Window Resizing ---
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            VP_Y = height * 0.35; // Horizon is at 35% down the screen
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- Swipe Input Handling ---
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', e => {
+            if (state !== 'PLAYING') return;
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, {passive: false});
+
+        document.addEventListener('touchmove', e => {
+            if (state === 'PLAYING') e.preventDefault(); // Prevent scrolling
+        }, {passive: false});
+
+        document.addEventListener('touchend', e => {
+            if (state !== 'PLAYING') return;
+            let touchEndX = e.changedTouches[0].screenX;
+            let touchEndY = e.changedTouches[0].screenY;
+            handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
+        }, {passive: false});
+
+        // Keyboard fallbacks for desktop testing
+        document.addEventListener('keydown', e => {
+            if (state !== 'PLAYING') return;
+            if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1);
+            if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1);
+            if (e.key === 'ArrowUp' || e.key === 'w') jump();
+            if (e.key === 'ArrowDown' || e.key === 's') duck();
+        });
+
+        function handleSwipe(startX, startY, endX, endY) {
+            let dx = endX - startX;
+            let dy = endY - startY;
+            
+            // Determine dominant swipe direction
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal Swipe
+                if (Math.abs(dx) > 30) {
+                    if (dx > 0) movePlayer(1); // Right
+                    else movePlayer(-1);       // Left
+                }
+            } else {
+                // Vertical Swipe
+                if (Math.abs(dy) > 30) {
+                    if (dy < 0) jump();        // Up
+                    else duck();               // Down
+                }
+            }
+        }
+
+        // --- Player Actions ---
+        function movePlayer(dir) {
+            player.lane += dir;
+            if (player.lane < -1) player.lane = -1;
+            if (player.lane > 1) player.lane = 1;
+        }
+
+        function jump() {
+            if (player.y <= 0 && !player.isDucking) { // Only jump if on ground
+                player.vy = player.jumpPower;
+            }
+        }
+
+        function duck() {
+            if (player.y <= 0) { // Only duck if on ground
+                player.isDucking = true;
+                player.duckTimer = 40; // frames
+            } else {
+                player.vy -= 15; // Fast fall if in air
+            }
+        }
+
+        // --- Game Logic ---
+        function startGame() {
+            state = 'PLAYING';
+            score = 0;
+            distanceTraveled = 0;
+            currentSpeed = baseSpeed;
+            frameCount = 0;
+            player.lane = 0;
+            player.visualLane = 0;
+            player.y = 0;
+            player.vy = 0;
+            player.isDucking = false;
+            entities = [];
+            
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            hud.style.display = 'flex';
+            updateScoreUI();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            state = 'GAMEOVER';
+            hud.style.display = 'none';
+            gameOverScreen.style.display = 'flex';
+            finalScore.innerText = `Score: ${Math.floor(score)}`;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('runnerHighScore', highScore);
+                highScoreDisplay.innerText = `Best: ${Math.floor(highScore)}`;
+            }
+        }
+
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        // --- Spawning Entities ---
+        function spawnEntities() {
+            // Spawn rate increases slightly with speed
+            let spawnInterval = Math.max(20, 60 - Math.floor(currentSpeed));
+            
+            if (frameCount % spawnInterval === 0) {
+                let randomLane = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+                let r = Math.random();
+
+                if (r < 0.2) {
+                    // Spawn Coins (Line of 3-5)
+                    let coinCount = Math.floor(Math.random() * 3) + 3;
+                    for (let i = 0; i < coinCount; i++) {
+                        entities.push({
+                            type: 'coin', lane: randomLane, z: MAX_DEPTH + i * 150,
+                            w: 40, h: 40, y: 30, collected: false
+                        });
+                    }
+                } else if (r < 0.5) {
+                    // Spawn Train (tall obstacle)
+                    entities.push({
+                        type: 'train', lane: randomLane, z: MAX_DEPTH,
+                        w: 160, h: 200, y: 0, color: '#e63946'
+                    });
+                } else if (r < 0.8) {
+                    // Spawn Barrier (jump over)
+                    entities.push({
+                        type: 'barrier', lane: randomLane, z: MAX_DEPTH,
+                        w: 140, h: 60, y: 0, color: '#fca311'
+                    });
+                } else {
+                    // Spawn Overhead (duck under)
+                    entities.push({
+                        type: 'overhead', lane: randomLane, z: MAX_DEPTH,
+                        w: 200, h: 50, y: 130, color: '#457b9d'
+                    });
+                }
+            }
+        }
+
+        // --- Projection Math ---
+        function project(lane, y3d, z3d) {
+            let scale = FOCAL_LENGTH / (FOCAL_LENGTH + z3d);
+            let screenX = width / 2 + (lane * LANE_WIDTH) * scale;
+            let screenY = VP_Y + CAM_HEIGHT * scale - y3d * scale;
+            return { x: screenX, y: screenY, scale: scale };
+        }
+
+        // --- Update Loop ---
+        function update() {
+            frameCount++;
+            distanceTraveled += currentSpeed;
+            score += currentSpeed * 0.05;
+            currentSpeed = baseSpeed + (distanceTraveled * 0.0001); // Gradually increase speed
+
+            updateScoreUI();
+
+            // Player Physics & Animation
+            player.visualLane += (player.lane - player.visualLane) * 0.2; // Smooth lane switch
+            
+            // Jump physics
+            player.y += player.vy;
+            player.vy += player.gravity;
+            if (player.y <= 0) {
+                player.y = 0;
+                player.vy = 0;
+            }
+
+            // Duck physics
+            if (player.isDucking) {
+                player.duckTimer--;
+                if (player.duckTimer <= 0) player.isDucking = false;
+            }
+
+            // Move & Collide Entities
+            for (let i = entities.length - 1; i >= 0; i--) {
+                let e = entities[i];
+                e.z -= currentSpeed;
+
+                // Collision Detection
+                // Check if Z is overlapping player (player is at Z=20, depth threshold ~40)
+                if (e.z > 0 && e.z < 60 && Math.abs(e.lane - player.lane) < 0.5) {
+                    if (e.type === 'coin' && !e.collected) {
+                        e.collected = true;
+                        score += 50;
+                    } else if (!e.collected) {
+                        // Obstacle Collision
+                        if (e.type === 'train') {
+                            gameOver();
+                        } else if (e.type === 'barrier') {
+                            if (player.y < e.h - 10) gameOver(); // Didn't jump high enough
+                        } else if (e.type === 'overhead') {
+                            if (!player.isDucking) gameOver(); // Didn't duck
+                        }
+                    }
+                }
+
+                // Remove off-screen entities
+                if (e.z < -100) {
+                    entities.splice(i, 1);
+                }
+            }
+
+            spawnEntities();
+        }
+
+        function updateScoreUI() {
+            if(frameCount % 5 === 0) {
+                scoreDisplay.innerHTML = `<span class="coin-icon">★</span> ${Math.floor(score)}`;
+            }
+        }
+
+        // --- Render Loop ---
+        function draw() {
+            // Background (Sky)
+            let skyGrad = ctx.createLinearGradient(0, 0, 0, VP_Y);
+            skyGrad.addColorStop(0, '#1a1a2e');
+            skyGrad.addColorStop(1, '#16213e');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Horizon Glow
+            ctx.fillStyle = '#0f3460';
+            ctx.beginPath();
+            ctx.ellipse(width/2, VP_Y, width, 50, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ground
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, VP_Y, width, height - VP_Y);
+
+            // Draw Grid/Speed lines to simulate movement
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1;
+            let offset = (distanceTraveled % 200);
+            for (let i = 0; i < 20; i++) {
+                let z = i * 200 - offset;
+                if (z > 0 && z < MAX_DEPTH) {
+                    let p1 = project(-2, 0, z);
+                    let p2 = project(2, 0, z);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw Lanes
+            for (let l = -1; l <= 1; l++) {
+                let pBottom = project(l, 0, 0);
+                let pTop = project(l, 0, MAX_DEPTH);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 4 * pBottom.scale;
+                ctx.beginPath();
+                ctx.moveTo(pBottom.x, pBottom.y);
+                ctx.lineTo(pTop.x, pTop.y);
+                ctx.stroke();
+            }
+
+            // Sort entities from back to front (Painter's Algorithm)
+            let renderList = [...entities];
+            // Add player to render list for correct depth sorting
+            renderList.push({
+                isPlayer: true, z: player.z
+            });
+            
+            renderList.sort((a, b) => b.z - a.z);
+
+            // Draw Entities
+            for (let e of renderList) {
+                if (e.z < 0) continue; // Behind camera
+
+                if (e.isPlayer) {
+                    drawPlayer();
+                } else if (!e.collected) {
+                    drawEntity(e);
+                }
+            }
+        }
+
+        function drawEntity(e) {
+            let p = project(e.lane, e.y, e.z);
+            let s = p.scale;
+            let dw = e.w * s;
+            let dh = e.h * s;
+
+            if (e.type === 'coin') {
+                ctx.fillStyle = '#ffcc00';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y - dh/2, dw/2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ff9900';
+                ctx.lineWidth = 2 * s;
+                ctx.stroke();
+                
+                // Inner detail
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(p.x - dw/6, p.y - dh/2 - dh/6, dw/8, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Obstacles (Trains, Barriers, Overhead)
+                let faceHeight = dh;
+                // Add fake 3D depth block
+                let depth = 40 * s;
+                
+                // Side/Top colors based on main color
+                ctx.fillStyle = e.color;
+                
+                // Front Face
+                ctx.fillRect(p.x - dw/2, p.y - faceHeight, dw, faceHeight);
+                
+                // Simple lighting/border
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(p.x - dw/2, p.y - faceHeight, dw, faceHeight);
+
+                // Add visual details based on type
+                if (e.type === 'train') {
+                    // Windows
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(p.x - dw*0.4, p.y - faceHeight*0.8, dw*0.8, faceHeight*0.3);
+                    // Headlights
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(p.x - dw*0.3, p.y - faceHeight*0.2, dw*0.2, faceHeight*0.1);
+                    ctx.fillRect(p.x + dw*0.1, p.y - faceHeight*0.2, dw*0.2, faceHeight*0.1);
+                } else if (e.type === 'barrier') {
+                    // Stripes
+                    ctx.fillStyle = '#111';
+                    for(let i=0; i<3; i++) {
+                        ctx.fillRect(p.x - dw/2 + i*(dw/3), p.y - faceHeight, dw/6, faceHeight);
+                    }
+                }
+            }
+        }
+
+        function drawPlayer() {
+            let p = project(player.visualLane, player.y, player.z);
+            let s = p.scale;
+            
+            let ph = player.isDucking ? (player.height * 0.5) : player.height;
+            let pw = player.width;
+            
+            let dw = pw * s;
+            let dh = ph * s;
+            
+            // Player Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath();
+            ctx.ellipse(project(player.visualLane, 0, player.z).x, project(player.visualLane, 0, player.z).y, dw*0.6, dw*0.2, 0, 0, Math.PI*2);
+            ctx.fill();
+
+            // Player Body (Rounded Rect style)
+            ctx.fillStyle = player.color;
+            let rx = p.x - dw/2;
+            let ry = p.y - dh;
+            
+            ctx.beginPath();
+            ctx.roundRect(rx, ry, dw, dh, 10 * s);
+            ctx.fill();
+            
+            // Player details (Backpack/Head)
+            ctx.fillStyle = '#ff3366'; // Head/Cap
+            ctx.beginPath();
+            ctx.arc(p.x, ry + dh*0.2, dw*0.4, 0, Math.PI*2);
+            ctx.fill();
+            
+            if(!player.isDucking) {
+                // Backpack
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(rx + dw*0.2, ry + dh*0.4, dw*0.6, dh*0.4);
+            }
+        }
+
+        // --- Main Game Loop ---
+        function gameLoop() {
+            if (state === 'PLAYING') {
+                update();
+            }
+            draw();
+            
+            if (state === 'PLAYING') {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Initial render frame behind start screen
+        draw();
+
+    </script>
+</body>
+</html>
