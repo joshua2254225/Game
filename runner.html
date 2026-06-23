@@ -3,148 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon City Runner</title>
+    <title>Ultimate Neon Runner</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+        /* =========================================
+           CSS STYLES & UI OVERLAYS
+           ========================================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #050510; font-family: 'Arial Black', Impact, sans-serif; touch-action: none; }
+        canvas { display: block; width: 100%; height: 100%; }
 
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #050510;
-            font-family: 'Arial Black', Impact, sans-serif;
-            touch-action: none;
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* --- UI Overlay & Layout --- */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        /* --- Screens (Start / Game Over) --- */
-        .screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            background: linear-gradient(135deg, rgba(20, 10, 40, 0.85), rgba(40, 10, 50, 0.95));
-            padding: 40px;
-            border-radius: 24px;
-            border: 4px solid #ff007f;
-            box-shadow: 0 0 30px rgba(255, 0, 127, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.2);
-            pointer-events: auto;
-            text-align: center;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            animation: float 4s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        h1 {
-            color: #fff;
-            font-size: 42px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 4px 4px 0px #ff007f, -3px -3px 0px #00f0ff;
-        }
-
-        p { 
-            color: #e0e0ff; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 16px; 
-            margin-bottom: 30px; 
-            line-height: 1.6;
-            font-weight: 600;
-            text-shadow: 1px 1px 2px #000;
-        }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
         
-        .score-text { 
-            color: #ffcc00; 
-            font-size: 28px; 
-            margin: 15px 0; 
-            text-shadow: 0 0 10px #ffcc00;
-        }
+        /* Modals & Screens */
+        .screen { display: none; flex-direction: column; align-items: center; background: linear-gradient(135deg, rgba(20, 10, 40, 0.9), rgba(40, 10, 50, 0.95)); padding: 40px; border-radius: 24px; border: 4px solid #ff007f; box-shadow: 0 0 40px rgba(255, 0, 127, 0.6), inset 0 0 20px rgba(0, 240, 255, 0.2); pointer-events: auto; text-align: center; backdrop-filter: blur(10px); max-width: 90%; max-height: 90%; overflow-y: auto; }
+        .screen.active { display: flex; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* --- Buttons --- */
-        button {
-            background: linear-gradient(to bottom, #00f0ff, #0088ff);
-            color: #fff;
-            border: none;
-            padding: 16px 45px;
-            font-family: 'Arial Black', Impact, sans-serif;
-            font-size: 24px;
-            border-radius: 50px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 6px 0 #0055aa, 0 10px 20px rgba(0, 240, 255, 0.5);
-            transition: all 0.1s;
-            animation: pulse 2s infinite;
-        }
+        h1 { color: #fff; font-size: 42px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 4px 4px 0px #ff007f, -3px -3px 0px #00f0ff; }
+        h2 { color: #00f0ff; font-size: 28px; margin-bottom: 20px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        p { color: #e0e0ff; font-family: 'Segoe UI', sans-serif; font-size: 16px; margin-bottom: 25px; line-height: 1.6; font-weight: 600; text-shadow: 1px 1px 2px #000; }
+        
+        .score-text { color: #ffcc00; font-size: 32px; margin: 15px 0; text-shadow: 0 0 15px #ffcc00; }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 6px 0 #0055aa, 0 0 15px rgba(0, 240, 255, 0.4); }
-            50% { box-shadow: 0 6px 0 #0055aa, 0 0 30px rgba(0, 240, 255, 0.8); }
-            100% { box-shadow: 0 6px 0 #0055aa, 0 0 15px rgba(0, 240, 255, 0.4); }
-        }
+        /* Buttons */
+        button { background: linear-gradient(to bottom, #00f0ff, #0088ff); color: #fff; border: none; padding: 15px 40px; font-family: 'Arial Black', sans-serif; font-size: 20px; border-radius: 50px; cursor: pointer; text-transform: uppercase; box-shadow: 0 6px 0 #0055aa, 0 10px 20px rgba(0, 240, 255, 0.4); transition: all 0.1s; margin: 10px; }
+        button:active { transform: translateY(6px); box-shadow: 0 0 0 #0055aa, 0 5px 10px rgba(0, 240, 255, 0.5); }
+        .btn-store { background: linear-gradient(to bottom, #ff007f, #aa0055); box-shadow: 0 6px 0 #55002a, 0 10px 20px rgba(255, 0, 127, 0.4); }
+        .btn-store:active { box-shadow: 0 0 0 #55002a, 0 5px 10px rgba(255, 0, 127, 0.5); }
 
-        button:active { 
-            transform: translateY(6px); 
-            box-shadow: 0 0 0 #0055aa, 0 5px 10px rgba(0, 240, 255, 0.5); 
-        }
+        /* HUD */
+        #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; pointer-events: none; z-index: 5; }
+        .hud-top-left { display: flex; flex-direction: column; gap: 10px; }
+        .hud-panel { background: rgba(10, 5, 20, 0.7); border: 2px solid #ff007f; color: #fff; font-size: 18px; padding: 8px 15px; border-radius: 20px; box-shadow: 0 0 10px rgba(255, 0, 127, 0.4); backdrop-filter: blur(5px); display: flex; align-items: center; gap: 8px; }
+        .coin-icon { color: #ffcc00; text-shadow: 0 0 8px #ffcc00; font-size: 22px; }
 
-        /* --- HUD (Heads Up Display) --- */
-        #hud {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-        }
+        /* Action Buttons (Hoverboard) */
+        #action-buttons { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; pointer-events: auto; }
+        .action-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(0, 240, 255, 0.2); border: 3px solid #00f0ff; color: #fff; font-size: 30px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px rgba(0, 240, 255, 0.5); display: none; }
+        .action-btn.active { display: flex; }
+        .action-btn .badge { position: absolute; top: -5px; right: -5px; background: #ff007f; color: white; font-size: 14px; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; }
 
-        .hud-panel {
-            background: rgba(10, 5, 20, 0.6);
-            border: 2px solid #ff007f;
-            color: #fff;
-            font-size: 20px;
-            padding: 10px 20px;
-            border-radius: 30px;
-            box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            text-shadow: 1px 1px 2px #000;
-        }
+        /* Store Layout */
+        .store-items { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; width: 100%; }
+        .store-item { background: rgba(0,0,0,0.5); border: 2px solid #00f0ff; padding: 15px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .store-info { text-align: left; }
+        .store-info h3 { color: #fff; font-size: 20px; margin-bottom: 5px; }
+        .store-info p { margin: 0; font-size: 14px; color: #aaa; }
+        .buy-btn { font-size: 16px; padding: 10px 20px; margin: 0; }
+        .buy-btn:disabled { filter: grayscale(1); opacity: 0.5; pointer-events: none; }
 
-        .coin-icon { color: #ffcc00; text-shadow: 0 0 8px #ffcc00; }
+        /* Jetpack Progress */
+        #jetpack-bar-container { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 200px; height: 20px; background: rgba(0,0,0,0.5); border: 2px solid #ffcc00; border-radius: 10px; display: none; overflow: hidden; pointer-events: none; }
+        #jetpack-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff9900, #ffcc00); box-shadow: 0 0 10px #ffcc00; transition: width 0.1s linear; }
     </style>
 </head>
 <body>
@@ -152,88 +63,152 @@
     <canvas id="gameCanvas"></canvas>
 
     <div id="hud" style="display: none;">
-        <div id="scoreDisplay" class="hud-panel"><span class="coin-icon">★</span> 0</div>
-        <div id="highScoreDisplay" class="hud-panel">BEST: 0</div>
+        <div class="hud-top-left">
+            <div id="scoreDisplay" class="hud-panel">SCORE: 0</div>
+            <div id="coinDisplay" class="hud-panel"><span class="coin-icon">★</span> <span id="coinCount">0</span></div>
+        </div>
+        <div class="hud-top-right">
+            <div id="highScoreDisplay" class="hud-panel">BEST: 0</div>
+        </div>
+    </div>
+
+    <div id="jetpack-bar-container">
+        <div id="jetpack-bar"></div>
+    </div>
+
+    <div id="action-buttons">
+        <button id="hoverboardBtn" class="action-btn">
+            🛹
+            <div id="hoverboardCount" class="badge">0</div>
+        </button>
     </div>
 
     <div id="ui-layer">
-        <div id="startScreen" class="screen" style="display: flex;">
+        <div id="startScreen" class="screen active">
             <h1>Neon Runner</h1>
-            <p>Swipe <b>Left/Right</b> to switch lanes<br>Swipe <b>Up</b> to Jump<br>Swipe <b>Down</b> to Duck</p>
-            <button id="startBtn">Tap to Play</button>
+            <p>Swipe <b>L/R</b> to move | Swipe <b>Up</b> to Jump | Swipe <b>Down</b> to Duck</p>
+            <button id="startBtn">Play</button>
+            <button id="openStoreBtn" class="btn-store">Store</button>
+        </div>
+
+        <div id="storeScreen" class="screen">
+            <h2>Black Market</h2>
+            <div class="score-text"><span class="coin-icon">★</span> <span id="storeCoinCount">0</span></div>
+            
+            <div class="store-items">
+                <div class="store-item">
+                    <div class="store-info">
+                        <h3>Hoverboard</h3>
+                        <p>Grants 1 Crash Immunity</p>
+                    </div>
+                    <button class="buy-btn" id="buyHoverboardBtn">200 ★</button>
+                </div>
+                <div class="store-item">
+                    <div class="store-info">
+                        <h3>Jetpack Tech</h3>
+                        <p>Fly longer! (Lvl <span id="jpLvlDisplay">1</span>)</p>
+                    </div>
+                    <button class="buy-btn" id="buyJetpackBtn">500 ★</button>
+                </div>
+            </div>
+            <button id="closeStoreBtn">Back to Menu</button>
         </div>
 
         <div id="gameOverScreen" class="screen">
             <h1>Wasted</h1>
-            <div id="finalScore" class="score-text"><span class="coin-icon">★</span> 0</div>
-            <p>You smashed into an obstacle!</p>
-            <button id="restartBtn">Play Again</button>
+            <div id="finalScore" class="score-text">SCORE: 0</div>
+            <p>You smashed into reality.</p>
+            <button id="restartBtn">Run Again</button>
+            <button id="goMenuBtn" class="btn-store">Main Menu</button>
         </div>
     </div>
 
     <script>
-        // --- Setup & Config ---
+        /* =========================================
+           CORE ENGINE & ARCHITECTURE
+           ========================================= */
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let width, height;
 
-        // UI Elements
-        const startScreen = document.getElementById('startScreen');
-        const gameOverScreen = document.getElementById('gameOverScreen');
-        const hud = document.getElementById('hud');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const highScoreDisplay = document.getElementById('highScoreDisplay');
-        const finalScore = document.getElementById('finalScore');
-        const startBtn = document.getElementById('startBtn');
-        const restartBtn = document.getElementById('restartBtn');
-
-        // Pseudo-3D Camera constants
-        const FOCAL_LENGTH = 300;
-        let CAM_HEIGHT = 150;
-        let VP_Y = 0; // Horizon Y position
-        const LANE_WIDTH = 220;
-        const MAX_DEPTH = 2000;
-
-        // Game State
-        let state = 'START';
-        let score = 0;
-        let highScore = localStorage.getItem('neonRunnerHighScore') || 0;
-        let distanceTraveled = 0;
-        let baseSpeed = 16;
-        let currentSpeed = 0;
-        let frameCount = 0;
-
-        highScoreDisplay.innerText = `BEST: ${Math.floor(highScore)}`;
-
-        // Player Object
-        const player = {
-            lane: 0,
-            visualLane: 0,
-            z: 20,
-            y: 0,
-            vy: 0,
-            gravity: -2.8,
-            jumpPower: 38,
-            isDucking: false,
-            duckTimer: 0,
-            width: 80,
-            height: 120,
-            color: '#00f0ff'
+        // UI Element References
+        const DOM = {
+            screens: {
+                start: document.getElementById('startScreen'),
+                store: document.getElementById('storeScreen'),
+                gameOver: document.getElementById('gameOverScreen')
+            },
+            hud: document.getElementById('hud'),
+            score: document.getElementById('scoreDisplay'),
+            highScore: document.getElementById('highScoreDisplay'),
+            coins: document.getElementById('coinCount'),
+            storeCoins: document.getElementById('storeCoinCount'),
+            jpLevel: document.getElementById('jpLvlDisplay'),
+            hoverboardBtn: document.getElementById('hoverboardBtn'),
+            hoverboardCount: document.getElementById('hoverboardCount'),
+            jetpackBarContainer: document.getElementById('jetpack-bar-container'),
+            jetpackBar: document.getElementById('jetpack-bar'),
+            buttons: {
+                start: document.getElementById('startBtn'),
+                restart: document.getElementById('restartBtn'),
+                openStore: document.getElementById('openStoreBtn'),
+                closeStore: document.getElementById('closeStoreBtn'),
+                goMenu: document.getElementById('goMenuBtn'),
+                buyHoverboard: document.getElementById('buyHoverboardBtn'),
+                buyJetpack: document.getElementById('buyJetpackBtn')
+            }
         };
 
-        // Entities arrays
-        let entities = [];
+        // --- Save System (LocalStorage) ---
+        const SaveData = {
+            bestScore: parseInt(localStorage.getItem('nr_best')) || 0,
+            wallet: parseInt(localStorage.getItem('nr_coins')) || 0,
+            inventory: {
+                hoverboards: parseInt(localStorage.getItem('nr_hb')) || 0,
+                jetpackLevel: parseInt(localStorage.getItem('nr_jp_lvl')) || 1
+            },
+            save() {
+                localStorage.setItem('nr_best', this.bestScore);
+                localStorage.setItem('nr_coins', this.wallet);
+                localStorage.setItem('nr_hb', this.inventory.hoverboards);
+                localStorage.setItem('nr_jp_lvl', this.inventory.jetpackLevel);
+            }
+        };
 
-        // Skyline Data (Pre-generated for performance)
+        // --- Game Config & Variables ---
+        const CONFIG = {
+            focalLength: 300,
+            laneWidth: 220,
+            maxDepth: 2500,
+            baseSpeed: 16,
+            speedMultiplier: 0.00015
+        };
+
+        let Game = {
+            state: 'MENU', // MENU, STORE, PLAYING, GAMEOVER
+            score: 0,
+            sessionCoins: 0,
+            distance: 0,
+            speed: 0,
+            frameCount: 0,
+            horizonY: 0,
+            cameraHeight: 150
+        };
+
+        // Arrays for processing
+        let entities = [];
+        let particles = [];
         let skyline = [];
 
-        // --- Window Resizing ---
+        /* =========================================
+           RESIZING & RENDERING SETUP
+           ========================================= */
         function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            VP_Y = height * 0.40; // Horizon slightly lower for better sky view
+            Game.horizonY = height * 0.40;
             generateSkyline();
         }
         window.addEventListener('resize', resize);
@@ -242,422 +217,631 @@
             skyline = [];
             let currentX = 0;
             while (currentX < width) {
-                let w = 30 + Math.random() * 50;
-                let h = 20 + Math.random() * 120;
-                skyline.push({ x: currentX, w: w, h: h });
-                currentX += w + Math.random() * 10;
+                let w = 40 + Math.random() * 60;
+                let h = 30 + Math.random() * 150;
+                skyline.push({ x: currentX, w: w, h: h, lights: Math.random() > 0.3 });
+                currentX += w + Math.random() * 15;
             }
         }
 
-        resize();
-
-        // --- Swipe Input Handling ---
-        let touchStartX = 0;
-        let touchStartY = 0;
-
-        document.addEventListener('touchstart', e => {
-            if (state !== 'PLAYING') return;
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-        }, {passive: false});
-
-        document.addEventListener('touchmove', e => {
-            if (state === 'PLAYING') e.preventDefault(); 
-        }, {passive: false});
-
-        document.addEventListener('touchend', e => {
-            if (state !== 'PLAYING') return;
-            let touchEndX = e.changedTouches[0].screenX;
-            let touchEndY = e.changedTouches[0].screenY;
-            handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
-        }, {passive: false});
-
-        document.addEventListener('keydown', e => {
-            if (state !== 'PLAYING') return;
-            if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1);
-            if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1);
-            if (e.key === 'ArrowUp' || e.key === 'w') jump();
-            if (e.key === 'ArrowDown' || e.key === 's') duck();
-        });
-
-        function handleSwipe(startX, startY, endX, endY) {
-            let dx = endX - startX;
-            let dy = endY - startY;
-            if (Math.abs(dx) > Math.abs(dy)) {
-                if (Math.abs(dx) > 30) {
-                    if (dx > 0) movePlayer(1);
-                    else movePlayer(-1);
-                }
-            } else {
-                if (Math.abs(dy) > 30) {
-                    if (dy < 0) jump();
-                    else duck();
-                }
-            }
-        }
-
-        // --- Player Actions ---
-        function movePlayer(dir) {
-            player.lane += dir;
-            if (player.lane < -1) player.lane = -1;
-            if (player.lane > 1) player.lane = 1;
-        }
-
-        function jump() {
-            if (player.y <= 0 && !player.isDucking) {
-                player.vy = player.jumpPower;
-            }
-        }
-
-        function duck() {
-            if (player.y <= 0) {
-                player.isDucking = true;
-                player.duckTimer = 40; 
-            } else {
-                player.vy -= 20; 
-            }
-        }
-
-        // --- Game Logic ---
-        function startGame() {
-            state = 'PLAYING';
-            score = 0;
-            distanceTraveled = 0;
-            currentSpeed = baseSpeed;
-            frameCount = 0;
-            player.lane = 0;
-            player.visualLane = 0;
-            player.y = 0;
-            player.vy = 0;
-            player.isDucking = false;
-            entities = [];
-            
-            startScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            hud.style.display = 'flex';
-            updateScoreUI();
-            
-            requestAnimationFrame(gameLoop);
-        }
-
-        function gameOver() {
-            state = 'GAMEOVER';
-            hud.style.display = 'none';
-            gameOverScreen.style.display = 'flex';
-            finalScore.innerHTML = `<span class="coin-icon">★</span> ${Math.floor(score)}`;
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('neonRunnerHighScore', highScore);
-                highScoreDisplay.innerText = `BEST: ${Math.floor(highScore)}`;
-            }
-        }
-
-        startBtn.addEventListener('click', startGame);
-        restartBtn.addEventListener('click', startGame);
-
-        // --- Spawning Entities ---
-        function spawnEntities() {
-            let spawnInterval = Math.max(15, 55 - Math.floor(currentSpeed));
-            
-            if (frameCount % spawnInterval === 0) {
-                let randomLane = Math.floor(Math.random() * 3) - 1; 
-                let r = Math.random();
-
-                if (r < 0.25) {
-                    let coinCount = Math.floor(Math.random() * 4) + 3;
-                    for (let i = 0; i < coinCount; i++) {
-                        entities.push({
-                            type: 'coin', lane: randomLane, z: MAX_DEPTH + i * 150,
-                            w: 40, h: 40, y: 30, collected: false
-                        });
-                    }
-                } else if (r < 0.5) {
-                    entities.push({
-                        type: 'train', lane: randomLane, z: MAX_DEPTH,
-                        w: 160, h: 220, y: 0, color: '#ff007f'
-                    });
-                } else if (r < 0.75) {
-                    entities.push({
-                        type: 'barrier', lane: randomLane, z: MAX_DEPTH,
-                        w: 160, h: 65, y: 0, color: '#ffcc00'
-                    });
-                } else {
-                    entities.push({
-                        type: 'overhead', lane: randomLane, z: MAX_DEPTH,
-                        w: 200, h: 50, y: 140, color: '#b000ff'
-                    });
-                }
-            }
-        }
-
-        // --- Projection Math ---
+        // Pseudo-3D Projection Math
         function project(lane, y3d, z3d) {
-            let scale = FOCAL_LENGTH / (FOCAL_LENGTH + z3d);
-            let screenX = width / 2 + (lane * LANE_WIDTH) * scale;
-            let screenY = VP_Y + CAM_HEIGHT * scale - y3d * scale;
+            let scale = CONFIG.focalLength / (CONFIG.focalLength + z3d);
+            let screenX = width / 2 + (lane * CONFIG.laneWidth) * scale;
+            let screenY = Game.horizonY + Game.cameraHeight * scale - y3d * scale;
             return { x: screenX, y: screenY, scale: scale };
         }
 
-        // --- Update Loop ---
-        function update() {
-            frameCount++;
-            distanceTraveled += currentSpeed;
-            score += currentSpeed * 0.05;
-            currentSpeed = baseSpeed + (distanceTraveled * 0.00015); 
+        /* =========================================
+           INPUT MANAGEMENT
+           ========================================= */
+        let Input = { startX: 0, startY: 0 };
 
-            updateScoreUI();
+        document.addEventListener('touchstart', e => {
+            if (Game.state !== 'PLAYING') return;
+            Input.startX = e.changedTouches[0].screenX;
+            Input.startY = e.changedTouches[0].screenY;
+        }, {passive: false});
 
-            player.visualLane += (player.lane - player.visualLane) * 0.25; 
+        document.addEventListener('touchmove', e => {
+            if (Game.state === 'PLAYING') e.preventDefault(); 
+        }, {passive: false});
+
+        document.addEventListener('touchend', e => {
+            if (Game.state !== 'PLAYING') return;
+            // Ignore swipe if tapping a button
+            if (e.target.closest('#action-buttons')) return;
+
+            let dx = e.changedTouches[0].screenX - Input.startX;
+            let dy = e.changedTouches[0].screenY - Input.startY;
+            handleGesture(dx, dy);
+        }, {passive: false});
+
+        document.addEventListener('keydown', e => {
+            if (Game.state !== 'PLAYING') return;
+            if (e.key === 'ArrowLeft' || e.key === 'a') Player.move(-1);
+            if (e.key === 'ArrowRight' || e.key === 'd') Player.move(1);
+            if (e.key === 'ArrowUp' || e.key === 'w') Player.jump();
+            if (e.key === 'ArrowDown' || e.key === 's') Player.duck();
+            if (e.code === 'Space') activateHoverboard();
+        });
+
+        function handleGesture(dx, dy) {
+            if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return; // Tap
+            if (Math.abs(dx) > Math.abs(dy)) {
+                dx > 0 ? Player.move(1) : Player.move(-1);
+            } else {
+                dy < 0 ? Player.jump() : Player.duck();
+            }
+        }
+
+        /* =========================================
+           PLAYER CONTROLLER
+           ========================================= */
+        const Player = {
+            lane: 0, visualLane: 0,
+            z: 30, y: 0, vy: 0,
+            w: 80, h: 120,
+            gravity: -2.8, jumpPower: 38,
             
-            player.y += player.vy;
-            player.vy += player.gravity;
-            if (player.y <= 0) {
-                player.y = 0;
-                player.vy = 0;
+            // States
+            isDucking: false, duckTimer: 0,
+            isFlying: false, flightTimer: 0, maxFlight: 0,
+            hasHoverboard: false,
+            
+            init() {
+                this.lane = 0; this.visualLane = 0;
+                this.y = 0; this.vy = 0;
+                this.isDucking = false;
+                this.isFlying = false;
+                this.hasHoverboard = false;
+            },
+
+            move(dir) {
+                if (this.isFlying) return; // Locked lanes while flying? No, let them move.
+                this.lane += dir;
+                if (this.lane < -1) this.lane = -1;
+                if (this.lane > 1) this.lane = 1;
+            },
+
+            jump() {
+                if (this.y <= 0 && !this.isDucking && !this.isFlying) {
+                    this.vy = this.jumpPower;
+                }
+            },
+
+            duck() {
+                if (this.isFlying) return;
+                if (this.y <= 0) {
+                    this.isDucking = true;
+                    this.duckTimer = 40; 
+                } else {
+                    this.vy -= 25; // Fast fall
+                }
+            },
+
+            activateJetpack() {
+                this.isFlying = true;
+                this.y = 400; // Shoot up
+                this.vy = 0;
+                // Level 1 = 300 frames (~5s), +100 per level
+                this.maxFlight = 300 + (SaveData.inventory.jetpackLevel * 100);
+                this.flightTimer = this.maxFlight;
+                DOM.jetpackBarContainer.style.display = 'block';
+                spawnParticleExplosion(this.lane, this.y, this.z, '#ff9900', 30);
+            },
+
+            update() {
+                // Smooth lane visual interpolation
+                this.visualLane += (this.lane - this.visualLane) * 0.25; 
+
+                if (this.isFlying) {
+                    // Jetpack physics
+                    this.flightTimer--;
+                    DOM.jetpackBar.style.width = `${(this.flightTimer / this.maxFlight) * 100}%`;
+                    
+                    if (this.flightTimer <= 0) {
+                        this.isFlying = false;
+                        DOM.jetpackBarContainer.style.display = 'none';
+                    }
+                    // Emit smoke particles
+                    if (Game.frameCount % 2 === 0) {
+                        particles.push(new Particle(this.lane, this.y - 50, this.z, '#aaa', 1));
+                    }
+                } else {
+                    // Normal gravity
+                    this.y += this.vy;
+                    this.vy += this.gravity;
+                    if (this.y <= 0) {
+                        this.y = 0;
+                        this.vy = 0;
+                    }
+                }
+
+                if (this.isDucking) {
+                    this.duckTimer--;
+                    if (this.duckTimer <= 0) this.isDucking = false;
+                }
+            }
+        };
+
+        /* =========================================
+           PARTICLE SYSTEM
+           ========================================= */
+        class Particle {
+            constructor(lane, y, z, color, type = 0) {
+                this.lane = lane + (Math.random() - 0.5) * 0.5;
+                this.y = y + (Math.random() - 0.5) * 50;
+                this.z = z;
+                this.color = color;
+                this.life = 1.0;
+                this.decay = 0.02 + Math.random() * 0.03;
+                
+                // Type 0: Explosion, Type 1: Smoke
+                if (type === 0) {
+                    this.vy = Math.random() * 20 - 5;
+                    this.vx = (Math.random() - 0.5) * 0.1;
+                    this.vz = Math.random() * 10;
+                } else {
+                    this.vy = -2;
+                    this.vx = 0;
+                    this.vz = -Game.speed;
+                }
+            }
+            update() {
+                this.y += this.vy;
+                this.lane += this.vx;
+                this.z += this.vz;
+                this.life -= this.decay;
+            }
+            draw() {
+                if (this.life <= 0 || this.z < 0) return;
+                let p = project(this.lane, this.y, this.z);
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 10 * p.scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        function spawnParticleExplosion(lane, y, z, color, count) {
+            for(let i=0; i<count; i++) {
+                particles.push(new Particle(lane, y, z, color, 0));
+            }
+        }
+
+        /* =========================================
+           ENTITY SYSTEM & SPAWNER
+           ========================================= */
+        class Entity {
+            constructor(type, lane, z) {
+                this.type = type;
+                this.lane = lane;
+                this.z = z;
+                this.collected = false;
+                
+                // Configure based on type
+                switch(type) {
+                    case 'coin': this.w = 40; this.h = 40; this.y = 30; this.color = '#ffea00'; break;
+                    case 'coin_high': this.w = 40; this.h = 40; this.y = 400; this.color = '#ffea00'; break; // For jetpack
+                    case 'train': this.w = 160; this.h = 220; this.y = 0; this.color = '#ff007f'; break;
+                    case 'barrier': this.w = 160; this.h = 65; this.y = 0; this.color = '#ffcc00'; break;
+                    case 'overhead': this.w = 200; this.h = 50; this.y = 140; this.color = '#b000ff'; break;
+                    case 'jetpack': this.w = 60; this.h = 80; this.y = 40; this.color = '#00f0ff'; break;
+                }
             }
 
-            if (player.isDucking) {
-                player.duckTimer--;
-                if (player.duckTimer <= 0) player.isDucking = false;
+            draw() {
+                if (this.collected) return;
+                let p = project(this.lane, this.y, this.z);
+                let s = p.scale;
+                let dw = this.w * s;
+                let dh = this.h * s;
+
+                if (this.type.includes('coin')) {
+                    let rot = Math.sin(Game.frameCount * 0.1 + this.z) * (dw/2);
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.ellipse(p.x, p.y - dh/2, Math.max(1, Math.abs(rot)), dh/2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ff9900';
+                    ctx.lineWidth = 2 * s;
+                    ctx.stroke();
+                } else if (this.type === 'jetpack') {
+                    // Floating Animation
+                    let floatY = Math.sin(Game.frameCount * 0.1) * 20;
+                    p = project(this.lane, this.y + floatY, this.z);
+                    ctx.fillStyle = this.color;
+                    ctx.shadowColor = this.color; ctx.shadowBlur = 20 * s;
+                    ctx.fillRect(p.x - dw/2, p.y - dh, dw, dh);
+                    ctx.shadowBlur = 0;
+                    // Jetpack details
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(p.x - dw*0.3, p.y - dh*0.8, dw*0.2, dh*0.6);
+                    ctx.fillRect(p.x + dw*0.1, p.y - dh*0.8, dw*0.2, dh*0.6);
+                } else {
+                    // Obstacles
+                    ctx.fillStyle = this.color;
+                    ctx.shadowColor = this.color; ctx.shadowBlur = 10 * s;
+                    ctx.fillRect(p.x - dw/2, p.y - dh, dw, dh);
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+                    ctx.strokeRect(p.x - dw/2, p.y - dh, dw, dh);
+
+                    if (this.type === 'train') {
+                        ctx.fillStyle = '#111';
+                        ctx.fillRect(p.x - dw*0.4, p.y - dh*0.8, dw*0.8, dh*0.3); 
+                        ctx.fillStyle = '#00f0ff'; 
+                        ctx.fillRect(p.x - dw*0.3, p.y - dh*0.2, dw*0.2, dh*0.1);
+                        ctx.fillRect(p.x + dw*0.1, p.y - dh*0.2, dw*0.2, dh*0.1);
+                    } else if (this.type === 'barrier') {
+                        ctx.fillStyle = '#111';
+                        for(let i=0; i<4; i++) ctx.fillRect(p.x - dw/2 + i*(dw/4), p.y - dh, dw/8, dh);
+                    } else if (this.type === 'overhead') {
+                        ctx.fillStyle = '#555';
+                        ctx.fillRect(p.x - dw/2, p.y, dw*0.15, this.y * s);
+                        ctx.fillRect(p.x + dw*0.35, p.y, dw*0.15, this.y * s);
+                    }
+                }
+            }
+        }
+
+        function spawnLogic() {
+            let spawnRate = Math.max(15, 60 - Math.floor(Game.speed));
+            
+            if (Game.frameCount % spawnRate === 0) {
+                let lane = Math.floor(Math.random() * 3) - 1; 
+
+                if (Player.isFlying) {
+                    // Only spawn sky coins when flying (Wave pattern)
+                    let wLane = Math.sin(Game.frameCount * 0.05) > 0 ? 1 : -1;
+                    entities.push(new Entity('coin_high', wLane, CONFIG.maxDepth));
+                    entities.push(new Entity('coin_high', 0, CONFIG.maxDepth + 50));
+                    return;
+                }
+
+                let r = Math.random();
+                if (r < 0.02) {
+                    // Spawn Jetpack (rare)
+                    entities.push(new Entity('jetpack', lane, CONFIG.maxDepth));
+                } else if (r < 0.30) {
+                    // Coins line
+                    for (let i = 0; i < 4; i++) {
+                        entities.push(new Entity('coin', lane, CONFIG.maxDepth + i * 150));
+                    }
+                } else if (r < 0.55) {
+                    entities.push(new Entity('train', lane, CONFIG.maxDepth));
+                } else if (r < 0.80) {
+                    entities.push(new Entity('barrier', lane, CONFIG.maxDepth));
+                } else {
+                    entities.push(new Entity('overhead', lane, CONFIG.maxDepth));
+                }
+            }
+        }
+
+        /* =========================================
+           CORE GAME LOOP & PHYSICS
+           ========================================= */
+        function switchScreen(screen) {
+            Object.values(DOM.screens).forEach(s => s.classList.remove('active'));
+            if(screen) screen.classList.add('active');
+        }
+
+        function updateUI() {
+            DOM.score.innerText = `SCORE: ${Math.floor(Game.score)}`;
+            DOM.coins.innerText = Game.sessionCoins;
+            DOM.hoverboardCount.innerText = SaveData.inventory.hoverboards;
+            
+            if (SaveData.inventory.hoverboards > 0 && !Player.hasHoverboard) {
+                DOM.hoverboardBtn.classList.add('active');
+            } else {
+                DOM.hoverboardBtn.classList.remove('active');
+            }
+        }
+
+        function activateHoverboard() {
+            if (SaveData.inventory.hoverboards > 0 && !Player.hasHoverboard && !Player.isFlying) {
+                SaveData.inventory.hoverboards--;
+                SaveData.save();
+                Player.hasHoverboard = true;
+                spawnParticleExplosion(Player.lane, Player.y, Player.z, '#00f0ff', 20);
+                updateUI();
+            }
+        }
+        DOM.hoverboardBtn.addEventListener('click', activateHoverboard);
+
+        function triggerGameOver() {
+            Game.state = 'GAMEOVER';
+            DOM.hud.style.display = 'none';
+            DOM.actionButtons = document.getElementById('action-buttons').style.display = 'none';
+            
+            // Save currencies & scores
+            SaveData.wallet += Game.sessionCoins;
+            if (Game.score > SaveData.bestScore) {
+                SaveData.bestScore = Math.floor(Game.score);
+            }
+            SaveData.save();
+
+            switchScreen(DOM.screens.gameOver);
+            document.getElementById('finalScore').innerHTML = `SCORE: ${Math.floor(Game.score)}<br><span class="coin-icon" style="font-size:24px;">★</span> +${Game.sessionCoins}`;
+        }
+
+        function update() {
+            Game.frameCount++;
+            Game.distance += Game.speed;
+            Game.score += Game.speed * 0.05;
+            Game.speed = CONFIG.baseSpeed + (Game.distance * CONFIG.speedMultiplier); 
+
+            if(Game.frameCount % 5 === 0) updateUI();
+
+            Player.update();
+
+            // Camera adjustments for Jetpack
+            let targetHorizon = Player.isFlying ? height * 0.60 : height * 0.40;
+            Game.horizonY += (targetHorizon - Game.horizonY) * 0.05;
+
+            // Particles
+            for(let i=particles.length-1; i>=0; i--) {
+                particles[i].update();
+                if(particles[i].life <= 0) particles.splice(i, 1);
             }
 
+            // Entities update & collision
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
-                e.z -= currentSpeed;
+                e.z -= Game.speed;
 
-                if (e.z > 0 && e.z < 60 && Math.abs(e.lane - player.lane) < 0.5) {
-                    if (e.type === 'coin' && !e.collected) {
-                        e.collected = true;
-                        score += 50;
-                    } else if (!e.collected) {
-                        if (e.type === 'train') {
-                            gameOver();
-                        } else if (e.type === 'barrier') {
-                            if (player.y < e.h - 15) gameOver(); 
-                        } else if (e.type === 'overhead') {
-                            if (!player.isDucking) gameOver(); 
+                // Collision bounds (Player is at z: 30)
+                if (e.z > 0 && e.z < 80 && Math.abs(e.lane - Player.lane) < 0.5) {
+                    if (!e.collected) {
+                        if (e.type.includes('coin')) {
+                            // Hitbox height check for coins
+                            if (Math.abs(Player.y - e.y) < 100) {
+                                e.collected = true;
+                                Game.sessionCoins++;
+                                Game.score += 20;
+                                spawnParticleExplosion(e.lane, e.y, e.z, '#ffcc00', 5);
+                            }
+                        } else if (e.type === 'jetpack') {
+                            if (Math.abs(Player.y - e.y) < 100) {
+                                e.collected = true;
+                                Player.activateJetpack();
+                            }
+                        } else {
+                            // Obstacles
+                            let hit = false;
+                            if (e.type === 'train') hit = true;
+                            if (e.type === 'barrier' && Player.y < e.h - 15) hit = true;
+                            if (e.type === 'overhead' && !Player.isDucking) hit = true;
+
+                            if (hit) {
+                                if (Player.hasHoverboard) {
+                                    // Crash immunity
+                                    Player.hasHoverboard = false;
+                                    e.collected = true; // Destroy obstacle
+                                    spawnParticleExplosion(e.lane, e.y, e.z, '#ff007f', 40);
+                                    // Brief camera shake logic could go here
+                                } else {
+                                    triggerGameOver();
+                                    return;
+                                }
+                            }
                         }
                     }
                 }
-
+                // Cleanup
                 if (e.z < -100) entities.splice(i, 1);
             }
-
-            spawnEntities();
+            spawnLogic();
         }
 
-        function updateScoreUI() {
-            if(frameCount % 5 === 0) {
-                scoreDisplay.innerHTML = `<span class="coin-icon">★</span> ${Math.floor(score)}`;
-            }
-        }
-
-        // --- Render Loop ---
-        function draw() {
-            // 1. Draw Sky Background
-            let skyGrad = ctx.createLinearGradient(0, 0, 0, VP_Y);
-            skyGrad.addColorStop(0, '#0f0c29');   // Deep Space
-            skyGrad.addColorStop(0.5, '#302b63'); // Purple
-            skyGrad.addColorStop(1, '#ff007f');   // Neon Pink horizon
-            ctx.fillStyle = skyGrad;
-            ctx.fillRect(0, 0, width, VP_Y);
-
-            // 2. Draw Sun
-            ctx.fillStyle = '#ffea00';
-            ctx.shadowColor = '#ffea00';
-            ctx.shadowBlur = 30;
-            ctx.beginPath();
-            ctx.arc(width/2, VP_Y, 80, Math.PI, 0); // Half circle resting on horizon
-            ctx.fill();
-            ctx.shadowBlur = 0; // Reset shadow
-
-            // 3. Draw Skyline
-            ctx.fillStyle = '#050510'; // Silhouette color
-            for (let b of skyline) {
-                ctx.fillRect(b.x, VP_Y - b.h, b.w, b.h);
-                // Glowing windows
-                ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
-                if(b.h > 50) ctx.fillRect(b.x + 5, VP_Y - b.h + 10, b.w - 10, b.h - 20);
-                ctx.fillStyle = '#050510';
-            }
-
-            // 4. Draw Ground / Grid
-            ctx.fillStyle = '#110022';
-            ctx.fillRect(0, VP_Y, width, height - VP_Y);
-
-            // Speed Grid lines
-            ctx.strokeStyle = '#ff007f';
-            ctx.lineWidth = 1;
-            let offset = (distanceTraveled % 200);
-            for (let i = 0; i < 20; i++) {
-                let z = i * 200 - offset;
-                if (z > 0 && z < MAX_DEPTH) {
-                    let p1 = project(-3, 0, z);
-                    let p2 = project(3, 0, z);
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.stroke();
-                }
-            }
-
-            // Lane Dividers
-            for (let l = -1; l <= 1; l++) {
-                let pBottom = project(l, 0, 0);
-                let pTop = project(l, 0, MAX_DEPTH);
-                
-                // Outer boundaries and middle dividers
-                ctx.strokeStyle = (l === 0) ? 'rgba(0, 240, 255, 0.8)' : 'rgba(255, 0, 127, 0.5)';
-                ctx.lineWidth = 6 * pBottom.scale;
-                
-                // Draw dashed lines for dividers
-                ctx.setLineDash([20, 20]);
-                ctx.lineDashOffset = -distanceTraveled;
-                
-                ctx.beginPath();
-                ctx.moveTo(pBottom.x, pBottom.y);
-                ctx.lineTo(pTop.x, pTop.y);
-                ctx.stroke();
-                
-                ctx.setLineDash([]); // Reset line dash
-            }
-
-            // Sort entities from back to front (Painter's Algorithm)
-            let renderList = [...entities];
-            renderList.push({ isPlayer: true, z: player.z });
-            renderList.sort((a, b) => b.z - a.z);
-
-            // Draw Entities
-            for (let e of renderList) {
-                if (e.z < 0) continue; 
-                if (e.isPlayer) drawPlayer();
-                else if (!e.collected) drawEntity(e);
-            }
-        }
-
-        function drawEntity(e) {
-            let p = project(e.lane, e.y, e.z);
-            let s = p.scale;
-            let dw = e.w * s;
-            let dh = e.h * s;
-
-            if (e.type === 'coin') {
-                // Rotation effect
-                let rot = Math.sin(frameCount * 0.1 + e.z) * (dw/2);
-                
-                ctx.fillStyle = '#ffea00';
-                ctx.beginPath();
-                ctx.ellipse(p.x, p.y - dh/2, Math.max(1, Math.abs(rot)), dh/2, 0, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.strokeStyle = '#ff9900';
-                ctx.lineWidth = 2 * s;
-                ctx.stroke();
-            } else {
-                let faceHeight = dh;
-                
-                // Front Face
-                ctx.fillStyle = e.color;
-                ctx.shadowColor = e.color;
-                ctx.shadowBlur = 10 * s; // Neon glow effect
-                ctx.fillRect(p.x - dw/2, p.y - faceHeight, dw, faceHeight);
-                ctx.shadowBlur = 0;
-                
-                // Dark border
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(p.x - dw/2, p.y - faceHeight, dw, faceHeight);
-
-                // Obstacle Details
-                if (e.type === 'train') {
-                    ctx.fillStyle = '#111';
-                    ctx.fillRect(p.x - dw*0.4, p.y - faceHeight*0.8, dw*0.8, faceHeight*0.3); // Window
-                    ctx.fillStyle = '#00f0ff'; // Bright headlights
-                    ctx.fillRect(p.x - dw*0.3, p.y - faceHeight*0.2, dw*0.2, faceHeight*0.1);
-                    ctx.fillRect(p.x + dw*0.1, p.y - faceHeight*0.2, dw*0.2, faceHeight*0.1);
-                } else if (e.type === 'barrier') {
-                    ctx.fillStyle = '#111';
-                    for(let i=0; i<4; i++) {
-                        ctx.fillRect(p.x - dw/2 + i*(dw/4), p.y - faceHeight, dw/8, faceHeight);
-                    }
-                } else if (e.type === 'overhead') {
-                    // Pillars for overhead
-                    ctx.fillStyle = '#555';
-                    ctx.fillRect(p.x - dw/2, p.y, dw*0.15, e.y * s);
-                    ctx.fillRect(p.x + dw*0.35, p.y, dw*0.15, e.y * s);
-                }
-            }
-        }
-
+        /* =========================================
+           RENDER ENGINE
+           ========================================= */
         function drawPlayer() {
-            let p = project(player.visualLane, player.y, player.z);
+            let p = project(Player.visualLane, Player.y, Player.z);
             let s = p.scale;
-            
-            let ph = player.isDucking ? (player.height * 0.5) : player.height;
-            let pw = player.width;
-            
-            let dw = pw * s;
+            let ph = Player.isDucking ? (Player.h * 0.5) : Player.h;
+            let dw = Player.w * s;
             let dh = ph * s;
             
-            // Player Shadow
+            // Shadow
             ctx.fillStyle = 'rgba(0,0,0,0.6)';
             ctx.beginPath();
-            ctx.ellipse(project(player.visualLane, 0, player.z).x, project(player.visualLane, 0, player.z).y, dw*0.7, dw*0.2, 0, 0, Math.PI*2);
+            ctx.ellipse(project(Player.visualLane, 0, Player.z).x, project(Player.visualLane, 0, Player.z).y, dw*0.7, dw*0.2, 0, 0, Math.PI*2);
             ctx.fill();
 
-            // Player Body
-            ctx.fillStyle = player.color;
-            ctx.shadowColor = player.color;
-            ctx.shadowBlur = 15 * s; // Glowing player
             let rx = p.x - dw/2;
             let ry = p.y - dh;
             
-            ctx.beginPath();
-            ctx.roundRect(rx, ry, dw, dh, 12 * s);
-            ctx.fill();
+            // Hoverboard
+            if (Player.hasHoverboard) {
+                ctx.fillStyle = '#ff007f';
+                ctx.shadowColor = '#ff007f'; ctx.shadowBlur = 15*s;
+                ctx.beginPath();
+                ctx.ellipse(p.x, p.y, dw*0.8, dw*0.15, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            // Body
+            ctx.fillStyle = Player.hasHoverboard ? '#fff' : '#00f0ff';
+            ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10 * s;
+            ctx.beginPath(); ctx.roundRect(rx, ry, dw, dh, 12 * s); ctx.fill();
             ctx.shadowBlur = 0;
             
-            // Helmet/Visor
+            // Visor
             ctx.fillStyle = '#ff007f';
-            ctx.beginPath();
-            ctx.arc(p.x, ry + dh*0.2, dw*0.4, 0, Math.PI*2);
-            ctx.fill();
-            
-            // Visor reflection
+            ctx.beginPath(); ctx.arc(p.x, ry + dh*0.2, dw*0.4, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#fff';
             ctx.fillRect(p.x + dw*0.1, ry + dh*0.1, dw*0.2, dh*0.1);
 
-            if(!player.isDucking) {
-                // Jetpack / Backpack
+            // Jetpack Back attachment
+            if(!Player.isDucking) {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(rx + dw*0.1, ry + dh*0.4, dw*0.8, dh*0.5);
-                
-                // Thruster exhaust (if jumping)
-                if(player.y > 0) {
+                if(Player.y > 0) {
                     ctx.fillStyle = '#ffaa00';
                     ctx.beginPath();
                     ctx.moveTo(rx + dw*0.2, ry + dh*0.9);
                     ctx.lineTo(rx + dw*0.8, ry + dh*0.9);
-                    ctx.lineTo(p.x, ry + dh*1.3);
+                    ctx.lineTo(p.x, ry + dh*1.5); // Thruster flame
                     ctx.fill();
                 }
             }
         }
 
-        // --- Main Game Loop ---
-        function gameLoop() {
-            if (state === 'PLAYING') {
-                update();
+        function draw() {
+            // Sky
+            let skyGrad = ctx.createLinearGradient(0, 0, 0, Game.horizonY);
+            skyGrad.addColorStop(0, '#0f0c29');   
+            skyGrad.addColorStop(0.5, '#302b63'); 
+            skyGrad.addColorStop(1, '#ff007f');   
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, width, Game.horizonY);
+
+            // Sun
+            ctx.fillStyle = '#ffea00';
+            ctx.beginPath(); ctx.arc(width/2, Game.horizonY, 80, Math.PI, 0); ctx.fill();
+
+            // Skyline Parallax
+            ctx.fillStyle = '#050510';
+            for (let b of skyline) {
+                // Parallax shift based on lane
+                let shift = Player.visualLane * 20;
+                ctx.fillRect(b.x - shift, Game.horizonY - b.h, b.w, b.h);
+                if(b.lights && b.h > 50) {
+                    ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+                    ctx.fillRect(b.x - shift + 5, Game.horizonY - b.h + 10, b.w - 10, b.h - 20);
+                    ctx.fillStyle = '#050510';
+                }
             }
-            draw();
-            
-            if (state === 'PLAYING') {
-                requestAnimationFrame(gameLoop);
+
+            // Ground
+            ctx.fillStyle = '#110022';
+            ctx.fillRect(0, Game.horizonY, width, height - Game.horizonY);
+
+            // Grid Lines
+            ctx.strokeStyle = '#ff007f'; ctx.lineWidth = 1;
+            let offset = (Game.distance % 200);
+            for (let i = 0; i < 20; i++) {
+                let z = i * 200 - offset;
+                if (z > 0 && z < CONFIG.maxDepth) {
+                    let p1 = project(-3, 0, z), p2 = project(3, 0, z);
+                    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+                }
             }
+
+            // Lane Dividers
+            for (let l = -1; l <= 1; l++) {
+                let pB = project(l, 0, 0), pT = project(l, 0, CONFIG.maxDepth);
+                ctx.strokeStyle = (l === 0) ? 'rgba(0, 240, 255, 0.8)' : 'rgba(255, 0, 127, 0.5)';
+                ctx.lineWidth = 6 * pB.scale;
+                ctx.setLineDash([20, 20]); ctx.lineDashOffset = -Game.distance;
+                ctx.beginPath(); ctx.moveTo(pB.x, pB.y); ctx.lineTo(pT.x, pT.y); ctx.stroke();
+                ctx.setLineDash([]); 
+            }
+
+            // Z-Sorting (Painter's Algorithm)
+            let renderList = [...entities];
+            renderList.push({ isPlayer: true, z: Player.z });
+            renderList.sort((a, b) => b.z - a.z);
+
+            // Draw everything
+            for (let e of renderList) {
+                if (e.z < 0) continue; 
+                if (e.isPlayer) drawPlayer();
+                else if (!e.collected) e.draw();
+            }
+
+            // Particles (Draw last so they overlay)
+            for(let p of particles) p.draw();
         }
 
-        // Initial render frame behind start screen
-        draw();
+        /* =========================================
+           STATE MANAGEMENT & MAIN LOOP
+           ========================================= */
+        function gameLoop() {
+            if (Game.state === 'PLAYING') update();
+            // Always draw to keep background rendered during menus
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            Game.state = 'PLAYING';
+            Game.score = 0; Game.sessionCoins = 0; Game.distance = 0;
+            Game.speed = CONFIG.baseSpeed; Game.frameCount = 0;
+            Player.init();
+            entities = []; particles = [];
+            
+            switchScreen(null);
+            DOM.hud.style.display = 'flex';
+            document.getElementById('action-buttons').style.display = 'flex';
+            DOM.highScore.innerText = `BEST: ${SaveData.bestScore}`;
+            updateUI();
+        }
+
+        /* =========================================
+           STORE LOGIC
+           ========================================= */
+        function openStore() {
+            Game.state = 'STORE';
+            switchScreen(DOM.screens.store);
+            updateStoreUI();
+        }
+
+        function updateStoreUI() {
+            DOM.storeCoins.innerText = SaveData.wallet;
+            DOM.jpLevel.innerText = SaveData.inventory.jetpackLevel;
+            
+            // Hoverboard cost: 200
+            DOM.buttons.buyHoverboard.disabled = SaveData.wallet < 200;
+            
+            // Jetpack upgrade cost: level * 500
+            let jpCost = SaveData.inventory.jetpackLevel * 500;
+            DOM.buttons.buyJetpack.innerText = `${jpCost} ★`;
+            DOM.buttons.buyJetpack.disabled = SaveData.wallet < jpCost;
+        }
+
+        DOM.buttons.buyHoverboard.addEventListener('click', () => {
+            if (SaveData.wallet >= 200) {
+                SaveData.wallet -= 200;
+                SaveData.inventory.hoverboards++;
+                SaveData.save();
+                updateStoreUI();
+            }
+        });
+
+        DOM.buttons.buyJetpack.addEventListener('click', () => {
+            let cost = SaveData.inventory.jetpackLevel * 500;
+            if (SaveData.wallet >= cost) {
+                SaveData.wallet -= cost;
+                SaveData.inventory.jetpackLevel++;
+                SaveData.save();
+                updateStoreUI();
+            }
+        });
+
+        // Event Listeners for Menus
+        DOM.buttons.start.addEventListener('click', startGame);
+        DOM.buttons.restart.addEventListener('click', startGame);
+        DOM.buttons.openStore.addEventListener('click', openStore);
+        DOM.buttons.closeStore.addEventListener('click', () => {
+            Game.state = 'MENU';
+            switchScreen(DOM.screens.start);
+        });
+        DOM.buttons.goMenu.addEventListener('click', () => {
+            Game.state = 'MENU';
+            switchScreen(DOM.screens.start);
+        });
+
+        // Init
+        resize();
+        DOM.highScore.innerText = `BEST: ${SaveData.bestScore}`;
+        requestAnimationFrame(gameLoop);
 
     </script>
 </body>
