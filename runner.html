@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Canvas Endless Runner</title>
+    <title>Neon City Runner</title>
     <style>
         * {
             margin: 0;
@@ -17,9 +17,9 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #111;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: none; /* Prevent browser scrolling/zooming */
+            background-color: #050510;
+            font-family: 'Arial Black', Impact, sans-serif;
+            touch-action: none;
         }
 
         canvas {
@@ -28,7 +28,7 @@
             height: 100%;
         }
 
-        /* UI Overlays */
+        /* --- UI Overlay & Layout --- */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -40,51 +40,87 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            z-index: 10;
         }
 
+        /* --- Screens (Start / Game Over) --- */
         .screen {
             display: none;
             flex-direction: column;
             align-items: center;
-            background: rgba(0, 0, 0, 0.85);
+            background: linear-gradient(135deg, rgba(20, 10, 40, 0.85), rgba(40, 10, 50, 0.95));
             padding: 40px;
-            border-radius: 20px;
-            border: 3px solid #ffcc00;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border-radius: 24px;
+            border: 4px solid #ff007f;
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.2);
             pointer-events: auto;
             text-align: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
         }
 
         h1 {
             color: #fff;
-            font-size: 36px;
-            margin-bottom: 10px;
+            font-size: 42px;
+            margin-bottom: 15px;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 0px #ff3366, -2px -2px 0px #00ccff;
+            letter-spacing: 3px;
+            text-shadow: 4px 4px 0px #ff007f, -3px -3px 0px #00f0ff;
         }
 
-        p { color: #ccc; font-size: 16px; margin-bottom: 30px; line-height: 1.5; }
+        p { 
+            color: #e0e0ff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px; 
+            margin-bottom: 30px; 
+            line-height: 1.6;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px #000;
+        }
         
-        .score-text { color: #ffcc00; font-size: 24px; font-weight: bold; margin: 10px 0; }
+        .score-text { 
+            color: #ffcc00; 
+            font-size: 28px; 
+            margin: 15px 0; 
+            text-shadow: 0 0 10px #ffcc00;
+        }
 
+        /* --- Buttons --- */
         button {
-            background: linear-gradient(to bottom, #ffcc00, #ff9900);
-            color: #000;
+            background: linear-gradient(to bottom, #00f0ff, #0088ff);
+            color: #fff;
             border: none;
-            padding: 15px 40px;
-            font-size: 22px;
-            font-weight: bold;
+            padding: 16px 45px;
+            font-family: 'Arial Black', Impact, sans-serif;
+            font-size: 24px;
             border-radius: 50px;
             cursor: pointer;
             text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
-            transition: transform 0.1s;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 0 #0055aa, 0 10px 20px rgba(0, 240, 255, 0.5);
+            transition: all 0.1s;
+            animation: pulse 2s infinite;
         }
 
-        button:active { transform: scale(0.95); }
+        @keyframes pulse {
+            0% { box-shadow: 0 6px 0 #0055aa, 0 0 15px rgba(0, 240, 255, 0.4); }
+            50% { box-shadow: 0 6px 0 #0055aa, 0 0 30px rgba(0, 240, 255, 0.8); }
+            100% { box-shadow: 0 6px 0 #0055aa, 0 0 15px rgba(0, 240, 255, 0.4); }
+        }
 
+        button:active { 
+            transform: translateY(6px); 
+            box-shadow: 0 0 0 #0055aa, 0 5px 10px rgba(0, 240, 255, 0.5); 
+        }
+
+        /* --- HUD (Heads Up Display) --- */
         #hud {
             position: absolute;
             top: 20px;
@@ -92,14 +128,23 @@
             right: 20px;
             display: flex;
             justify-content: space-between;
-            color: white;
-            font-size: 22px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             pointer-events: none;
         }
 
-        .coin-icon { color: #ffcc00; }
+        .hud-panel {
+            background: rgba(10, 5, 20, 0.6);
+            border: 2px solid #ff007f;
+            color: #fff;
+            font-size: 20px;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .coin-icon { color: #ffcc00; text-shadow: 0 0 8px #ffcc00; }
     </style>
 </head>
 <body>
@@ -107,21 +152,21 @@
     <canvas id="gameCanvas"></canvas>
 
     <div id="hud" style="display: none;">
-        <div id="scoreDisplay">Score: 0</div>
-        <div id="highScoreDisplay">Best: 0</div>
+        <div id="scoreDisplay" class="hud-panel"><span class="coin-icon">★</span> 0</div>
+        <div id="highScoreDisplay" class="hud-panel">BEST: 0</div>
     </div>
 
     <div id="ui-layer">
         <div id="startScreen" class="screen" style="display: flex;">
-            <h1>City Runner</h1>
-            <p>Swipe Left/Right to switch lanes<br>Swipe Up to Jump<br>Swipe Down to Duck</p>
+            <h1>Neon Runner</h1>
+            <p>Swipe <b>Left/Right</b> to switch lanes<br>Swipe <b>Up</b> to Jump<br>Swipe <b>Down</b> to Duck</p>
             <button id="startBtn">Tap to Play</button>
         </div>
 
         <div id="gameOverScreen" class="screen">
-            <h1>Game Over</h1>
-            <div id="finalScore" class="score-text">Score: 0</div>
-            <p>You hit an obstacle!</p>
+            <h1>Wasted</h1>
+            <div id="finalScore" class="score-text"><span class="coin-icon">★</span> 0</div>
+            <p>You smashed into an obstacle!</p>
             <button id="restartBtn">Play Again</button>
         </div>
     </div>
@@ -146,38 +191,41 @@
         const FOCAL_LENGTH = 300;
         let CAM_HEIGHT = 150;
         let VP_Y = 0; // Horizon Y position
-        const LANE_WIDTH = 220; // 3D width of a lane
+        const LANE_WIDTH = 220;
         const MAX_DEPTH = 2000;
 
         // Game State
-        let state = 'START'; // START, PLAYING, GAMEOVER
+        let state = 'START';
         let score = 0;
-        let highScore = localStorage.getItem('runnerHighScore') || 0;
+        let highScore = localStorage.getItem('neonRunnerHighScore') || 0;
         let distanceTraveled = 0;
-        let baseSpeed = 15;
+        let baseSpeed = 16;
         let currentSpeed = 0;
         let frameCount = 0;
 
-        highScoreDisplay.innerText = `Best: ${Math.floor(highScore)}`;
+        highScoreDisplay.innerText = `BEST: ${Math.floor(highScore)}`;
 
         // Player Object
         const player = {
-            lane: 0,         // -1 (Left), 0 (Middle), 1 (Right)
-            visualLane: 0,   // For smooth lane changing animation
-            z: 20,           // Fixed Z position relative to camera
-            y: 0,            // Jump height
-            vy: 0,           // Vertical velocity
-            gravity: -2.5,
-            jumpPower: 35,
+            lane: 0,
+            visualLane: 0,
+            z: 20,
+            y: 0,
+            vy: 0,
+            gravity: -2.8,
+            jumpPower: 38,
             isDucking: false,
             duckTimer: 0,
             width: 80,
             height: 120,
-            color: '#00ccff'
+            color: '#00f0ff'
         };
 
         // Entities arrays
         let entities = [];
+
+        // Skyline Data (Pre-generated for performance)
+        let skyline = [];
 
         // --- Window Resizing ---
         function resize() {
@@ -185,9 +233,22 @@
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            VP_Y = height * 0.35; // Horizon is at 35% down the screen
+            VP_Y = height * 0.40; // Horizon slightly lower for better sky view
+            generateSkyline();
         }
         window.addEventListener('resize', resize);
+
+        function generateSkyline() {
+            skyline = [];
+            let currentX = 0;
+            while (currentX < width) {
+                let w = 30 + Math.random() * 50;
+                let h = 20 + Math.random() * 120;
+                skyline.push({ x: currentX, w: w, h: h });
+                currentX += w + Math.random() * 10;
+            }
+        }
+
         resize();
 
         // --- Swipe Input Handling ---
@@ -201,7 +262,7 @@
         }, {passive: false});
 
         document.addEventListener('touchmove', e => {
-            if (state === 'PLAYING') e.preventDefault(); // Prevent scrolling
+            if (state === 'PLAYING') e.preventDefault(); 
         }, {passive: false});
 
         document.addEventListener('touchend', e => {
@@ -211,7 +272,6 @@
             handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
         }, {passive: false});
 
-        // Keyboard fallbacks for desktop testing
         document.addEventListener('keydown', e => {
             if (state !== 'PLAYING') return;
             if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1);
@@ -223,19 +283,15 @@
         function handleSwipe(startX, startY, endX, endY) {
             let dx = endX - startX;
             let dy = endY - startY;
-            
-            // Determine dominant swipe direction
             if (Math.abs(dx) > Math.abs(dy)) {
-                // Horizontal Swipe
                 if (Math.abs(dx) > 30) {
-                    if (dx > 0) movePlayer(1); // Right
-                    else movePlayer(-1);       // Left
+                    if (dx > 0) movePlayer(1);
+                    else movePlayer(-1);
                 }
             } else {
-                // Vertical Swipe
                 if (Math.abs(dy) > 30) {
-                    if (dy < 0) jump();        // Up
-                    else duck();               // Down
+                    if (dy < 0) jump();
+                    else duck();
                 }
             }
         }
@@ -248,17 +304,17 @@
         }
 
         function jump() {
-            if (player.y <= 0 && !player.isDucking) { // Only jump if on ground
+            if (player.y <= 0 && !player.isDucking) {
                 player.vy = player.jumpPower;
             }
         }
 
         function duck() {
-            if (player.y <= 0) { // Only duck if on ground
+            if (player.y <= 0) {
                 player.isDucking = true;
-                player.duckTimer = 40; // frames
+                player.duckTimer = 40; 
             } else {
-                player.vy -= 15; // Fast fall if in air
+                player.vy -= 20; 
             }
         }
 
@@ -288,11 +344,11 @@
             state = 'GAMEOVER';
             hud.style.display = 'none';
             gameOverScreen.style.display = 'flex';
-            finalScore.innerText = `Score: ${Math.floor(score)}`;
+            finalScore.innerHTML = `<span class="coin-icon">★</span> ${Math.floor(score)}`;
             if (score > highScore) {
                 highScore = score;
-                localStorage.setItem('runnerHighScore', highScore);
-                highScoreDisplay.innerText = `Best: ${Math.floor(highScore)}`;
+                localStorage.setItem('neonRunnerHighScore', highScore);
+                highScoreDisplay.innerText = `BEST: ${Math.floor(highScore)}`;
             }
         }
 
@@ -301,16 +357,14 @@
 
         // --- Spawning Entities ---
         function spawnEntities() {
-            // Spawn rate increases slightly with speed
-            let spawnInterval = Math.max(20, 60 - Math.floor(currentSpeed));
+            let spawnInterval = Math.max(15, 55 - Math.floor(currentSpeed));
             
             if (frameCount % spawnInterval === 0) {
-                let randomLane = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+                let randomLane = Math.floor(Math.random() * 3) - 1; 
                 let r = Math.random();
 
-                if (r < 0.2) {
-                    // Spawn Coins (Line of 3-5)
-                    let coinCount = Math.floor(Math.random() * 3) + 3;
+                if (r < 0.25) {
+                    let coinCount = Math.floor(Math.random() * 4) + 3;
                     for (let i = 0; i < coinCount; i++) {
                         entities.push({
                             type: 'coin', lane: randomLane, z: MAX_DEPTH + i * 150,
@@ -318,22 +372,19 @@
                         });
                     }
                 } else if (r < 0.5) {
-                    // Spawn Train (tall obstacle)
                     entities.push({
                         type: 'train', lane: randomLane, z: MAX_DEPTH,
-                        w: 160, h: 200, y: 0, color: '#e63946'
+                        w: 160, h: 220, y: 0, color: '#ff007f'
                     });
-                } else if (r < 0.8) {
-                    // Spawn Barrier (jump over)
+                } else if (r < 0.75) {
                     entities.push({
                         type: 'barrier', lane: randomLane, z: MAX_DEPTH,
-                        w: 140, h: 60, y: 0, color: '#fca311'
+                        w: 160, h: 65, y: 0, color: '#ffcc00'
                     });
                 } else {
-                    // Spawn Overhead (duck under)
                     entities.push({
                         type: 'overhead', lane: randomLane, z: MAX_DEPTH,
-                        w: 200, h: 50, y: 130, color: '#457b9d'
+                        w: 200, h: 50, y: 140, color: '#b000ff'
                     });
                 }
             }
@@ -352,14 +403,12 @@
             frameCount++;
             distanceTraveled += currentSpeed;
             score += currentSpeed * 0.05;
-            currentSpeed = baseSpeed + (distanceTraveled * 0.0001); // Gradually increase speed
+            currentSpeed = baseSpeed + (distanceTraveled * 0.00015); 
 
             updateScoreUI();
 
-            // Player Physics & Animation
-            player.visualLane += (player.lane - player.visualLane) * 0.2; // Smooth lane switch
+            player.visualLane += (player.lane - player.visualLane) * 0.25; 
             
-            // Jump physics
             player.y += player.vy;
             player.vy += player.gravity;
             if (player.y <= 0) {
@@ -367,39 +416,31 @@
                 player.vy = 0;
             }
 
-            // Duck physics
             if (player.isDucking) {
                 player.duckTimer--;
                 if (player.duckTimer <= 0) player.isDucking = false;
             }
 
-            // Move & Collide Entities
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
                 e.z -= currentSpeed;
 
-                // Collision Detection
-                // Check if Z is overlapping player (player is at Z=20, depth threshold ~40)
                 if (e.z > 0 && e.z < 60 && Math.abs(e.lane - player.lane) < 0.5) {
                     if (e.type === 'coin' && !e.collected) {
                         e.collected = true;
                         score += 50;
                     } else if (!e.collected) {
-                        // Obstacle Collision
                         if (e.type === 'train') {
                             gameOver();
                         } else if (e.type === 'barrier') {
-                            if (player.y < e.h - 10) gameOver(); // Didn't jump high enough
+                            if (player.y < e.h - 15) gameOver(); 
                         } else if (e.type === 'overhead') {
-                            if (!player.isDucking) gameOver(); // Didn't duck
+                            if (!player.isDucking) gameOver(); 
                         }
                     }
                 }
 
-                // Remove off-screen entities
-                if (e.z < -100) {
-                    entities.splice(i, 1);
-                }
+                if (e.z < -100) entities.splice(i, 1);
             }
 
             spawnEntities();
@@ -413,32 +454,46 @@
 
         // --- Render Loop ---
         function draw() {
-            // Background (Sky)
+            // 1. Draw Sky Background
             let skyGrad = ctx.createLinearGradient(0, 0, 0, VP_Y);
-            skyGrad.addColorStop(0, '#1a1a2e');
-            skyGrad.addColorStop(1, '#16213e');
+            skyGrad.addColorStop(0, '#0f0c29');   // Deep Space
+            skyGrad.addColorStop(0.5, '#302b63'); // Purple
+            skyGrad.addColorStop(1, '#ff007f');   // Neon Pink horizon
             ctx.fillStyle = skyGrad;
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillRect(0, 0, width, VP_Y);
 
-            // Horizon Glow
-            ctx.fillStyle = '#0f3460';
+            // 2. Draw Sun
+            ctx.fillStyle = '#ffea00';
+            ctx.shadowColor = '#ffea00';
+            ctx.shadowBlur = 30;
             ctx.beginPath();
-            ctx.ellipse(width/2, VP_Y, width, 50, 0, 0, Math.PI * 2);
+            ctx.arc(width/2, VP_Y, 80, Math.PI, 0); // Half circle resting on horizon
             ctx.fill();
+            ctx.shadowBlur = 0; // Reset shadow
 
-            // Ground
-            ctx.fillStyle = '#111';
+            // 3. Draw Skyline
+            ctx.fillStyle = '#050510'; // Silhouette color
+            for (let b of skyline) {
+                ctx.fillRect(b.x, VP_Y - b.h, b.w, b.h);
+                // Glowing windows
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+                if(b.h > 50) ctx.fillRect(b.x + 5, VP_Y - b.h + 10, b.w - 10, b.h - 20);
+                ctx.fillStyle = '#050510';
+            }
+
+            // 4. Draw Ground / Grid
+            ctx.fillStyle = '#110022';
             ctx.fillRect(0, VP_Y, width, height - VP_Y);
 
-            // Draw Grid/Speed lines to simulate movement
-            ctx.strokeStyle = '#222';
+            // Speed Grid lines
+            ctx.strokeStyle = '#ff007f';
             ctx.lineWidth = 1;
             let offset = (distanceTraveled % 200);
             for (let i = 0; i < 20; i++) {
                 let z = i * 200 - offset;
                 if (z > 0 && z < MAX_DEPTH) {
-                    let p1 = project(-2, 0, z);
-                    let p2 = project(2, 0, z);
+                    let p1 = project(-3, 0, z);
+                    let p2 = project(3, 0, z);
                     ctx.beginPath();
                     ctx.moveTo(p1.x, p1.y);
                     ctx.lineTo(p2.x, p2.y);
@@ -446,36 +501,37 @@
                 }
             }
 
-            // Draw Lanes
+            // Lane Dividers
             for (let l = -1; l <= 1; l++) {
                 let pBottom = project(l, 0, 0);
                 let pTop = project(l, 0, MAX_DEPTH);
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                ctx.lineWidth = 4 * pBottom.scale;
+                
+                // Outer boundaries and middle dividers
+                ctx.strokeStyle = (l === 0) ? 'rgba(0, 240, 255, 0.8)' : 'rgba(255, 0, 127, 0.5)';
+                ctx.lineWidth = 6 * pBottom.scale;
+                
+                // Draw dashed lines for dividers
+                ctx.setLineDash([20, 20]);
+                ctx.lineDashOffset = -distanceTraveled;
+                
                 ctx.beginPath();
                 ctx.moveTo(pBottom.x, pBottom.y);
                 ctx.lineTo(pTop.x, pTop.y);
                 ctx.stroke();
+                
+                ctx.setLineDash([]); // Reset line dash
             }
 
             // Sort entities from back to front (Painter's Algorithm)
             let renderList = [...entities];
-            // Add player to render list for correct depth sorting
-            renderList.push({
-                isPlayer: true, z: player.z
-            });
-            
+            renderList.push({ isPlayer: true, z: player.z });
             renderList.sort((a, b) => b.z - a.z);
 
             // Draw Entities
             for (let e of renderList) {
-                if (e.z < 0) continue; // Behind camera
-
-                if (e.isPlayer) {
-                    drawPlayer();
-                } else if (!e.collected) {
-                    drawEntity(e);
-                }
+                if (e.z < 0) continue; 
+                if (e.isPlayer) drawPlayer();
+                else if (!e.collected) drawEntity(e);
             }
         }
 
@@ -486,51 +542,49 @@
             let dh = e.h * s;
 
             if (e.type === 'coin') {
-                ctx.fillStyle = '#ffcc00';
+                // Rotation effect
+                let rot = Math.sin(frameCount * 0.1 + e.z) * (dw/2);
+                
+                ctx.fillStyle = '#ffea00';
                 ctx.beginPath();
-                ctx.arc(p.x, p.y - dh/2, dw/2, 0, Math.PI * 2);
+                ctx.ellipse(p.x, p.y - dh/2, Math.max(1, Math.abs(rot)), dh/2, 0, 0, Math.PI * 2);
                 ctx.fill();
+                
                 ctx.strokeStyle = '#ff9900';
                 ctx.lineWidth = 2 * s;
                 ctx.stroke();
-                
-                // Inner detail
-                ctx.fillStyle = '#fff';
-                ctx.beginPath();
-                ctx.arc(p.x - dw/6, p.y - dh/2 - dh/6, dw/8, 0, Math.PI * 2);
-                ctx.fill();
             } else {
-                // Obstacles (Trains, Barriers, Overhead)
                 let faceHeight = dh;
-                // Add fake 3D depth block
-                let depth = 40 * s;
-                
-                // Side/Top colors based on main color
-                ctx.fillStyle = e.color;
                 
                 // Front Face
+                ctx.fillStyle = e.color;
+                ctx.shadowColor = e.color;
+                ctx.shadowBlur = 10 * s; // Neon glow effect
                 ctx.fillRect(p.x - dw/2, p.y - faceHeight, dw, faceHeight);
+                ctx.shadowBlur = 0;
                 
-                // Simple lighting/border
+                // Dark border
                 ctx.strokeStyle = '#000';
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 2;
                 ctx.strokeRect(p.x - dw/2, p.y - faceHeight, dw, faceHeight);
 
-                // Add visual details based on type
+                // Obstacle Details
                 if (e.type === 'train') {
-                    // Windows
                     ctx.fillStyle = '#111';
-                    ctx.fillRect(p.x - dw*0.4, p.y - faceHeight*0.8, dw*0.8, faceHeight*0.3);
-                    // Headlights
-                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(p.x - dw*0.4, p.y - faceHeight*0.8, dw*0.8, faceHeight*0.3); // Window
+                    ctx.fillStyle = '#00f0ff'; // Bright headlights
                     ctx.fillRect(p.x - dw*0.3, p.y - faceHeight*0.2, dw*0.2, faceHeight*0.1);
                     ctx.fillRect(p.x + dw*0.1, p.y - faceHeight*0.2, dw*0.2, faceHeight*0.1);
                 } else if (e.type === 'barrier') {
-                    // Stripes
                     ctx.fillStyle = '#111';
-                    for(let i=0; i<3; i++) {
-                        ctx.fillRect(p.x - dw/2 + i*(dw/3), p.y - faceHeight, dw/6, faceHeight);
+                    for(let i=0; i<4; i++) {
+                        ctx.fillRect(p.x - dw/2 + i*(dw/4), p.y - faceHeight, dw/8, faceHeight);
                     }
+                } else if (e.type === 'overhead') {
+                    // Pillars for overhead
+                    ctx.fillStyle = '#555';
+                    ctx.fillRect(p.x - dw/2, p.y, dw*0.15, e.y * s);
+                    ctx.fillRect(p.x + dw*0.35, p.y, dw*0.15, e.y * s);
                 }
             }
         }
@@ -546,30 +600,47 @@
             let dh = ph * s;
             
             // Player Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
             ctx.beginPath();
-            ctx.ellipse(project(player.visualLane, 0, player.z).x, project(player.visualLane, 0, player.z).y, dw*0.6, dw*0.2, 0, 0, Math.PI*2);
+            ctx.ellipse(project(player.visualLane, 0, player.z).x, project(player.visualLane, 0, player.z).y, dw*0.7, dw*0.2, 0, 0, Math.PI*2);
             ctx.fill();
 
-            // Player Body (Rounded Rect style)
+            // Player Body
             ctx.fillStyle = player.color;
+            ctx.shadowColor = player.color;
+            ctx.shadowBlur = 15 * s; // Glowing player
             let rx = p.x - dw/2;
             let ry = p.y - dh;
             
             ctx.beginPath();
-            ctx.roundRect(rx, ry, dw, dh, 10 * s);
+            ctx.roundRect(rx, ry, dw, dh, 12 * s);
             ctx.fill();
+            ctx.shadowBlur = 0;
             
-            // Player details (Backpack/Head)
-            ctx.fillStyle = '#ff3366'; // Head/Cap
+            // Helmet/Visor
+            ctx.fillStyle = '#ff007f';
             ctx.beginPath();
             ctx.arc(p.x, ry + dh*0.2, dw*0.4, 0, Math.PI*2);
             ctx.fill();
             
+            // Visor reflection
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(p.x + dw*0.1, ry + dh*0.1, dw*0.2, dh*0.1);
+
             if(!player.isDucking) {
-                // Backpack
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(rx + dw*0.2, ry + dh*0.4, dw*0.6, dh*0.4);
+                // Jetpack / Backpack
+                ctx.fillStyle = '#222';
+                ctx.fillRect(rx + dw*0.1, ry + dh*0.4, dw*0.8, dh*0.5);
+                
+                // Thruster exhaust (if jumping)
+                if(player.y > 0) {
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.beginPath();
+                    ctx.moveTo(rx + dw*0.2, ry + dh*0.9);
+                    ctx.lineTo(rx + dw*0.8, ry + dh*0.9);
+                    ctx.lineTo(p.x, ry + dh*1.3);
+                    ctx.fill();
+                }
             }
         }
 
