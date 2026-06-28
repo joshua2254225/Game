@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIN Generator</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#11192b;
+      --line:rgba(255,255,255,.10);
+      --text:#eaf0ff;
+      --muted:#9db0d1;
+      --accent:#64d2ff;
+      --accent2:#7c5cff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(180deg,#070b15,#0b1020);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      padding:16px;
+    }
+    .card{
+      width:min(420px,100%);
+      background:rgba(17,25,43,.92);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
+    }
+    h1{
+      margin:0 0 6px;
+      font-size:1.35rem;
+    }
+    p{
+      margin:0 0 16px;
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.4;
+    }
+    .row{
+      display:grid;
+      grid-template-columns:1fr 110px;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    input, select, button{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#0b1322;
+      color:var(--text);
+      font:inherit;
+      padding:13px 14px;
+      outline:none;
+    }
+    input:focus, select:focus{
+      border-color:rgba(100,210,255,.55);
+      box-shadow:0 0 0 4px rgba(100,210,255,.12);
+    }
+    button{
+      margin-top:2px;
+      border:0;
+      font-weight:700;
+      cursor:pointer;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+    }
+    button:disabled{opacity:.65;cursor:not-allowed}
+    .info{
+      margin-top:12px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.45;
+      background:rgba(255,255,255,.03);
+      min-height:54px;
+    }
+    .small{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:.82rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>BIN Generator</h1>
+    <p>Gib die Größe ein, dann wird eine .bin-Datei erzeugt und direkt heruntergeladen.</p>
+
+    <div class="row">
+      <input id="size" type="number" min="1" step="1" value="10" />
+      <select id="unit">
+        <option value="KB">KB</option>
+        <option value="MB" selected>MB</option>
+        <option value="GB">GB</option>
+      </select>
+    </div>
+
+    <button id="btn">.bin herunterladen</button>
+
+    <div class="info" id="info">Bereit.</div>
+    <div class="small">Hinweis: Sehr große Dateien können den Browser stark belasten.</div>
+  </div>
+
+  <script>
+    const sizeInput = document.getElementById('size');
+    const unitSelect = document.getElementById('unit');
+    const button = document.getElementById('btn');
+    const info = document.getElementById('info');
+
+    function bytesFromSize(value, unit) {
+      const n = Number(value);
+      if (!Number.isFinite(n) || n <= 0) return 0;
+
+      const factors = {
+        KB: 1024,
+        MB: 1024 * 1024,
+        GB: 1024 * 1024 * 1024
+      };
+      return Math.floor(n * factors[unit]);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+      if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+      return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    }
+
+    function makePattern(size) {
+      const buffer = new Uint8Array(size);
+      let x = 123456789;
+      for (let i = 0; i < size; i++) {
+        x ^= x << 13;
+        x ^= x >>> 17;
+        x ^= x << 5;
+        buffer[i] = x & 255;
+      }
+      return buffer;
+    }
+
+    button.addEventListener('click', async () => {
+      const bytes = bytesFromSize(sizeInput.value, unitSelect.value);
+
+      if (!bytes) {
+        info.textContent = 'Bitte eine gültige Größe eingeben.';
+        return;
+      }
+
+      button.disabled = true;
+      info.textContent = 'Datei wird erzeugt...';
+
+      try {
+        const chunkSize = Math.min(bytes, 1024 * 1024); // 1 MB Muster
+        const pattern = makePattern(chunkSize);
+
+        const parts = [];
+        let remaining = bytes;
+
+        while (remaining > 0) {
+          const take = Math.min(remaining, pattern.length);
+          parts.push(pattern.slice(0, take));
+          remaining -= take;
+        }
+
+        const blob = new Blob(parts, { type: 'application/octet-stream' });
+        const fileName = `testfile_${formatBytes(bytes).replaceAll(' ', '_').replaceAll('.', ',')}.bin`;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        info.textContent = `Fertig: ${fileName} (${formatBytes(bytes)})`;
+      } catch (err) {
+        console.error(err);
+        info.textContent = 'Fehler beim Erzeugen der Datei.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
