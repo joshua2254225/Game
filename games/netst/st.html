@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="de">
+<!DOCTYPE html><html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -8,427 +7,419 @@
     :root {
       --bg: #0b1020;
       --panel: rgba(16, 24, 40, 0.72);
-      --panel2: rgba(255,255,255,0.06);
       --text: #eaf0ff;
       --muted: #9db0d1;
       --line: rgba(255,255,255,0.10);
       --accent: #64d2ff;
       --accent2: #7c5cff;
-      --good: #54e39f;
-      --warn: #ffd166;
-      --bad: #ff6b6b;
       --shadow: 0 20px 60px rgba(0,0,0,0.35);
       --radius: 24px;
-    }
+    }* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, rgba(100,210,255,0.16), transparent 35%),
+    radial-gradient(circle at 80% 0%, rgba(124,92,255,0.14), transparent 30%),
+    linear-gradient(180deg, #070b15 0%, #0b1020 100%);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
 
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      width: 100%;
-      min-height: 100%;
-      background:
-        radial-gradient(circle at top, rgba(100,210,255,0.16), transparent 35%),
-        radial-gradient(circle at 80% 0%, rgba(124,92,255,0.14), transparent 30%),
-        linear-gradient(180deg, #070b15 0%, #0b1020 100%);
-      color: var(--text);
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    }
+body {
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
 
-    body {
-      display: grid;
-      place-items: center;
-      padding: 18px;
-    }
+.app {
+  width: min(980px, 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+}
 
-    .app {
-      width: min(980px, 100%);
-      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-      border: 1px solid var(--line);
-      border-radius: 30px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(20px);
-      overflow: hidden;
-    }
+.topbar {
+  padding: 20px 22px 0;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
 
-    .topbar {
-      padding: 20px 22px 0;
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-    }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
+.logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 10px 30px rgba(100,210,255,0.22);
+  position: relative;
+  overflow: hidden;
+}
 
-    .logo {
-      width: 52px;
-      height: 52px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 10px 30px rgba(100,210,255,0.22);
-      position: relative;
-      overflow: hidden;
-    }
+.logo::after {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 2px solid rgba(255,255,255,0.65);
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-radius: 50%;
+  transform: rotate(25deg);
+}
 
-    .logo::after {
-      content: '';
-      position: absolute;
-      inset: 10px;
-      border: 2px solid rgba(255,255,255,0.65);
-      border-top-color: transparent;
-      border-left-color: transparent;
-      border-radius: 50%;
-      transform: rotate(25deg);
-    }
+h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 2.3rem);
+  letter-spacing: 0.2px;
+}
 
-    h1 {
-      margin: 0;
-      font-size: clamp(1.5rem, 2vw, 2.3rem);
-      letter-spacing: 0.2px;
-    }
+.subtitle {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
 
-    .subtitle {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
+.top-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
-    .top-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+.chip {
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 
-    .chip {
-      border: 1px solid var(--line);
-      color: var(--text);
-      background: rgba(255,255,255,0.06);
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-size: 0.9rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
+.content {
+  padding: 20px 22px 24px;
+  display: grid;
+  gap: 18px;
+}
 
-    .content {
-      padding: 20px 22px 24px;
-      display: grid;
-      gap: 18px;
-    }
+.hero {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+}
 
-    .hero {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 18px;
-    }
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+}
 
-    @media (max-width: 840px) {
-      .hero { grid-template-columns: 1fr; }
-    }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
 
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-    }
+.speed-card {
+  padding: 22px;
+  display: grid;
+  gap: 16px;
+}
 
-    .speed-card {
-      padding: 22px;
-      display: grid;
-      gap: 16px;
-    }
+.stage-label {
+  color: var(--muted);
+  font-size: 0.95rem;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
 
-    .stage-label {
-      color: var(--muted);
-      font-size: 0.95rem;
-      letter-spacing: 0.2px;
-      text-transform: uppercase;
-    }
+.speed-readout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: center;
+}
 
-    .speed-readout {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 18px;
-      align-items: center;
-    }
+.gauge {
+  width: min(280px, 66vw);
+  aspect-ratio: 1/1;
+  position: relative;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,0.12) 0 22%, transparent 23%),
+    conic-gradient(from 220deg, rgba(255,255,255,0.06), rgba(100,210,255,0.95), rgba(124,92,255,0.95), rgba(255,255,255,0.06));
+  padding: 12px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
 
-    .gauge {
-      width: min(280px, 66vw);
-      aspect-ratio: 1/1;
-      position: relative;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at center, rgba(255,255,255,0.12) 0 22%, transparent 23%),
-        conic-gradient(from 220deg, rgba(255,255,255,0.06), rgba(100,210,255,0.95), rgba(124,92,255,0.95), rgba(255,255,255,0.06));
-      padding: 12px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
-    }
+.gauge-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(11,16,32,0.96), rgba(11,16,32,0.84));
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+}
 
-    .gauge-inner {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: radial-gradient(circle at center, rgba(11,16,32,0.96), rgba(11,16,32,0.84));
-      display: grid;
-      place-items: center;
-      position: relative;
-      overflow: hidden;
-    }
+.needle {
+  position: absolute;
+  width: 44%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #fff 20%, #fff 80%, transparent);
+  left: 50%;
+  top: 50%;
+  transform-origin: 0% 50%;
+  transform: rotate(-130deg);
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.2));
+  border-radius: 999px;
+  transition: transform 0.16s ease-out;
+}
 
-    .needle {
-      position: absolute;
-      width: 44%;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, #fff 20%, #fff 80%, transparent);
-      left: 50%;
-      top: 50%;
-      transform-origin: 0% 50%;
-      transform: rotate(-130deg);
-      filter: drop-shadow(0 0 8px rgba(255,255,255,0.2));
-      border-radius: 999px;
-      transition: transform 0.16s ease-out;
-    }
+.needle::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
 
-    .needle::after {
-      content: '';
-      position: absolute;
-      right: -7px;
-      top: 50%;
-      width: 12px;
-      height: 12px;
-      background: #fff;
-      border-radius: 50%;
-      transform: translateY(-50%);
-    }
+.gauge-center {
+  text-align: center;
+  z-index: 2;
+  padding-top: 28px;
+}
 
-    .gauge-center {
-      text-align: center;
-      z-index: 2;
-      padding-top: 28px;
-    }
+.value {
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
 
-    .value {
-      font-size: clamp(2.5rem, 7vw, 4.5rem);
-      font-weight: 800;
-      line-height: 1;
-      letter-spacing: -0.04em;
-    }
+.unit {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
 
-    .unit {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-top: 8px;
-    }
+.mini {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
 
-    .mini {
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-top: 8px;
-    }
+.side-stack {
+  display: grid;
+  gap: 18px;
+}
 
-    .side-stack {
-      display: grid;
-      gap: 18px;
-    }
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
 
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
+@media (max-width: 560px) {
+  .metrics-grid { grid-template-columns: 1fr; }
+  .speed-readout { grid-template-columns: 1fr; justify-items: center; }
+}
 
-    @media (max-width: 560px) {
-      .metrics-grid { grid-template-columns: 1fr; }
-      .speed-readout { grid-template-columns: 1fr; justify-items: center; }
-    }
+.metric {
+  padding: 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+}
 
-    .metric {
-      padding: 18px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-    }
+.metric .label {
+  color: var(--muted);
+  font-size: 0.84rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
 
-    .metric .label {
-      color: var(--muted);
-      font-size: 0.84rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
+.metric .num {
+  margin-top: 8px;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
 
-    .metric .num {
-      margin-top: 8px;
-      font-size: 1.5rem;
-      font-weight: 800;
-    }
+.controls {
+  padding: 18px 22px 22px;
+  display: grid;
+  gap: 14px;
+}
 
-    .controls {
-      padding: 18px 22px 22px;
-      display: grid;
-      gap: 14px;
-    }
+.form-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr auto;
+  gap: 12px;
+}
 
-    .form-row {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr auto;
-      gap: 12px;
-    }
+@media (max-width: 840px) {
+  .form-row { grid-template-columns: 1fr 1fr; }
+}
 
-    @media (max-width: 840px) {
-      .form-row { grid-template-columns: 1fr 1fr; }
-    }
+@media (max-width: 520px) {
+  .form-row { grid-template-columns: 1fr; }
+}
 
-    @media (max-width: 520px) {
-      .form-row { grid-template-columns: 1fr; }
-    }
+.field {
+  display: grid;
+  gap: 8px;
+}
 
-    .field {
-      display: grid;
-      gap: 8px;
-    }
+label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 
-    label {
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
+input {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.24);
+  color: var(--text);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 1rem;
+  outline: none;
+}
 
-    input {
-      width: 100%;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.24);
-      color: var(--text);
-      border-radius: 16px;
-      padding: 14px 16px;
-      font-size: 1rem;
-      outline: none;
-    }
+input:focus {
+  border-color: rgba(100,210,255,0.55);
+  box-shadow: 0 0 0 4px rgba(100,210,255,0.12);
+}
 
-    input:focus {
-      border-color: rgba(100,210,255,0.55);
-      box-shadow: 0 0 0 4px rgba(100,210,255,0.12);
-    }
+.btn-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
 
-    .btn-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-    }
+.buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
 
-    .buttons {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+button {
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 18px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
+}
 
-    button {
-      border: 0;
-      border-radius: 16px;
-      padding: 14px 18px;
-      font-weight: 700;
-      font-size: 0.98rem;
-      color: white;
-      cursor: pointer;
-      transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
-    }
+button:hover { transform: translateY(-1px); }
+button:active { transform: translateY(1px); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    button:hover { transform: translateY(-1px); }
-    button:active { transform: translateY(1px); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
+.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 10px 24px rgba(100,210,255,0.14);
+}
 
-    .primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 10px 24px rgba(100,210,255,0.14);
-    }
+.secondary {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
+}
 
-    .secondary {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.10);
-    }
+.progress-wrap {
+  display: grid;
+  gap: 8px;
+}
 
-    .progress-wrap {
-      display: grid;
-      gap: 8px;
-    }
+.progress {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+}
 
-    .progress {
-      width: 100%;
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
+.bar {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.12s linear;
+}
 
-    .bar {
-      width: 0%;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      transition: width 0.12s linear;
-    }
+.status {
+  color: var(--muted);
+  font-size: 0.95rem;
+  min-height: 1.25em;
+}
 
-    .status {
-      color: var(--muted);
-      font-size: 0.95rem;
-      min-height: 1.25em;
-    }
+.history {
+  padding: 18px 22px 22px;
+  display: grid;
+  gap: 12px;
+}
 
-    .history {
-      padding: 18px 22px 22px;
-      display: grid;
-      gap: 12px;
-    }
+.history-list {
+  display: grid;
+  gap: 10px;
+}
 
-    .history-list {
-      display: grid;
-      gap: 10px;
-    }
+.history-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  align-items: center;
+}
 
-    .history-item {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      align-items: center;
-    }
+.history-item small {
+  color: var(--muted);
+  display: block;
+  margin-top: 4px;
+}
 
-    .history-item small {
-      color: var(--muted);
-      display: block;
-      margin-top: 4px;
-    }
+.pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
 
-    .pill {
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      color: var(--text);
-      font-weight: 700;
-      white-space: nowrap;
-    }
+.footer-note {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
 
-    .footer-note {
-      color: var(--muted);
-      font-size: 0.88rem;
-      line-height: 1.5;
-    }
+.accent { color: var(--text); font-weight: 700; }
 
-    .accent {
-      color: var(--text);
-      font-weight: 700;
-    }
   </style>
 </head>
 <body>
@@ -438,118 +429,137 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1>SpeedTester</h1>
-          <div class="subtitle">Download • Ping • Jitter • Browser-basiert für GitHub Pages</div>
+          <div class="subtitle">Download • Ping • Jitter • GitHub Pages kompatibel</div>
         </div>
       </div>
       <div class="top-actions">
-        <div class="chip">⚡ echte Messung mit Datei-Download</div>
+        <div class="chip">⚡ Dateien: 1, 5, 10 MB</div>
         <div class="chip">📡 Cache-busted Requests</div>
       </div>
-    </section>
-
-    <section class="content">
-      <div class="hero">
-        <div class="card speed-card">
-          <div class="stage-label" id="stageLabel">Bereit</div>
-          <div class="speed-readout">
-            <div class="gauge" aria-hidden="true">
-              <div class="gauge-inner">
-                <div class="needle" id="needle"></div>
-                <div class="gauge-center">
-                  <div class="value" id="mainValue">0.0</div>
-                  <div class="unit" id="mainUnit">Mbit/s</div>
-                  <div class="mini" id="mainHint">Starten, um den Download-Test zu beginnen</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="side-stack">
-              <div class="metrics-grid">
-                <div class="metric">
-                  <div class="label">Download</div>
-                  <div class="num" id="downloadValue">0.00 Mbit/s</div>
-                </div>
-                <div class="metric">
-                  <div class="label">Ping</div>
-                  <div class="num" id="pingValue">0 ms</div>
-                </div>
-                <div class="metric">
-                  <div class="label">Jitter</div>
-                  <div class="num" id="jitterValue">0 ms</div>
-                </div>
-              </div>
-
-              <div class="metric">
-                <div class="label">Live-Info</div>
-                <div class="num" id="liveInfo" style="font-size:1.05rem; font-weight:600; line-height:1.5;">Noch kein Test gestartet.</div>
-              </div>
+    </section><section class="content">
+  <div class="hero">
+    <div class="card speed-card">
+      <div class="stage-label" id="stageLabel">Bereit</div>
+      <div class="speed-readout">
+        <div class="gauge" aria-hidden="true">
+          <div class="gauge-inner">
+            <div class="needle" id="needle"></div>
+            <div class="gauge-center">
+              <div class="value" id="mainValue">0.0</div>
+              <div class="unit" id="mainUnit">Mbit/s</div>
+              <div class="mini" id="mainHint">Starten, um den Download-Test zu beginnen</div>
             </div>
           </div>
         </div>
 
-        <div class="card controls">
-          <div class="form-row">
-            <div class="field">
-              <label for="downloadUrl">Download-Datei</label>
-              <input id="downloadUrl" type="text" value="testfile.bin" spellcheck="false" />
+        <div class="side-stack">
+          <div class="metrics-grid">
+            <div class="metric">
+              <div class="label">Download</div>
+              <div class="num" id="downloadValue">0.00 Mbit/s</div>
             </div>
-            <div class="field">
-              <label for="pingUrl">Ping-Datei</label>
-              <input id="pingUrl" type="text" value="ping.txt" spellcheck="false" />
+            <div class="metric">
+              <div class="label">Ping</div>
+              <div class="num" id="pingValue">0 ms</div>
             </div>
-            <div class="field">
-              <label for="pingSamples">Ping-Samples</label>
-              <input id="pingSamples" type="number" min="3" max="20" value="8" />
-            </div>
-            <div class="field">
-              <label>&nbsp;</label>
-              <button class="secondary" id="resetBtn" type="button">Reset</button>
+            <div class="metric">
+              <div class="label">Jitter</div>
+              <div class="num" id="jitterValue">0 ms</div>
             </div>
           </div>
 
-          <div class="btn-row">
-            <div class="buttons">
-              <button class="primary" id="startBtn" type="button">Test starten</button>
-              <button class="secondary" id="stopBtn" type="button" disabled>Stop</button>
-            </div>
-            <div class="status" id="status">Tipp: Lege <span class="accent">testfile.bin</span> und <span class="accent">ping.txt</span> im selben Ordner wie diese HTML-Datei ab.</div>
-          </div>
-
-          <div class="progress-wrap">
-            <div class="progress"><div class="bar" id="bar"></div></div>
-            <div class="status" id="progressText">0%</div>
+          <div class="metric">
+            <div class="label">Live-Info</div>
+            <div class="num" id="liveInfo" style="font-size:1.05rem; font-weight:600; line-height:1.5;">Noch kein Test gestartet.</div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="card history">
-        <div class="stage-label">Messverlauf</div>
-        <div class="history-list" id="historyList">
-          <div class="history-item">
-            <div>
-              <strong>Noch keine Messung</strong>
-              <small>Der Verlauf erscheint nach dem ersten Lauf.</small>
-            </div>
-            <div class="pill">—</div>
-          </div>
+    <div class="card controls">
+      <div class="form-row">
+        <div class="field">
+          <label for="pingUrl">Ping-Datei</label>
+          <input id="pingUrl" type="text" value="ping.txt" spellcheck="false" />
         </div>
-        <div class="footer-note">
-          Für GitHub Pages brauchst du neben dieser HTML-Datei mindestens eine kleine Datei für Ping und eine größere Datei für den Download-Test. Die Messung ist dann echt, aber sie misst auch den Weg zum GitHub-CDN.
+        <div class="field">
+          <label for="pingSamples">Ping-Samples</label>
+          <input id="pingSamples" type="number" min="3" max="20" value="8" />
+        </div>
+        <div class="field">
+          <label for="repeatDownloads">Download-Runden</label>
+          <input id="repeatDownloads" type="number" min="1" max="4" value="1" />
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="secondary" id="resetBtn" type="button">Reset</button>
         </div>
       </div>
-    </section>
-  </main>
 
-  <script>
+      <div class="form-row">
+        <div class="field">
+          <label for="file1">1 MB Datei</label>
+          <input id="file1" type="text" value="1mb.bin" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label for="file2">5 MB Datei</label>
+          <input id="file2" type="text" value="5mb.bin" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label for="file3">10 MB Datei</label>
+          <input id="file3" type="text" value="10mb.bin" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <div class="status tiny" style="padding-top:14px;">Alle drei Dateien werden gemessen.</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <div class="buttons">
+          <button class="primary" id="startBtn" type="button">Test starten</button>
+          <button class="secondary" id="stopBtn" type="button" disabled>Stop</button>
+        </div>
+        <div class="status" id="status">Tipp: Lege <span class="accent">ping.txt</span>, <span class="accent">1mb.bin</span>, <span class="accent">5mb.bin</span> und <span class="accent">10mb.bin</span> in denselben Ordner.</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <div class="status" id="progressText">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card history">
+    <div class="stage-label">Messverlauf</div>
+    <div class="history-list" id="historyList">
+      <div class="history-item">
+        <div>
+          <strong>Noch keine Messung</strong>
+          <small>Der Verlauf erscheint nach dem ersten Lauf.</small>
+        </div>
+        <div class="pill">—</div>
+      </div>
+    </div>
+    <div class="footer-note">
+      Ping wird über <span class="accent">ping.txt</span> gemessen. Der Download-Speed entsteht aus den drei Dateien und wird als gewichteter Gesamtwert angezeigt. Jitter ist die durchschnittliche Schwankung zwischen den Ping-Samples.
+    </div>
+  </div>
+</section>
+
+  </main>  <script>
     const el = (id) => document.getElementById(id);
 
     const ui = {
       startBtn: el('startBtn'),
       stopBtn: el('stopBtn'),
       resetBtn: el('resetBtn'),
-      downloadUrl: el('downloadUrl'),
       pingUrl: el('pingUrl'),
       pingSamples: el('pingSamples'),
+      repeatDownloads: el('repeatDownloads'),
+      file1: el('file1'),
+      file2: el('file2'),
+      file3: el('file3'),
       needle: el('needle'),
       mainValue: el('mainValue'),
       mainUnit: el('mainUnit'),
@@ -565,13 +575,18 @@
       historyList: el('historyList'),
     };
 
+    const fileDefs = [
+      { label: '1 MB', input: () => ui.file1.value.trim() },
+      { label: '5 MB', input: () => ui.file2.value.trim() },
+      { label: '10 MB', input: () => ui.file3.value.trim() },
+    ];
+
     let controller = null;
     let running = false;
     let history = [];
 
     function nowMs() { return performance.now(); }
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
     function fmtSpeed(mbps) {
@@ -584,8 +599,11 @@
       return ms >= 100 ? ms.toFixed(0) : ms >= 10 ? ms.toFixed(1) : ms.toFixed(2);
     }
 
-    function setStatus(text) { ui.status.innerHTML = text; }
+    function fmtMiB(bytes) {
+      return (bytes / (1024 * 1024)).toFixed(2);
+    }
 
+    function setStatus(text) { ui.status.innerHTML = text; }
     function setStage(text) { ui.stageLabel.textContent = text; }
 
     function setGauge(mbps) {
@@ -649,7 +667,7 @@
           ? times.slice(1).reduce((sum, t, idx) => sum + Math.abs(t - times[idx]), 0) / (times.length - 1)
           : 0;
         setStatus(`Ping läuft… Sample ${i + 1}/${samples}`);
-        updateMetrics(Number(ui.downloadValue.textContent), avg, liveJitter, `Ping-Sample ${i + 1}: ${fmtMs(ms)} ms`);
+        updateMetrics(Number(ui.downloadValue.textContent) || 0, avg, liveJitter, `Ping-Sample ${i + 1}: ${fmtMs(ms)} ms`);
         await sleep(120);
       }
 
@@ -658,10 +676,10 @@
         ? times.slice(1).reduce((sum, t, idx) => sum + Math.abs(t - times[idx]), 0) / (times.length - 1)
         : 0;
 
-      return { ping, jitter, samples: times };
+      return { ping, jitter };
     }
 
-    async function measureDownload(url, signal) {
+    async function measureDownload(url, signal, progressBase, progressSpan) {
       const finalUrl = appendQuery(url, randomCacheBust());
       const start = nowMs();
       const res = await fetch(finalUrl, {
@@ -675,9 +693,11 @@
         }
       });
       if (!res.ok) throw new Error(`Download fehlgeschlagen: HTTP ${res.status}`);
+
       if (!res.body) {
         const buf = await res.arrayBuffer();
         const elapsed = (nowMs() - start) / 1000;
+        setProgress(progressBase + progressSpan);
         return { bytes: buf.byteLength, elapsed };
       }
 
@@ -696,15 +716,16 @@
         if (t - lastUi > 60) {
           const elapsed = (t - start) / 1000;
           const mbps = elapsed > 0 ? (bytes * 8) / elapsed / 1e6 : 0;
-          ui.liveInfo.textContent = `Download: ${bytes} Bytes gelesen • ${elapsed.toFixed(2)} s`;
+          ui.liveInfo.textContent = `Datei geladen: ${fmtMiB(bytes)} MiB • ${elapsed.toFixed(2)} s`;
           setGauge(mbps);
-          if (contentLength > 0) setProgress((bytes / contentLength) * 100);
+          if (contentLength > 0) setProgress(progressBase + ((bytes / contentLength) * progressSpan));
           setStatus(`Download läuft… ${fmtSpeed(mbps)} Mbit/s`);
           lastUi = t;
         }
       }
 
       const elapsed = (nowMs() - start) / 1000;
+      setProgress(progressBase + progressSpan);
       return { bytes, elapsed };
     }
 
@@ -734,7 +755,7 @@
       ui.bar.style.width = '0%';
       ui.progressText.textContent = '0%';
       setStage('Bereit');
-      setStatus('Tipp: Lege <span class="accent">testfile.bin</span> und <span class="accent">ping.txt</span> im selben Ordner wie diese HTML-Datei ab.');
+      setStatus('Tipp: Lege <span class="accent">ping.txt</span>, <span class="accent">1mb.bin</span>, <span class="accent">5mb.bin</span> und <span class="accent">10mb.bin</span> im selben Ordner ab.');
     }
 
     async function runTest() {
@@ -750,10 +771,15 @@
       setStatus('Messung wird vorbereitet…');
       updateMetrics(0, 0, 0, 'Starte…');
 
-      const downloadUrl = ui.downloadUrl.value.trim();
       const pingUrl = ui.pingUrl.value.trim();
       const samples = clamp(parseInt(ui.pingSamples.value || '8', 10), 3, 20);
+      const repeatDownloads = clamp(parseInt(ui.repeatDownloads.value || '1', 10), 1, 4);
       ui.pingSamples.value = samples;
+      ui.repeatDownloads.value = repeatDownloads;
+
+      const totalPasses = fileDefs.length * repeatDownloads;
+      const results = [];
+      let pass = 0;
 
       try {
         setStage('Ping');
@@ -763,34 +789,54 @@
         ui.jitterValue.textContent = `${fmtMs(pingResult.jitter)} ms`;
 
         setStage('Download');
-        setStatus('Download beginnt…');
-        ui.liveInfo.textContent = 'Lese Testdatei…';
-        let currentMbps = 0;
+        setStatus('Download-Messung startet…');
 
         const speedTicker = setInterval(() => {
           if (!running) return;
           const displayed = parseFloat(ui.mainValue.textContent) || 0;
-          currentMbps = displayed;
-          setGauge(currentMbps);
+          setGauge(displayed);
         }, 120);
 
-        const dl = await measureDownload(downloadUrl, signal);
+        for (let round = 1; round <= repeatDownloads; round++) {
+          for (const file of fileDefs) {
+            pass++;
+            const label = `${file.label} • Runde ${round}/${repeatDownloads}`;
+            setStage(`Download ${pass}/${totalPasses}`);
+            setStatus(`Lade ${label}…`);
+            ui.liveInfo.textContent = `Datei: ${label}`;
+
+            const dl = await measureDownload(file.input(), signal, ((pass - 1) / totalPasses) * 100, 100 / totalPasses);
+            const mbps = (dl.bytes * 8) / dl.elapsed / 1e6;
+            results.push({ label, bytes: dl.bytes, elapsed: dl.elapsed, mbps });
+
+            const avgSoFar = results.reduce((sum, r) => sum + r.mbps, 0) / results.length;
+            updateMetrics(avgSoFar, pingResult.ping, pingResult.jitter,
+              `${label} fertig: ${fmtMiB(dl.bytes)} MiB in ${dl.elapsed.toFixed(2)} s`);
+            await sleep(140);
+          }
+        }
+
         clearInterval(speedTicker);
 
-        const downloadMbps = (dl.bytes * 8) / dl.elapsed / 1e6;
-        const avgPing = pingResult.ping;
-        const jitter = pingResult.jitter;
+        const weightedMbps = (() => {
+          const totalBits = results.reduce((sum, r) => sum + r.bytes * 8, 0);
+          const totalSeconds = results.reduce((sum, r) => sum + r.elapsed, 0);
+          return totalSeconds > 0 ? (totalBits / totalSeconds) / 1e6 : 0;
+        })();
 
-        updateMetrics(downloadMbps, avgPing, jitter, `Download fertig: ${(dl.bytes / (1024 * 1024)).toFixed(2)} MiB in ${dl.elapsed.toFixed(2)} s`);
+        updateMetrics(weightedMbps, pingResult.ping, pingResult.jitter, `Fertig: ${results.length} Downloads gemessen`);
         setProgress(100);
         setStage('Fertig');
         setStatus('Messung abgeschlossen.');
 
+        const detail = results.map(r => `${r.label}: ${fmtSpeed(r.mbps)} Mbit/s`).join(' | ');
         renderHistory({
           title: 'Letzter Lauf',
-          meta: `Ping ${fmtMs(avgPing)} ms • Jitter ${fmtMs(jitter)} ms • ${samples} Samples`,
-          value: `${fmtSpeed(downloadMbps)} Mbit/s`
+          meta: `Ping ${fmtMs(pingResult.ping)} ms • Jitter ${fmtMs(pingResult.jitter)} ms • ${samples} Samples`,
+          value: `${fmtSpeed(weightedMbps)} Mbit/s`
         });
+
+        ui.liveInfo.textContent = detail.slice(0, 120) + (detail.length > 120 ? '…' : '');
       } catch (err) {
         if (err && err.name === 'AbortError') {
           setStage('Gestoppt');
@@ -830,6 +876,5 @@
     });
 
     resetUI();
-  </script>
-</body>
-</html>
+  </script></body>
+              </html>
