@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Canvas Surfer Clone</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; overflow: hidden; background: #1a1a2e;
+    font-family: system-ui, Arial, sans-serif; touch-action: none;
+  }
+  canvas { display: block; width: 100vw; height: 100vh; }
+ .overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; background: rgba(26,26,46,0.9);
+    color: #fff; text-align: center; z-index: 10;
+  }
+ .overlay h1 { font-size: 8vw; margin: 0 0 2vh; color: #f9d342; text-shadow: 0 0 10px #f9d342; }
+ .overlay p { font-size: 4vw; margin: 0 0 4vh; opacity: 0.8; }
+ .btn {
+    background: linear-gradient(135deg, #f9d342, #ff8c42);
+    border: none; color: #1a1a2e; font-weight: 700; font-size: 5vw;
+    padding: 3vh 10vw; border-radius: 99px; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(249,211,66,0.4);
+  }
+ .hud {
+    position: absolute; top: 2vh; left: 0; right: 0;
+    display: flex; justify-content: space-between; padding: 0 5vw;
+    color: #fff; font-weight: 700; font-size: 5vw; text-shadow: 0 2px 4px #000;
+    z-index: 5; pointer-events: none;
+  }
+ .hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="startScreen" class="overlay">
+  <h1>CANVAS SURFER</h1>
+  <p>Swipe L/R: Lane | Up: Jump | Down: Duck</p>
+  <button id="playBtn" class="btn">PLAY</button>
+</div>
+
+<div id="gameOverScreen" class="overlay hidden">
+  <h1>GAME OVER</h1>
+  <p id="finalScore">Score: 0</p>
+  <button id="restartBtn" class="btn">RESTART</button>
+</div>
+
+<div id="hud" class="hud hidden">
+  <div id="score">Score: 0</div>
+  <div id="highScore">Best: 0</div>
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const startScreen = document.getElementById('startScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const hud = document.getElementById('hud');
+const scoreEl = document.getElementById('score');
+const highScoreEl = document.getElementById('highScore');
+const finalScoreEl = document.getElementById('finalScore');
+
+let W, H, laneWidth, roadX, roadW;
+let gameState = 'start'; // start, playing, over
+let score = 0, highScore = localStorage.getItem('surferBest') || 0;
+let speed = 6, speedInc = 0.002;
+let lastTime = 0;
+let spawnTimer = 0;
+
+const LANE_COUNT = 3;
+const PLAYER_SIZE = 60;
+const GRAVITY = 1.2;
+
+const player = {
+  lane: 1, x: 0, y: 0, targetX: 0,
+  vy: 0, jumping: false, ducking: false, duckTimer: 0,
+  width: PLAYER_SIZE, height: PLAYER_SIZE,
+  color1: '#4ecdc4', color2: '#ff6b6b'
+};
+
+let obstacles = [];
+let coins = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  roadW = W * 0.7;
+  roadX = (W - roadW) / 2;
+  laneWidth = roadW / LANE_COUNT;
+  player.targetX = roadX + laneWidth * player.lane + laneWidth/2;
+  player.x = player.targetX;
+  player.y = H * 0.75;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function resetGame() {
+  score = 0; speed = 6; obstacles = []; coins = []; spawnTimer = 0;
+  player.lane = 1; player.jumping = false; player.ducking = false;
+  player.vy = 0; player.height = PLAYER_SIZE;
+  gameState = 'playing';
+  startScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  hud.classList.remove('hidden');
+  highScoreEl.textContent = 'Best: ' + highScore;
+}
+
+function gameOver() {
+  gameState = 'over';
+  highScore = Math.max(highScore, score);
+  localStorage.setItem('surferBest', highScore);
+  finalScoreEl.textContent = 'Score: ' + Math.floor(score);
+  hud.classList.add('hidden');
+  gameOverScreen.classList.remove('hidden');
+}
+
+function spawnObstacle() {
+  const type = Math.random();
+  const lane = Math.floor(Math.random() * LANE_COUNT);
+  const z = -100; // start behind camera
+  if (type < 0.4) { // Train - jump
+    obstacles.push({lane, z, type: 'train', w: laneWidth*0.8, h: 80, color: '#ff4757'});
+  } else if (type < 0.7) { // Barrier - duck
+    obstacles.push({lane, z, type: 'barrier', w: laneWidth*0.8, h: 30, color: '#ffa502'});
+  } else { // Wall - dodge
+    obstacles.push({lane, z, type: 'wall', w: laneWidth*0.9, h: 120, color: '#2f3542'});
+  }
+}
+
+function spawnCoin() {
+  const lane = Math.floor(Math.random() * LANE_COUNT);
+  coins.push({lane, z: -100, collected: false, color: '#f9d342'});
+}
+
+function update(dt) {
+  if (gameState!== 'playing') return;
+
+  speed += speedInc * dt;
+  score += dt * 0.1 * speed;
+
+  // Player movement
+  player.targetX = roadX + laneWidth * player.lane + laneWidth/2;
+  player.x += (player.targetX - player.x) * 0.2;
+
+  if (player.jumping) {
+    player.y += player.vy;
+    player.vy += GRAVITY;
+    if (player.y >= H * 0.75) {
+      player.y = H * 0.75; player.jumping = false; player.vy = 0;
+    }
+  }
+  if (player.ducking) {
+    player.duckTimer -= dt;
+    player.height = PLAYER_SIZE * 0.5;
+    if (player.duckTimer <= 0) {
+      player.ducking = false; player.height = PLAYER_SIZE;
+    }
+  }
+
+  // Spawn logic
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnObstacle();
+    if (Math.random() < 0.6) spawnCoin();
+    spawnTimer = 40 - speed;
+  }
+
+  // Update obstacles
+  for (let i = obstacles.length-1; i >= 0; i--) {
+    const o = obstacles[i];
+    o.z += speed;
+    if (o.z > 200) obstacles.splice(i,1);
+    else checkCollision(o);
+  }
+
+  // Update coins
+  for (let i = coins.length-1; i >= 0; i--) {
+    const c = coins[i];
+    c.z += speed;
+    if (c.z > 200) coins.splice(i,1);
+    else if (!c.collected && c.lane === player.lane && c.z > 0 && c.z < 50 &&!player.jumping &&!player.ducking) {
+      c.collected = true; score += 50;
+    }
+  }
+
+  scoreEl.textContent = 'Score: ' + Math.floor(score);
+}
+
+function checkCollision(o) {
+  if (o.lane!== player.lane) return;
+  if (o.z < 0 || o.z > 60) return;
+  if (o.type === 'train' &&!player.jumping) gameOver();
+  if (o.type === 'barrier' &&!player.ducking) gameOver();
+  if (o.type === 'wall' &&!player.jumping &&!player.ducking) gameOver();
+}
+
+function drawRoad() {
+  // Sky gradient
+  const sky = ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#2b2d42'); sky.addColorStop(1,'#8d99ae');
+  ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+
+  // Road
+  ctx.fillStyle = '#3a3a3a';
+  ctx.beginPath();
+  ctx.moveTo(roadX, H);
+  ctx.lineTo(roadX - roadW*0.2, H*0.5);
+  ctx.lineTo(roadX + roadW + roadW*0.2, H*0.5);
+  ctx.lineTo(roadX + roadW, H);
+  ctx.closePath(); ctx.fill();
+
+  // Lane lines
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.setLineDash([20,20]);
+  for(let i=1; i<LANE_COUNT; i++){
+    const x1 = roadX + laneWidth*i;
+    const x2 = x1 - laneWidth*0.2;
+    ctx.beginPath();
+    ctx.moveTo(x1, H); ctx.lineTo(x2, H*0.5); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+function project(x, y, z) {
+  const scale = 200 / (200 + z);
+  const px = roadX + roadW/2 + (x - roadX - roadW/2) * scale;
+  const py = H*0.5 + (y - H*0.5) * scale;
+  return {x: px, y: py, s: scale};
+}
+
+function drawPlayer() {
+  const p = project(player.x, player.y, 0);
+  ctx.fillStyle = player.color1;
+  ctx.beginPath();
+  ctx.roundRect(p.x - player.width*p.s/2, p.y - player.height*p.s, player.width*p.s, player.height*p.s, 10*p.s);
+  ctx.fill();
+  // Face
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(p.x - 8*p.s, p.y - player.height*p.s + 10*p.s, 4*p.s, 4*p.s);
+  ctx.fillRect(p.x + 4*p.s, p.y - player.height*p.s + 10*p.s, 4*p.s, 4*p.s);
+}
+
+function drawObstacles() {
+  obstacles.forEach(o => {
+    const x = roadX + laneWidth*o.lane + laneWidth/2;
+    const y = H*0.75;
+    const pos = project(x, y, o.z);
+    ctx.fillStyle = o.color;
+    ctx.beginPath();
+    ctx.roundRect(pos.x - o.w*pos.s/2, pos.y - o.h*pos.s, o.w*pos.s, o.h*pos.s, 8*pos.s);
+    ctx.fill();
+  });
+}
+
+function drawCoins() {
+  coins.forEach(c => {
+    if (c.collected) return;
+    const x = roadX + laneWidth*c.lane + laneWidth/2;
+    const y = H*0.75 - 30;
+    const pos = project(x, y, c.z);
+    ctx.fillStyle = c.color;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, 12*pos.s, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `${10*pos.s}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText('$', pos.x, pos.y+3*pos.s);
+  });
+}
+
+function loop(t) {
+  const dt = t - lastTime;
+  lastTime = t;
+  update(dt);
+  drawRoad();
+  drawCoins();
+  drawObstacles();
+  drawPlayer();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// Controls
+let touchStartX = 0, touchStartY = 0;
+canvas.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+});
+canvas.addEventListener('touchend', e => {
+  if (gameState!== 'playing') return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30) {
+    if (dx > 0 && player.lane < LANE_COUNT-1) player.lane++;
+    if (dx < 0 && player.lane > 0) player.lane--;
+  } else if (Math.abs(dy) > 30) {
+    if (dy < 0 &&!player.jumping) { player.jumping = true; player.vy = -20; }
+    if (dy > 0 &&!player.ducking) { player.ducking = true; player.duckTimer = 300; }
+  }
+});
+
+document.getElementById('playBtn').onclick = resetGame;
+document.getElementById('restartBtn').onclick = resetGame;
+</script>
+</body>
+</html>
