@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flappy Level 1</title>
+  <link rel="stylesheet" href="../css/game.css" />
+  <style>
+    /* small level-specific tweaks */
+    .level-banner{
+      text-align:center;
+      margin-bottom:8px;
+      color:#073b3a;
+      font-weight:700;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-wrap">
+    <div class="level-banner">Level 1 Easy</div>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <div class="hud">
+      <div class="score">Score: 0</div>
+      <div class="controls">
+        <span class="small">Space or Click to flap</span>
+        <a class="btn small" href="../index.html">Menu</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { startGame } from '../js/gamelogic.js';
+
+    // level-specific configuration
+    const levelConfig = {
+      gravity: 0.42,
+      jumpStrength: -8.2,
+      pipeGap: 150,
+      pipeWidth: 56,
+      speed: 2.0,
+      spawnInterval: 100
+    };
+
+    const canvas = document.getElementById('gameCanvas');
+    const engine = startGame(canvas, levelConfig);
+
+    // update HUD score display
+    function updateHUD(){
+      const s = engine.getState();
+      document.querySelector('.score').textContent = 'Score: ' + s.score;
+      requestAnimationFrame(updateHUD);
+    }
+    updateHUD();
+  </script>
+</body>
+</html>
