@@ -1,0 +1,258 @@
+<!--
+================================================================================
+ FARMERS FARM  —  index.html
+================================================================================
+ PROJECT     : Farmers Farm
+ STUDIOS     : ArcadeOwl Games Studios / TechNODE-3 Studios
+ PHASE       : Phase 0 — Skeleton   |   FILE 1 of the project
+ DEPENDS ON  : css/base/*.css, css/layout/*.css, css/components/*.css,
+               css/animations/*.css, css/themes/seasons.css, src/main.js
+ USED BY     : nothing — this is the root document the browser loads first
+================================================================================
+ WHAT THIS FILE DOES
+   "Farmers Farm" is a single-page application: this file never reloads or
+   navigates away. Every screen you will ever see — splash, studio intros,
+   main menu, the game world, HUD, pause menu, sleep screen — is created and
+   swapped in/out by JavaScript, mounting into the small set of root
+   containers declared below.
+
+ WHY IT'S THIS MINIMAL
+   No gameplay markup lives here on purpose. Each container has exactly one
+   OWNER file (noted in its comment). That means:
+     - Two files never fight over the same DOM element.
+     - Any screen or menu can be rewritten by editing ONE file, not this one.
+     - Adding a new HUD widget or menu later never requires touching
+       index.html again — it just mounts into an existing container.
+   In short: this file is expected to barely change for the rest of the
+   project, even as we add 100+ files around it.
+
+ DESIGN DIRECTION (established here so every later CSS file stays consistent)
+   Palette is drawn from the farm itself rather than a generic "game" look:
+     grass green (crops), soil brown (earth/wood), wheat gold (harvest/money),
+     sky blue (day/water), night navy (dark cycle + dialogue), parchment
+     cream (paper-ledger UI panels). Formalized as CSS variables in the next
+     file, css/base/variables.css.
+   Type system uses three faces, one per job — not one font doing everything:
+     - "Baloo 2"     → display face for titles, studio intros, big HUD labels.
+                       Rounded and sturdy, reads as a game logo, not a website.
+     - "Nunito Sans" → body face for menus, dialogue, general UI text.
+                       Shares Baloo 2's rounded warmth but stays quiet at
+                       small sizes so it doesn't fight the display face.
+     - "Space Mono"  → utility face for numeric HUD readouts only (the clock,
+                       the money counter). Deliberately more mechanical/
+                       digital, like a tractor's onboard dashboard readout
+                       against an otherwise warm, hand-painted world.
+================================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Charset must be declared first, within the document's first 1024 bytes per spec -->
+  <meta charset="UTF-8">
+
+  <!--
+    Viewport tuned for a GAME, not a document:
+      - maximum-scale=1.0, user-scalable=no  → disables pinch-zoom, because
+        pinch is reserved for the CAMERA_ZOOM command
+        (see src/input/devices/TouchDevice.js, built in Phase 1)
+      - viewport-fit=cover                   → lets the canvas extend under
+        the notch/safe-area on modern phones instead of leaving black bars
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <!-- Makes "Add to Home Screen" behave like a real app: no browser address bar -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Stops iOS auto-linking things like in-game dialogue numbers as phone numbers -->
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- Shown in mobile browser chrome / app switcher. Primary grass-green from the palette above. -->
+  <meta name="theme-color" content="#3E6B2F">
+
+  <meta name="description" content="Farmers Farm — an open small-town farming simulator. Plant, harvest, drive, and build your farm through changing seasons and weather.">
+
+  <title>Farmers Farm</title>
+
+  <!-- Favicon: placeholder path, actual asset added in the assets pass. A missing icon fails silently, nothing breaks. -->
+  <link rel="icon" type="image/png" href="assets/icons/favicon.png">
+
+  <!--
+    ============================================================================
+    FONTS — Google Fonts CDN for now (fast to iterate with during development).
+    Can be swapped for self-hosted files in assets/fonts/ later for an
+    offline/production build without touching any other file — only these
+    two lines and the font-family declarations in css/base/typography.css
+    would need to change.
+    ============================================================================
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!--
+    ============================================================================
+    STYLESHEETS — load order is deliberate; later files may override earlier ones
+    ============================================================================
+      1. base/       reset defaults + define CSS custom properties (colors,
+                      spacing, fonts) FIRST so every later file can use them
+      2. layout/      page structure, responsive breakpoints, landscape lock
+      3. components/  one file per UI piece, each matching one JS UI module
+      4. animations/  keyframes/transitions, kept separate from structure so
+                      any file's motion can be tuned without touching layout
+      5. themes/      seasonal palette overrides, loaded LAST so seasons can
+                      safely repaint colors set anywhere above them
+    None of these files exist yet — they're next in Phase 0. Until then this
+    page renders unstyled, which is expected and fine.
+  -->
+
+  <!-- 1. Base -->
+  <link rel="stylesheet" href="css/base/reset.css">
+  <link rel="stylesheet" href="css/base/variables.css">
+  <link rel="stylesheet" href="css/base/typography.css">
+
+  <!-- 2. Layout -->
+  <link rel="stylesheet" href="css/layout/layout.css">
+  <link rel="stylesheet" href="css/layout/responsive.css">
+  <link rel="stylesheet" href="css/layout/landscape-lock.css">
+
+  <!-- 3. Components -->
+  <link rel="stylesheet" href="css/components/splash-screen.css">
+  <link rel="stylesheet" href="css/components/hud.css">
+  <link rel="stylesheet" href="css/components/menus.css">
+  <link rel="stylesheet" href="css/components/inventory.css">
+  <link rel="stylesheet" href="css/components/shop.css">
+  <link rel="stylesheet" href="css/components/dialogue.css">
+  <link rel="stylesheet" href="css/components/clock-widget.css">
+  <link rel="stylesheet" href="css/components/sleep-screen.css">
+  <link rel="stylesheet" href="css/components/mobile-controls.css">
+
+  <!-- 4. Animations -->
+  <link rel="stylesheet" href="css/animations/transitions.css">
+  <link rel="stylesheet" href="css/animations/ui-animations.css">
+  <link rel="stylesheet" href="css/animations/weather-animations.css">
+  <link rel="stylesheet" href="css/animations/camera-transitions.css">
+
+  <!-- 5. Themes (last, so seasonal colors can override anything above) -->
+  <link rel="stylesheet" href="css/themes/seasons.css">
+
+</head>
+<body>
+
+  <!--
+    ==========================================================================
+    #app — the single root container for the whole game
+    ==========================================================================
+    Contains exactly four containers, stacked bottom to top:
+      1. #game-canvas          the rendered world
+      2. #screen-root          full-screen overlays (splash, menus, sleep)
+      3. #ui-root              persistent gameplay UI (HUD, dialogue, menus)
+      4. #mobile-controls-root touch-only input widgets
+    Stacking order / z-index rules live in css/layout/layout.css.
+  -->
+  <div id="app">
+
+    <!--
+      GAME CANVAS
+      Owner: src/rendering/CanvasManager.js — creates the 2D context and
+             handles resize + devicePixelRatio scaling.
+      Drawn to by: src/rendering/Renderer.js every frame, following the
+             layer order defined in src/rendering/RenderLayers.js
+             (terrain → entities → weather → in-world effects).
+      We use ONE canvas for the entire visible world rather than stacking
+      several, keeping frame compositing cheap and predictable on low-end
+      mobile GPUs. UI is deliberately NOT drawn here — see #ui-root below —
+      because real DOM + CSS is both easier to style well and far cheaper
+      to animate than hand-drawn canvas UI.
+    -->
+    <canvas id="game-canvas"></canvas>
+
+    <!--
+      SCREEN ROOT — full-screen overlays that completely replace the view
+      Owner: src/core/SceneManager.js
+      Mounts here (one at a time): SplashScreen.js, StudioIntroArcadeOwl.js,
+      StudioIntroTechNODE3.js, MainMenuScreen.js, LoadingScreen.js,
+      SleepScreen.js. SceneManager.js clears this container before mounting
+      the next screen and drives the fade between them.
+
+      The nested #static-boot-fallback below is the ONLY hard-coded content
+      in this whole file: a plain loading message visible for the brief
+      instant before src/main.js finishes loading and BootSequence.js takes
+      over. BootSequence.js removes it as its very first action.
+    -->
+    <div id="screen-root">
+      <div id="static-boot-fallback">
+        <p>Loading Farmers Farm&hellip;</p>
+      </div>
+    </div>
+
+    <!--
+      UI ROOT — persistent gameplay interface (hidden while a screen-root
+      overlay is active; shown once the game world itself is running)
+      Owners: src/ui/hud/HUDManager.js (HUD widgets) and src/ui/UIManager.js
+      (menus, dialogue, notifications, layered on top of the HUD).
+      Mounts here: HUDMoney.js, HUDClock.js, HUDWeatherIcon.js, HUDMinimap.js,
+      HUDEnergyBar.js, HUDHotbar.js, PauseMenu.js, SettingsMenu.js,
+      InventoryMenu.js, ShopMenu.js, AlarmClockMenu.js, ToastNotification.js,
+      DialogueBox.js.
+    -->
+    <div id="ui-root"></div>
+
+    <!--
+      MOBILE CONTROLS ROOT — virtual joystick + action buttons
+      Owner: src/ui/mobileControls/MobileLayoutAdapter.js
+      Populated only when src/input/devices/DeviceDetector.js determines the
+      player is on a touch device. On desktop this stays empty permanently —
+      it's never removed from the DOM, just unused, so no other file ever
+      needs to branch its own logic on "am I on mobile?".
+    -->
+    <div id="mobile-controls-root"></div>
+
+  </div>
+
+  <!--
+    ROTATE-DEVICE NOTICE
+    Owner: css/layout/landscape-lock.css — pure CSS, no JS involved.
+    "Farmers Farm" is landscape-locked on mobile. Rather than the Screen
+    Orientation Lock API (unsupported for normal browser tabs in iOS Safari),
+    we use the reliable cross-platform trick: this element stays hidden by
+    default, and a CSS media query shows it — covering the entire screen —
+    only when the viewport is narrow AND in portrait. #app is never
+    unmounted underneath it, just visually covered until the phone rotates.
+  -->
+  <div id="rotate-device-notice" aria-hidden="true">
+    <p>Please rotate your device to landscape mode to play Farmers Farm.</p>
+  </div>
+
+  <!-- Fallback for the rare visitor with JavaScript disabled — the game cannot run without it -->
+  <noscript>
+    <div id="noscript-notice">
+      <p>Farmers Farm requires JavaScript to run. Please enable JavaScript and reload the page.</p>
+    </div>
+  </noscript>
+
+  <!--
+    ============================================================================
+    BOOT SCRIPT
+    ============================================================================
+    type="module" gives native ES import/export support directly in the
+    browser. This is WHY the 100+ file structure can stay as plain,
+    un-bundled JavaScript during development: main.js imports GameEngine.js,
+    which imports its own dependencies, and so on down the tree. Module
+    scripts are deferred automatically by the browser, so placing this at
+    the end of <body> without an explicit `defer` attribute is safe.
+
+    main.js is the ONLY <script> tag in this entire file. Every other JS
+    file in the project is reached through the import chain starting here.
+
+    DEV NOTE: browsers block ES module imports under the file:// protocol
+    (CORS). Serve this folder with a simple local server while developing —
+    e.g. `python -m http.server 8000` or `npx serve` — then open
+    http://localhost:8000 rather than double-clicking this file.
+  -->
+  <script type="module" src="src/main.js"></script>
+
+</body>
+</html>
