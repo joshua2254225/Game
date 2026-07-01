@@ -1,0 +1,201 @@
+/*
+================================================================================
+ FARMERS FARM  —  css/base/reset.css
+================================================================================
+ PROJECT     : Farmers Farm
+ STUDIOS     : ArcadeOwl Games Studios / TechNODE-3 Studios
+ PHASE       : Phase 0 — Skeleton   |   FILE 2 of the project
+ DEPENDS ON  : nothing — deliberately zero dependencies (see WHY below)
+ USED BY     : index.html (loaded FIRST in the stylesheet cascade); every
+               other CSS file in the project implicitly relies on the
+               normalized baseline this file establishes
+================================================================================
+ WHAT THIS FILE DOES
+   Strips and rewrites browser default styling (margins, list bullets, form
+   element chrome, tap highlights, etc.) so "Farmers Farm" looks and behaves
+   identically across Chrome, Safari, Firefox, and their mobile equivalents,
+   instead of inheriting each browser's own opinionated defaults.
+
+ WHY IT HAS ZERO DEPENDENCIES
+   This file never references a CSS custom property, a color, or a font —
+   those are owned by variables.css and typography.css, loaded right after
+   it. Reset rules stay pure normalization on purpose: if we ever swapped
+   the entire visual theme of the game, this file would never need to
+   change. Keeping that boundary strict is what makes a 100+ file project
+   maintainable — you always know exactly which file to open.
+
+ SCOPE NOTE
+   Only generic element selectors are touched here (html, body, button,
+   canvas, ...) — never IDs like #app or #game-canvas. Positioning and
+   sizing of our actual containers is css/layout/layout.css's job, built on
+   top of the full-bleed foundation this file lays down below.
+================================================================================
+*/
+
+
+/* ------------------------------------------------------------------------
+   1. BOX SIZING
+   Every element (and its ::before/::after) measures padding and border
+   INSIDE its declared width, not added on top. Without this, a HUD panel
+   declared as "width: 200px" with padding would silently render wider than
+   200px — a classic source of pixel-fitting bugs in a HUD-heavy game UI.
+   ------------------------------------------------------------------------ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+
+/* ------------------------------------------------------------------------
+   2. DOCUMENT & VIEWPORT FOUNDATION
+   "Farmers Farm" is a full-screen app, not a scrollable page, so html/body
+   are locked to exactly the viewport size with no scrolling, no bounce,
+   and no accidental gestures fighting our own input system.
+   ------------------------------------------------------------------------ */
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;              /* no scrollbars — the game is not a document */
+  overscroll-behavior: none;     /* stops pull-to-refresh and rubber-band bounce on mobile */
+  touch-action: none;            /* disables native scroll/pan/double-tap-zoom globally;
+                                     any future panel that DOES need native scrolling
+                                     (e.g. a long inventory list) overrides this locally
+                                     with touch-action: pan-y in its own component CSS */
+  -webkit-text-size-adjust: 100%; /* stops iOS Safari auto-inflating font size on rotation —
+                                      important since we rotate INTO landscape on purpose */
+  -webkit-tap-highlight-color: transparent; /* removes the gray/blue flash Android/iOS
+                                                webkit shows on every tap — looks like a
+                                                broken button otherwise */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ------------------------------------------------------------------------
+   3. TYPOGRAPHIC ELEMENT SPACING
+   Every browser ships different default margins for headings/paragraphs/
+   lists. We zero them all out here; actual spacing is added deliberately,
+   per component, once typography.css and each component file exist —
+   never inherited by accident from a browser's user-agent stylesheet.
+   ------------------------------------------------------------------------ */
+h1, h2, h3, h4, h5, h6,
+p, figure, blockquote, dl, dd {
+  margin: 0;
+}
+
+/* Unlike a content website, virtually every list in this project is
+   UI-driven (inventory grid, shop list, menu items) and we always style
+   it ourselves — so we reset ALL lists, not just class-flagged ones. */
+ul, ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ------------------------------------------------------------------------
+   4. MEDIA ELEMENTS
+   Browsers render canvas/img/svg/video as "inline" by default, which adds
+   a few px of mystery whitespace below them (reserved for descender space,
+   as if they were letters in a line of text). display: block removes that.
+   max-width: 100% is a safety net against any of these overflowing their
+   container; it never fights JS-driven canvas sizing, since our actual
+   canvas size is set explicitly by CanvasManager.js in Phase 3.
+   ------------------------------------------------------------------------ */
+canvas, img, svg, video {
+  display: block;
+  max-width: 100%;
+}
+
+
+/* ------------------------------------------------------------------------
+   5. FORM ELEMENTS
+   Buttons, inputs, etc. don't inherit font styling by default in most
+   browsers (they use the OS's native control font instead) — we force
+   them to inherit so a styled button doesn't suddenly look like a native
+   OS widget. Buttons additionally get their native chrome stripped
+   entirely, since every button in this game (HUD actions, menu options,
+   shop confirm, etc.) is fully custom-styled per component.
+   ------------------------------------------------------------------------ */
+button, input, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation; /* removes the ~300ms tap-response delay some mobile
+                                  browsers add while waiting to see if a tap becomes
+                                  a double-tap-to-zoom gesture */
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+
+/* ------------------------------------------------------------------------
+   6. SELECTION & TOUCH CALLOUT
+   A long-press-to-select-text or iOS's "Copy / Look Up" callout menu
+   popping up over game chrome (HUD labels, buttons, dialogue) reads as
+   broken, not helpful — so we disable it on the document as a whole.
+   We deliberately RE-ENABLE normal text selection for actual text inputs
+   (e.g. naming a save file later), since disabling it there would just be
+   annoying with no benefit.
+   ------------------------------------------------------------------------ */
+html, body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+
+/* ------------------------------------------------------------------------
+   7. FOCUS STATES (accessibility floor — do not remove)
+   We never blanket-disable outlines. A mouse or touch interaction gets no
+   outline (it looks unintentional there), but keyboard navigation always
+   gets a clearly visible ring, so the game's menus stay usable for
+   keyboard-only players. `currentColor` is used instead of a themed color
+   so this file still has zero dependency on variables.css; component
+   files are free to override the color later where it matters.
+   ------------------------------------------------------------------------ */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+
+/* ------------------------------------------------------------------------
+   8. REDUCED MOTION (accessibility floor — do not remove)
+   A global safety net: if the player's OS has "reduce motion" turned on,
+   EVERY animation/transition added anywhere in the project — now or in
+   any future file — is automatically clamped to near-instant. Individual
+   animation files never need to remember to check this themselves.
+   ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

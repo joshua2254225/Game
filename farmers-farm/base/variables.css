@@ -1,0 +1,279 @@
+/*
+================================================================================
+ FARMERS FARM  —  css/base/variables.css
+================================================================================
+ PROJECT     : Farmers Farm
+ STUDIOS     : ArcadeOwl Games Studios / TechNODE-3 Studios
+ PHASE       : Phase 0 — Skeleton   |   FILE 3 of the project
+ DEPENDS ON  : nothing in code — formalizes the design direction sketched in
+               index.html's header comment (palette + 3-font type system)
+ USED BY     : every CSS file from this point forward. typography.css,
+               layout.css, and every component/animation file read these
+               custom properties instead of hard-coding raw values.
+================================================================================
+ WHAT THIS FILE DOES
+   Defines the entire design token system as CSS custom properties on :root:
+   colors, fonts, a type scale, spacing, radii, shadows, a z-index scale, and
+   motion (duration/easing). No selector in this file styles anything — it
+   only DECLARES values. Every other file consumes them via var(--token-name).
+
+ WHY A TWO-TIER COLOR SYSTEM
+   Colors are defined twice, on purpose:
+     TIER 1 — PRIMITIVES  (--color-green-500, --color-gold-600, ...)
+              The raw palette. Never used directly in component files.
+     TIER 2 — SEMANTIC     (--color-primary, --color-accent, --color-danger, ...)
+              What things actually mean. Every component file uses ONLY
+              these.
+   This means two independent kinds of change stay cheap:
+     - Rebalancing the actual palette (a primitive gets a new hex value)
+       automatically ripples through every semantic token built on it.
+     - Reassigning what a concept MEANS (e.g. making --color-danger point
+       at a different red) never requires touching the primitive scale.
+
+ HOW SEASONS.CSS WILL USE THIS FILE (built later, in Phase 5/6)
+   css/themes/seasons.css is loaded LAST in index.html specifically so it
+   can override a handful of SEMANTIC tokens (mainly --color-primary*,
+   --color-sky*, --color-accent*, --color-surface*) underneath a
+   `[data-season="winter"]` -style attribute selector on <body>, set by
+   SeasonManager.js. It will never touch the primitive scale or redefine
+   tokens outside that handful — the rest of the UI stays visually stable
+   across seasons on purpose.
+================================================================================
+*/
+
+:root {
+
+  /* ==========================================================================
+     COLOR — TIER 1: PRIMITIVES
+     The raw palette, pulled from the game's own subject matter rather than a
+     generic "game UI" template: crop green, soil brown, harvest gold, sky
+     blue, night navy, and a parchment cream for paper-ledger style panels.
+     Each hue has 2–4 steps (light → dark) for hover/pressed/shadow states.
+     ========================================================================== */
+
+  /* Green — crops, pasture, growth */
+  --color-green-700: #2E5223;
+  --color-green-600: #3E6B2F; /* matches <meta name="theme-color"> in index.html */
+  --color-green-500: #4C8C3B;
+  --color-green-300: #8FC97C;
+
+  /* Brown — soil, tilled earth, wood */
+  --color-brown-700: #4A2F1C;
+  --color-brown-600: #6B4226;
+  --color-brown-400: #9C6B3E;
+
+  /* Gold — wheat, harvest, currency */
+  --color-gold-600: #C9910C; /* use this darker step for TEXT on light surfaces —
+                                 gold-500 alone is too low-contrast to read as text */
+  --color-gold-500: #E8A33D;
+  --color-gold-300: #F5C87A;
+
+  /* Sky — day cycle, water */
+  --color-sky-700: #2A5A8A;
+  --color-sky-500: #4A90D9;
+  --color-sky-300: #8FC1EA;
+
+  /* Navy — night cycle, dialogue, dark overlays */
+  --color-navy-900: #16202B;
+  --color-navy-700: #24344A;
+  --color-navy-500: #3C5270;
+
+  /* Cream — parchment/ledger-paper panel surfaces (the game's signature UI material) */
+  --color-cream-200: #F0E6CC;
+  --color-cream-100: #FAF3E1;
+  --color-cream-50:  #FFFBF2;
+
+  /* Red — reserved for danger/error only; no other token borrows from this hue */
+  --color-red-600: #B0402E; /* a muted brick/rust red, so it still belongs to
+                                the earthy palette instead of a stock "alert red" */
+  --color-red-400: #D97A63;
+
+  /* Neutral — warm-tinted grays for chrome that isn't thematically colored */
+  --color-neutral-900: #1F1B16; /* warm near-black; pure #000 read too cold
+                                    against the cream/gold palette */
+  --color-neutral-600: #6B6459;
+  --color-neutral-300: #C9C2B4;
+  --color-neutral-white: #FFFFFF;
+
+
+  /* ==========================================================================
+     COLOR — TIER 2: SEMANTIC TOKENS
+     What components actually use. Named by MEANING, not by hue.
+     ========================================================================== */
+
+  --color-primary:       var(--color-green-500);
+  --color-primary-dark:  var(--color-green-600);
+  --color-primary-darker:var(--color-green-700);
+  --color-primary-light: var(--color-green-300);
+
+  --color-secondary:       var(--color-brown-600);
+  --color-secondary-dark:  var(--color-brown-700);
+  --color-secondary-light: var(--color-brown-400);
+
+  --color-accent:       var(--color-gold-500);
+  --color-accent-dark:  var(--color-gold-600); /* text-safe gold, see note above */
+  --color-accent-light: var(--color-gold-300);
+
+  --color-sky:       var(--color-sky-500);
+  --color-sky-light: var(--color-sky-300);
+  --color-sky-dark:  var(--color-sky-700); /* dusk / pre-storm tint */
+
+  --color-night:       var(--color-navy-700); /* dialogue box + panel backgrounds at night */
+  --color-night-deep:  var(--color-navy-900); /* sleep screen background */
+  --color-night-light: var(--color-navy-500);
+
+  --color-surface:           var(--color-cream-100); /* default panel/menu background */
+  --color-surface-alt:       var(--color-cream-200); /* panel borders, inset areas */
+  --color-surface-highlight: var(--color-cream-50);
+
+  --color-text:         var(--color-neutral-900); /* default text on light surfaces */
+  --color-text-muted:   var(--color-neutral-600);
+  --color-text-inverse: var(--color-cream-100);    /* text on dark surfaces (dialogue, night) */
+  --color-border:       var(--color-neutral-300);
+
+  /* Status colors — each reuses a primitive that already carries the right
+     meaning thematically (green = success/growth, gold = caution, sky = info),
+     kept as their OWN named tokens so "success" and "primary" can diverge
+     later without a project-wide find/replace. */
+  --color-success:      var(--color-green-500);
+  --color-warning:      var(--color-gold-500);
+  --color-danger:       var(--color-red-600);
+  --color-danger-light: var(--color-red-400);
+  --color-info:         var(--color-sky-500);
+
+  /* Semi-transparent scrim behind modals, pause menu, and the sleep screen */
+  --color-overlay: rgba(22, 32, 43, 0.72);
+
+
+  /* ==========================================================================
+     TYPOGRAPHY TOKENS
+     Font-family tokens reference the three faces loaded via Google Fonts in
+     index.html. typography.css (Phase 0, next file) applies these to actual
+     elements — this file only declares the values.
+     ========================================================================== */
+
+  --font-display: 'Baloo 2', sans-serif;     /* titles, studio intros, big HUD labels */
+  --font-body:    'Nunito Sans', sans-serif; /* menus, dialogue, general UI text */
+  --font-mono:    'Space Mono', monospace;   /* HUD numeric readouts: clock, money */
+
+  /* Type scale — a single consistent set of sizes every heading/label pulls from */
+  --text-xs:  0.75rem;  /* 12px — captions, small tags */
+  --text-sm:  0.875rem; /* 14px — secondary/help text */
+  --text-base:1rem;     /* 16px — body copy, menu items, dialogue */
+  --text-lg:  1.25rem;  /* 20px — sub-headings, key HUD numbers */
+  --text-xl:  1.75rem;  /* 28px — section headings */
+  --text-2xl: 2.5rem;   /* 40px — screen titles (main menu) */
+  --text-3xl: 4rem;     /* 64px — splash / studio-intro hero text */
+
+  --weight-regular:  400;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-black:    800; /* Baloo 2's heaviest cut, reserved for hero titles only */
+
+  --leading-tight:  1.1;  /* headings */
+  --leading-normal: 1.5;  /* body text, dialogue */
+  --leading-loose:  1.75; /* rare — spacious reading contexts, if any */
+
+
+  /* ==========================================================================
+     SPACING SCALE
+     Base unit 4px. Every margin/padding/gap in the project should reference
+     one of these rather than a one-off pixel value, so the whole game's
+     density can be tuned from one place if it ever needs adjusting.
+     ========================================================================== */
+
+  --space-1: 0.25rem; /* 4px  */
+  --space-2: 0.5rem;  /* 8px  */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem;    /* 16px */
+  --space-5: 1.5rem;  /* 24px */
+  --space-6: 2rem;    /* 32px */
+  --space-7: 3rem;    /* 48px */
+  --space-8: 4rem;    /* 64px */
+
+
+  /* ==========================================================================
+     BORDER RADIUS
+     Consistently rounded, matching Baloo 2's friendly/rounded letterforms —
+     nothing in this UI should have a sharp 0px corner.
+     ========================================================================== */
+
+  --radius-sm:   4px;   /* small tags, badges, chips */
+  --radius-md:   10px;  /* buttons, inputs, hotbar slots */
+  --radius-lg:   18px;  /* panels, menus, dialogue box */
+  --radius-pill: 999px; /* fully-rounded pill buttons */
+
+
+  /* ==========================================================================
+     SHADOWS
+     Tinted with the palette's brown/navy instead of pure black, so elevation
+     reads as "warm light on a wooden panel" rather than a generic gray
+     drop-shadow. --shadow-panel adds a faint inner top highlight, like light
+     catching the top bevel of a carved wooden sign — this is the game's
+     recurring "signature" panel treatment, reused on every menu/HUD panel.
+     ========================================================================== */
+
+  --shadow-sm: 0 1px 2px rgba(74, 47, 28, 0.18);
+  --shadow-md: 0 4px 10px rgba(74, 47, 28, 0.22);
+  --shadow-lg: 0 10px 24px rgba(22, 32, 43, 0.28);
+  --shadow-panel:
+    0 6px 16px rgba(74, 47, 28, 0.25),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
+
+
+  /* ==========================================================================
+     Z-INDEX SCALE
+     Centralized on purpose. In a 100+ file project, letting every component
+     invent its own z-index leads to a "z-index war" where nobody knows what
+     number beats what. Every stacking value in the project comes from here —
+     see css/layout/layout.css (next-next file) for how these map onto the
+     four root containers from index.html.
+     ========================================================================== */
+
+  --z-canvas:           0;
+  --z-screen-root:      100; /* splash, studio intros, main menu, sleep screen */
+  --z-ui-root:          200; /* HUD + in-game menus */
+  --z-mobile-controls:  300; /* virtual joystick / buttons, always reachable */
+  --z-modal:            400; /* pause / settings / inventory / shop, above the HUD */
+  --z-toast:            500; /* notifications, above modals */
+  --z-rotate-notice:    9999; /* landscape-lock overlay — always wins */
+
+
+  /* ==========================================================================
+     MOTION — duration & easing
+     Centralized so animation timing feels consistent across completely
+     different components (a button press and a screen fade should feel like
+     they belong to the same game). --ease-bounce is used sparingly, for
+     small playful pop-ins (e.g. a toast appearing) — it's intentionally NOT
+     the default, per the design principle of spending "boldness" in one
+     place rather than bouncing everything.
+     ========================================================================== */
+
+  --duration-fast:  120ms; /* button presses, hover states */
+  --duration-base:  220ms; /* menu open/close, toast in/out */
+  --duration-slow:  400ms; /* panel transitions, HUD value changes */
+  --duration-scene: 600ms; /* full screen-root fades: splash → intro → menu */
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:      cubic-bezier(0, 0, 0.2, 1);
+  --ease-in:       cubic-bezier(0.4, 0, 1, 1);
+  --ease-bounce:   cubic-bezier(0.34, 1.56, 0.64, 1);
+
+}
+
+
+/* ================================================================================
+   BREAKPOINT REFERENCE  (documentation only — NOT usable custom properties)
+   ================================================================================
+   CSS custom properties cannot be read inside an @media condition, so
+   breakpoints can't live in :root the way colors/spacing do. These exact
+   numbers are documented here so css/layout/responsive.css (Phase 0, file 5)
+   and every later file that adds its own @media rule stay consistent by
+   convention instead of drifting to slightly different numbers over time.
+
+     568px  → mobile-landscape-min  (iPhone SE landscape width; our practical
+                                      minimum supported viewport)
+     768px  → tablet
+     1024px → desktop
+     1440px → wide-desktop
+   ================================================================================ */
