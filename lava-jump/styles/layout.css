@@ -1,0 +1,410 @@
+/* =========================================================
+FILE 3: styles/layout.css
+
+This file handles the main screen layout and positioning
+of the game's visual layers.
+
+Purpose:
+
+- Place the game canvas correctly
+- Position the HUD and overlays
+- Lay out the touch controls for mobile
+- Make the game feel centered and responsive
+- Prepare for later JavaScript-driven UI states
+
+The actual visuals and state changes will be controlled
+by other CSS and JavaScript files.
+========================================================= */
+
+/* ---------------------------------------------------------
+ROOT APP LAYOUT
+
+The game should always fill the screen.
+We also reserve safe area padding for phones with notches
+or rounded corners.
+--------------------------------------------------------- */
+.app-shell {
+padding:
+var(--safe-top)
+var(--safe-right)
+var(--safe-bottom)
+var(--safe-left);
+}
+
+/* ---------------------------------------------------------
+GAME STAGE LAYERING
+
+Everything inside the game stage is layered on top of the
+renderer, then HUD, then overlays, then mobile warnings.
+--------------------------------------------------------- */
+.game-stage {
+display: block;
+}
+
+/* Canvas/root should be behind UI elements */
+.render-root {
+z-index: 1;
+}
+
+/* ---------------------------------------------------------
+HUD LAYER
+
+The HUD is a full-screen overlay, but its parts are placed
+at the top-left, top-right, and bottom-center.
+--------------------------------------------------------- */
+.hud-layer {
+position: absolute;
+inset: 0;
+z-index: 20;
+pointer-events: none;
+}
+
+.hud-block {
+position: absolute;
+display: flex;
+gap: 0.75rem;
+flex-wrap: wrap;
+align-items: flex-start;
+pointer-events: none;
+}
+
+/* Top-left HUD cluster */
+.hud-top-left {
+top: calc(12px + var(--safe-top));
+left: calc(12px + var(--safe-left));
+}
+
+/* Top-right HUD cluster */
+.hud-top-right {
+top: calc(12px + var(--safe-top));
+right: calc(12px + var(--safe-right));
+justify-content: flex-end;
+}
+
+/* Bottom-center objective text */
+.hud-bottom-center {
+left: 50%;
+bottom: calc(18px + var(--safe-bottom));
+transform: translateX(-50%);
+justify-content: center;
+width: min(92vw, 760px);
+}
+
+/* ---------------------------------------------------------
+HUD ITEM STRUCTURE
+
+Each HUD item is a small visual block showing a label and
+a value. These can later be animated by JavaScript.
+--------------------------------------------------------- */
+.hud-item {
+display: flex;
+flex-direction: column;
+gap: 0.15rem;
+min-width: 82px;
+padding: 0.7rem 0.8rem;
+border-radius: 14px;
+background: rgba(8, 8, 12, 0.58);
+border: 1px solid rgba(255, 255, 255, 0.1);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+}
+
+.hud-label {
+font-size: 0.72rem;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+color: rgba(255, 255, 255, 0.68);
+}
+
+.hud-value {
+font-size: 1rem;
+font-weight: 800;
+color: #ffffff;
+}
+
+/* Objective strip */
+.hud-objective {
+width: 100%;
+text-align: center;
+padding: 0.85rem 1rem;
+border-radius: 16px;
+background: rgba(8, 8, 12, 0.58);
+border: 1px solid rgba(255, 255, 255, 0.1);
+color: rgba(255, 255, 255, 0.9);
+font-size: 0.95rem;
+line-height: 1.4;
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+}
+
+/* ---------------------------------------------------------
+OVERLAY LAYER
+
+All overlays sit centered on screen. Only one overlay will
+usually be visible at a time.
+--------------------------------------------------------- */
+.overlay-layer {
+position: absolute;
+inset: 0;
+z-index: 30;
+display: grid;
+place-items: center;
+padding: 1rem;
+pointer-events: none;
+}
+
+/* Every panel inside overlay-layer shares the same centered shape */
+.overlay-panel {
+display: none;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 0.85rem;
+width: min(92vw, 460px);
+padding: 1.5rem 1.25rem;
+text-align: center;
+pointer-events: auto;
+}
+
+.overlay-panel[hidden] {
+display: none !important;
+}
+
+/* Titles and text inside overlays */
+.game-title,
+.overlay-title {
+margin: 0;
+line-height: 1.05;
+letter-spacing: 0.02em;
+}
+
+.game-title {
+font-size: clamp(2.25rem, 5vw, 4.25rem);
+font-weight: 900;
+text-shadow: 0 0 18px rgba(255, 106, 0, 0.18);
+}
+
+.game-subtitle,
+.overlay-text,
+.overlay-note {
+margin: 0;
+color: rgba(255, 255, 255, 0.78);
+line-height: 1.5;
+}
+
+.game-subtitle {
+font-size: 1rem;
+max-width: 32ch;
+}
+
+.overlay-title {
+font-size: clamp(1.6rem, 3vw, 2.3rem);
+font-weight: 900;
+}
+
+.overlay-text {
+max-width: 34ch;
+}
+
+.overlay-note {
+font-size: 0.88rem;
+color: rgba(255, 255, 255, 0.62);
+max-width: 38ch;
+}
+
+/* ---------------------------------------------------------
+TOUCH UI
+
+Hidden by default. It becomes visible on mobile landscape.
+The touch buttons will later be connected to the input manager.
+--------------------------------------------------------- */
+.touch-ui {
+position: absolute;
+inset: auto 0 0 0;
+z-index: 25;
+display: none;
+justify-content: space-between;
+align-items: flex-end;
+gap: 1rem;
+padding:
+1rem
+calc(1rem + var(--safe-right))
+calc(1rem + var(--safe-bottom))
+calc(1rem + var(--safe-left));
+pointer-events: none;
+}
+
+.touch-row {
+display: flex;
+gap: 0.75rem;
+pointer-events: auto;
+}
+
+.touch-row-left {
+align-items: flex-end;
+}
+
+.touch-row-right {
+align-items: flex-end;
+flex-direction: column;
+}
+
+/* Touch buttons */
+.touch-button {
+min-width: 64px;
+min-height: 64px;
+padding: 0.85rem 1rem;
+border-radius: 18px;
+border: 1px solid rgba(255, 255, 255, 0.12);
+background: rgba(12, 12, 18, 0.68);
+color: #ffffff;
+font-weight: 800;
+letter-spacing: 0.04em;
+box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+touch-action: manipulation;
+}
+
+.touch-button:active {
+transform: scale(0.98);
+}
+
+.touch-button-wide {
+min-width: 84px;
+}
+
+.touch-button-accent {
+background: linear-gradient(180deg, rgba(255, 179, 71, 0.95), rgba(255, 106, 0, 0.92));
+color: #1b0e00;
+}
+
+/* ---------------------------------------------------------
+DEBUG PANEL POSITION
+
+The debug panel stays out of the way in the top-left corner.
+--------------------------------------------------------- */
+.debug-panel {
+display: grid;
+gap: 0.2rem;
+}
+
+/* ---------------------------------------------------------
+ORIENTATION WARNING
+
+This should cover the whole screen and remain centered.
+--------------------------------------------------------- */
+.orientation-warning {
+display: none;
+}
+
+/* ---------------------------------------------------------
+LANDSCAPE FOCUS
+
+In landscape, we give the game more breathing room and
+prepare the touch UI for display on mobile devices.
+--------------------------------------------------------- */
+@media (orientation: landscape) {
+.hud-objective {
+font-size: 0.92rem;
+}
+
+.overlay-panel {
+width: min(86vw, 480px);
+}
+}
+
+/* ---------------------------------------------------------
+PORTRAIT BEHAVIOR
+
+On narrow screens in portrait, the game is still present,
+but we prefer to show the orientation warning instead.
+JavaScript will decide when to display it.
+--------------------------------------------------------- */
+@media (orientation: portrait) {
+.hud-bottom-center {
+width: min(94vw, 760px);
+}
+
+.touch-ui {
+display: none;
+}
+}
+
+/* ---------------------------------------------------------
+LARGE DESKTOP SCREENS
+
+Keep the UI balanced on wide monitors.
+--------------------------------------------------------- */
+@media (min-width: 1200px) {
+.hud-item {
+min-width: 92px;
+}
+
+.touch-ui {
+padding-bottom: calc(1.25rem + var(--safe-bottom));
+}
+}
+
+/* ---------------------------------------------------------
+SMALL SCREENS
+
+Reduce spacing slightly so the HUD and menus do not feel
+oversized on smaller phones or tablets.
+--------------------------------------------------------- */
+@media (max-width: 768px) {
+.hud-block {
+gap: 0.5rem;
+}
+
+.hud-item {
+padding: 0.6rem 0.7rem;
+min-width: 74px;
+}
+
+.hud-value {
+font-size: 0.95rem;
+}
+
+.hud-objective {
+padding: 0.75rem 0.9rem;
+font-size: 0.88rem;
+}
+
+.overlay-panel {
+padding: 1.25rem 1rem;
+}
+
+.touch-button {
+min-width: 58px;
+min-height: 58px;
+padding: 0.75rem 0.9rem;
+}
+}
+
+/* ---------------------------------------------------------
+VERY SMALL DEVICES
+
+Tighten the layout a bit more for compact phones.
+--------------------------------------------------------- */
+@media (max-width: 420px) {
+.hud-item {
+min-width: 68px;
+}
+
+.hud-label {
+font-size: 0.68rem;
+}
+
+.hud-value {
+font-size: 0.9rem;
+}
+
+.touch-row {
+gap: 0.5rem;
+}
+
+.touch-button {
+border-radius: 16px;
+}
+                       }
