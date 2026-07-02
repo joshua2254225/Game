@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b10" />
+  <meta name="description" content="3D Lava Jump - a modular desktop and mobile platform game built with HTML, CSS, and JavaScript." />
+  <title>3D Lava Jump</title>  <!--
+    =========================================================
+    FILE 1: INDEX.HTML
+    ---------------------------------------------------------
+    This file is the shell of the game.
+    It does not contain gameplay logic yet.
+    The later JavaScript files will attach behavior to these
+    elements, one module at a time.
+
+    Goals:
+    - Keep the structure clean and easy to extend
+    - Support desktop and mobile
+    - Keep a dedicated area for canvas rendering
+    - Keep HUD, menus, and touch controls separate
+    - Make future files easy to add without rewriting this file
+    =========================================================
+  -->  <!-- Base styles and layout styles will be created next -->  <link rel="stylesheet" href="styles/base.css" />
+  <link rel="stylesheet" href="styles/layout.css" />
+  <link rel="stylesheet" href="styles/hud.css" />
+  <link rel="stylesheet" href="styles/menus.css" />
+  <link rel="stylesheet" href="styles/mobile.css" />
+</head>
+<body>
+  <!--
+    The app wrapper keeps the entire game inside one predictable
+    layout container. This helps with resizing, fullscreen mode,
+    and future UI changes.
+  -->
+  <div id="app" class="app-shell"><!--
+  Background layer:
+  later we can place animated gradients, lava glow, particles,
+  or a parallax sky here.
+-->
+<div id="background-layer" class="background-layer" aria-hidden="true"></div>
+
+<!--
+  Game stage:
+  this is where the 3D renderer will live.
+  Later we will attach a canvas or WebGL renderer here.
+-->
+<main id="game-stage" class="game-stage" aria-label="3D Lava Jump game area">
+  <div id="render-root" class="render-root">
+    <!-- Renderer output will be inserted here by JavaScript -->
+    <canvas id="game-canvas" class="game-canvas" aria-label="Game canvas"></canvas>
+  </div>
+
+  <!--
+    HUD layer:
+    all gameplay information such as score, timer, health,
+    and checkpoint state will appear here.
+  -->
+  <section id="hud-layer" class="hud-layer" aria-label="Game HUD">
+    <div id="hud-top-left" class="hud-block hud-top-left">
+      <div class="hud-item">
+        <span class="hud-label">Score</span>
+        <span id="score-value" class="hud-value">0</span>
+      </div>
+
+      <div class="hud-item">
+        <span class="hud-label">Coins</span>
+        <span id="coin-value" class="hud-value">0</span>
+      </div>
+    </div>
+
+    <div id="hud-top-right" class="hud-block hud-top-right">
+      <div class="hud-item">
+        <span class="hud-label">Time</span>
+        <span id="time-value" class="hud-value">0:00</span>
+      </div>
+
+      <div class="hud-item">
+        <span class="hud-label">Health</span>
+        <span id="health-value" class="hud-value">100%</span>
+      </div>
+    </div>
+
+    <div id="hud-bottom-center" class="hud-block hud-bottom-center">
+      <div id="objective-text" class="hud-objective">
+        Reach the end without falling into the lava.
+      </div>
+    </div>
+  </section>
+
+  <!--
+    Center overlays:
+    these are used for messages like "Press Start",
+    "Paused", "Game Over", or "Level Complete".
+  -->
+  <section id="overlay-layer" class="overlay-layer" aria-label="Game overlays">
+    <div id="start-overlay" class="overlay-panel overlay-visible">
+      <h1 class="game-title">3D Lava Jump</h1>
+      <p class="game-subtitle">Jump across platforms. Don’t fall into the lava.</p>
+      <button id="start-button" class="primary-button" type="button">
+        Start Game
+      </button>
+      <p class="overlay-note">
+        Desktop: use keyboard controls. Mobile: use landscape touch controls.
+      </p>
+    </div>
+
+    <div id="pause-overlay" class="overlay-panel" hidden>
+      <h2 class="overlay-title">Paused</h2>
+      <p class="overlay-text">Take a break and continue when ready.</p>
+      <button id="resume-button" class="primary-button" type="button">Resume</button>
+    </div>
+
+    <div id="gameover-overlay" class="overlay-panel" hidden>
+      <h2 class="overlay-title">Game Over</h2>
+      <p class="overlay-text">The lava won this round.</p>
+      <button id="restart-button" class="primary-button" type="button">Restart</button>
+    </div>
+
+    <div id="win-overlay" class="overlay-panel" hidden>
+      <h2 class="overlay-title">Level Complete</h2>
+      <p class="overlay-text">You made it to the end.</p>
+      <button id="next-level-button" class="primary-button" type="button">Next Level</button>
+    </div>
+  </section>
+</main>
+
+<!--
+  Mobile controls:
+  These are visible only in landscape mode on touch devices.
+  They will be wired to the input manager later.
+-->
+<aside id="touch-ui" class="touch-ui" aria-label="Mobile touch controls">
+  <div class="touch-row touch-row-left">
+    <button id="touch-left" class="touch-button" type="button" aria-label="Move left">
+      ◀
+    </button>
+    <button id="touch-right" class="touch-button" type="button" aria-label="Move right">
+      ▶
+    </button>
+  </div>
+
+  <div class="touch-row touch-row-right">
+    <button id="touch-forward" class="touch-button touch-button-wide" type="button" aria-label="Move forward">
+      ▲
+    </button>
+    <button id="touch-jump" class="touch-button touch-button-accent" type="button" aria-label="Jump">
+      JUMP
+    </button>
+  </div>
+</aside>
+
+<!--
+  Landscape warning:
+  On mobile, we want the game in landscape mode.
+  This panel will show when the device is held vertically.
+-->
+<section id="orientation-warning" class="orientation-warning" aria-label="Orientation warning" hidden>
+  <div class="orientation-card">
+    <h2>Rotate your device</h2>
+    <p>This game is designed for landscape mode.</p>
+  </div>
+</section>
+
+<!--
+  Debug panel:
+  This is optional and can be hidden or shown later.
+  Useful while building the game and testing movement, collisions,
+  and level loading.
+-->
+<section id="debug-panel" class="debug-panel" aria-label="Debug information" hidden>
+  <div class="debug-line">FPS: <span id="debug-fps">0</span></div>
+  <div class="debug-line">X: <span id="debug-x">0</span></div>
+  <div class="debug-line">Y: <span id="debug-y">0</span></div>
+  <div class="debug-line">Z: <span id="debug-z">0</span></div>
+  <div class="debug-line">State: <span id="debug-state">boot</span></div>
+</section>
+
+  </div>  <!--
+    Main entry point:
+    The game logic will begin here once the next files are created.
+    main.js will import the game core, input manager, UI, and level code.
+  -->  <script type="module" src="js/main.js"></script></body>
+</html>
