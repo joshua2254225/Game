@@ -1,0 +1,247 @@
+/*
+================================================================================
+ FARMERS FARM  —  css/base/typography.css
+================================================================================
+ PROJECT     : Farmers Farm
+ STUDIOS     : ArcadeOwl Games Studios / TechNODE-3 Studios
+ PHASE       : Phase 0 — Skeleton   |   FILE 4 of the project
+ DEPENDS ON  : css/base/variables.css (font, type-scale, color, spacing,
+               and motion tokens — this file declares ZERO raw values itself)
+ USED BY     : every component file that renders text (HUD, menus, dialogue,
+               shop, inventory, splash/studio-intro screens, credits, etc.)
+================================================================================
+ WHAT THIS FILE DOES
+   Takes the tokens declared in variables.css and applies them to real
+   elements: headings, paragraphs, links, inline emphasis, selection color,
+   and input placeholders. It also exposes a small set of reusable text
+   utility classes so component files can reach for `.text-muted` or
+   `.font-mono` instead of re-declaring color/font values inline.
+
+ WHY HEADINGS AREN'T A STRAIGHT LINEAR SCALE
+   h1–h3 use the display face (Baloo 2) — it's a rounded, characterful font
+   that reads best at larger sizes. h4–h6 deliberately SWITCH to the body
+   face (Nunito Sans) at smaller sizes, with h5/h6 additionally set in
+   uppercase with wider letter-spacing so they still read as headings
+   despite the change in family. This two-part hierarchy is a more
+   intentional choice than mechanically shrinking one font six times.
+
+ SCOPE NOTE
+   List appearance (menu items, inventory rows) is NOT styled here — that's
+   a per-component concern owned by menus.css / inventory.css / shop.css
+   later, since a "list" in this game is really a piece of game UI, not
+   prose. This file only covers genuinely typographic elements.
+================================================================================
+*/
+
+
+/* ==============================================================================
+   1. BASE DOCUMENT TEXT
+   Sets the default face, size, line-height, and color for all text in the
+   game. Every other rule in this file only overrides what's DIFFERENT from
+   this baseline — colors/sizes that match it are left to inherit naturally.
+   ============================================================================== */
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text);
+}
+
+
+/* ==============================================================================
+   2. HEADINGS
+   ============================================================================== */
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  line-height: var(--leading-tight);
+}
+
+h1 {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+}
+
+h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+
+h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+h4, h5, h6 {
+  font-family: var(--font-body);
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-bold);
+}
+
+h4 {
+  font-size: var(--text-base);
+}
+
+h5 {
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+h6 {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted); /* smallest heading level reads as a quiet label, not a shout */
+}
+
+
+/* ==============================================================================
+   3. BODY TEXT ELEMENTS
+   ============================================================================== */
+
+/* Only add space BETWEEN paragraphs, never above a lone one — keeps
+   component files in full control of a text block's outer spacing. */
+p + p {
+  margin-top: var(--space-3);
+}
+
+strong, b {
+  font-weight: var(--weight-bold);
+}
+
+em, i {
+  font-style: italic;
+}
+
+small {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Reserved for NPC quotes / "tip of the day" loading-screen text — a left
+   accent bar keeps this feeling like the game's carved-wood-and-parchment
+   material rather than a generic web blockquote. */
+blockquote {
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--color-accent);
+  font-style: italic;
+  line-height: var(--leading-loose);
+  color: var(--color-text-muted);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-4) 0;
+}
+
+
+/* ==============================================================================
+   4. LINKS
+   Used sparingly in-game (mainly the credits screen, linking out to the
+   ArcadeOwl website and the TechNODE-3 YouTube channel). Uses the "-dark"
+   gold step, not the base accent, since variables.css specifically flags
+   gold-500 as too low-contrast to serve as text color.
+   ============================================================================== */
+
+a {
+  color: var(--color-accent-dark);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--duration-fast) var(--ease-standard);
+}
+
+a:hover,
+a:focus-visible {
+  text-decoration-color: currentColor;
+}
+
+
+/* ==============================================================================
+   5. SELECTION & PLACEHOLDER
+   reset.css disables text selection on the document as a whole but
+   re-enables it for input/textarea — this is the styling that appears in
+   those spots, instead of the browser's default flat blue highlight.
+   ============================================================================== */
+
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-darker);
+}
+
+::placeholder {
+  font-family: var(--font-body);
+  color: var(--color-text-muted);
+  opacity: 1; /* Firefox applies its own opacity to placeholders by default; pin it */
+}
+
+
+/* ==============================================================================
+   6. REUSABLE TEXT UTILITY CLASSES
+   Small, composable, single-purpose classes. Reach for these before adding
+   a one-off inline style or repeating a var() in a component file.
+   ============================================================================== */
+
+/* --- Size --- */
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-lg { font-size: var(--text-lg); }
+
+/* The one reserved "shout" — text-3xl + heaviest weight, exclusively for the
+   splash screen and studio-intro title cards (see StudioIntroArcadeOwl.js /
+   StudioIntroTechNODE3.js in Phase 2). Not used anywhere else, so that
+   moment stays the single biggest beat in the whole UI. */
+.text-hero {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-black);
+  line-height: var(--leading-tight);
+}
+
+/* --- Weight --- */
+.font-regular  { font-weight: var(--weight-regular); }
+.font-semibold { font-weight: var(--weight-semibold); }
+.font-bold     { font-weight: var(--weight-bold); }
+
+/* --- Family (explicit escape hatches, independent of element choice) --- */
+.font-display { font-family: var(--font-display); }
+.font-mono    { font-family: var(--font-mono); } /* HUD clock + money readouts */
+
+/* --- Color --- */
+.text-muted   { color: var(--color-text-muted); }
+.text-inverse { color: var(--color-text-inverse); } /* for text on dark surfaces: dialogue box, night panels */
+.text-accent  { color: var(--color-accent-dark); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-danger  { color: var(--color-danger); }
+
+/* --- Alignment --- */
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+
+/* --- Truncation ---
+   Single-line ellipsis cutoff for tight HUD/inventory space (e.g. a long
+   crop or item name inside a fixed-width hotbar slot). */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Accessibility ---
+   Visually hides text while keeping it announced by screen readers — for
+   labeling icon-only buttons (e.g. a pause-menu gear icon needs an
+   accessible name even with no visible label). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
