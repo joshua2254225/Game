@@ -1,0 +1,103 @@
+/*
+================================================================================
+ FARMERS FARM  —  css/layout/responsive.css
+================================================================================
+ PROJECT     : Farmers Farm
+ STUDIOS     : ArcadeOwl Games Studios / TechNODE-3 Studios
+ PHASE       : Phase 0 — Skeleton   |   FILE 6 of the project
+ DEPENDS ON  : css/layout/layout.css (adjusts the containers it defines)
+ USED BY     : every future component file is written ASSUMING two things
+               this file establishes are already active: (1) the root
+               font-size may be scaled down on short viewports, so all
+               rem-based tokens shrink together, and (2) #ui-root /
+               #mobile-controls-root / #screen-root already pad themselves
+               away from notches — individual widgets never need their own
+               env(safe-area-inset-*) calls.
+================================================================================
+ WHAT THIS FILE DOES
+   Adjusts the base layout for real device constraints: a compact type/
+   spacing scale for short landscape viewports, and safe-area padding for
+   notched phones. No @media rules existed before this file — layout.css
+   is intentionally breakpoint-free.
+
+ BREAKPOINT STRATEGY — why this file keys off HEIGHT, not width
+   variables.css documents four WIDTH reference points (568 / 768 / 1024 /
+   1440px) for ordinary responsive design, and those remain the convention
+   future component files (HUD, menus — Phase 13) should reach for when
+   they need width-based tweaks.
+   This file's own rules are different on purpose: "Farmers Farm" is
+   LANDSCAPE-LOCKED on mobile, which flips the usual assumption. A phone
+   in landscape is often 600–900px WIDE — as wide as a tablet — but only
+   320–430px TALL. Width tells you almost nothing about how cramped the
+   screen actually is; HEIGHT is the real constraint. So the two tiers
+   below key off max-height + orientation:landscape instead of max-width.
+   They naturally only ever activate in landscape, so they never fight
+   with the portrait rotate-notice in landscape-lock.css (next file) —
+   both simply read the same orientation signal.
+================================================================================
+*/
+
+
+/* ==============================================================================
+   COMPACT LANDSCAPE — most modern phones (roughly iPhone 12–16 class,
+   large Android phones): landscape height typically 390–430px.
+   Scales the ROOT font-size down, which shrinks every rem-based token from
+   variables.css at once — the whole type scale AND the whole spacing scale,
+   from one place, with zero changes needed in any component file.
+   16px x 87.5% = 14px base.
+   ============================================================================== */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  html {
+    font-size: 87.5%;
+  }
+}
+
+
+/* ==============================================================================
+   EXTRA-COMPACT LANDSCAPE — the smallest supported devices (iPhone SE
+   class): landscape height as low as ~320px, our documented floor. Comes
+   AFTER the tier above in source order so it wins the cascade on devices
+   matching both conditions, without needing extra specificity.
+   16px x 81.25% = 13px base.
+   ============================================================================== */
+
+@media (orientation: landscape) and (max-height: 360px) {
+  html {
+    font-size: 81.25%;
+  }
+}
+
+
+/* ------------------------------------------------------------------------
+   SAFE-AREA INSETS (read this before absolutely-positioning a HUD widget)
+   ------------------------------------------------------------------------
+   In landscape, a phone's notch/camera cutout sits on the LEFT or RIGHT
+   edge, not the top — exactly where HUD corners (money, clock) want to
+   live. index.html already opts into drawing under the notch via
+   viewport-fit=cover; this is the other half of that feature: keeping
+   actual UI content out from behind it.
+
+   env(safe-area-inset-*) resolves to 0 on any device without a notch
+   (including every desktop browser), so this rule is safe to apply
+   unconditionally — no media query needed, it self-adapts per device.
+
+   #game-canvas is deliberately EXCLUDED — the game world should still
+   render full-bleed under the notch for visual immersion. Only the
+   interactive/readable layers on top of it inset themselves.
+
+   WHY INDIVIDUAL WIDGETS DON'T NEED THEIR OWN env() CALLS:
+   Per the CSS spec, an absolutely positioned element's containing block is
+   its nearest positioned ancestor's PADDING box, not its content box. So a
+   future HUD widget with simple `position: absolute; top: 0; right: 0;`
+   will automatically land just inside this padding, not under the notch —
+   safe-area handling is solved once, here, for every widget that will
+   ever be added to these three layers.
+   ------------------------------------------------------------------------ */
+
+#screen-root,
+#ui-root,
+#mobile-controls-root {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}

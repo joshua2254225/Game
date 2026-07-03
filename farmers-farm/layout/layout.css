@@ -1,0 +1,152 @@
+/*
+================================================================================
+ FARMERS FARM  —  css/layout/layout.css
+================================================================================
+ PROJECT     : Farmers Farm
+ STUDIOS     : ArcadeOwl Games Studios / TechNODE-3 Studios
+ PHASE       : Phase 0 — Skeleton   |   FILE 5 of the project
+ DEPENDS ON  : css/base/variables.css (z-index, spacing, color tokens)
+ USED BY     : index.html directly (styles its #app / #game-canvas /
+               #screen-root / #ui-root / #mobile-controls-root containers);
+               every future screen/HUD/menu file is written assuming THIS
+               file's positioning + pointer-events rules are already active
+================================================================================
+ WHAT THIS FILE DOES
+   Turns the four inert <div>/<canvas> containers declared in index.html
+   into an actual stacked, full-viewport game layout, using the z-index
+   scale from variables.css so stacking order is centralized, not guessed.
+
+ SCOPE NOTE — what this file deliberately does NOT do
+   - No @media rules live here. Breakpoint-driven adjustments to this base
+     layout are css/layout/responsive.css's job (next file).
+   - #rotate-device-notice is NOT touched here. That element's positioning,
+     hidden default state, AND the media query that reveals it all live
+     together in css/layout/landscape-lock.css, so that one feature stays
+     fully self-contained in one file instead of split across two.
+   - No component (HUD widgets, menu panels, buttons) is styled here — only
+     the four ROOT containers they mount into.
+================================================================================
+*/
+
+
+/* ==============================================================================
+   BODY BACKDROP
+   The only moment this color is actually visible is the fraction of a
+   second before #app's canvas starts rendering the game world. A dark
+   navy (rather than white) avoids a jarring flash-of-white and reads as
+   "game loading," not "website loading."
+   ============================================================================== */
+
+body {
+  background-color: var(--color-night-deep);
+}
+
+
+/* ==============================================================================
+   #app — the game's viewport-locked stage
+   position: fixed + inset: 0 (rather than height: 100vh) is a deliberate
+   choice for mobile: fixed positioning is anchored to the actual visual
+   viewport, so it behaves correctly even while a mobile browser's address
+   bar is animating in/out — a classic source of bugs with 100vh layouts.
+   ============================================================================== */
+
+#app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden; /* html/body already clip in reset.css; this is a second,
+                        closer line of defense specifically around the game
+                        stage, in case any future child overflows it */
+}
+
+
+/* ==============================================================================
+   THE FOUR STACKED LAYERS
+   All four containers share the same base recipe — absolutely positioned,
+   filling #app exactly (inset: 0 stretches an absolutely positioned element
+   to fill its containing block automatically, so no explicit width/height
+   is needed). What differs per layer is z-index and, for three of the four,
+   pointer-events — see the convention explained just below.
+   ============================================================================== */
+
+#game-canvas,
+#screen-root,
+#ui-root,
+#mobile-controls-root {
+  position: absolute;
+  inset: 0;
+  /* display: block is already set on `canvas` globally by reset.css */
+}
+
+#game-canvas {
+  z-index: var(--z-canvas);
+  /* This is ONLY the element's CSS box. The canvas's internal drawing-buffer
+     resolution (devicePixelRatio-aware, for crisp rendering on high-DPI
+     screens) is set via JS in CanvasManager.js — Phase 3, not this file. */
+}
+
+
+/* ------------------------------------------------------------------------
+   POINTER-EVENTS CONVENTION (read this before writing ANY UI file)
+   ------------------------------------------------------------------------
+   #screen-root, #ui-root, and #mobile-controls-root sit on top of the
+   canvas and, much of the time, are either empty or mostly empty space
+   (e.g. the HUD only occupies its corners; the rest of #ui-root is open
+   game world). If those containers captured clicks by default, an empty
+   div stacked over the canvas would silently swallow input meant for the
+   game world underneath — a classic invisible-overlay bug.
+
+   The fix, applied uniformly to all three: the CONTAINER defaults to
+   pointer-events: none (clicks pass straight through to whatever is
+   beneath it), and every individual piece of UI mounted inside re-enables
+   pointer-events: auto on ITSELF once it exists.
+
+   Example — a future HUD button in hud.css:
+     #ui-root { pointer-events: none; }        <- already set below
+     .hud-button { pointer-events: auto; }     <- set in hud.css, per-widget
+
+   #game-canvas is intentionally left OUT of this rule and keeps the CSS
+   default (pointer-events: auto) — it's the bottom layer, so there's
+   nothing beneath it that needs protecting from stray clicks.
+   ------------------------------------------------------------------------ */
+
+#screen-root {
+  z-index: var(--z-screen-root);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* re-enabled by whichever screen mounts inside —
+                            see SceneManager.js, Phase 2 */
+}
+
+#ui-root {
+  z-index: var(--z-ui-root);
+  pointer-events: none; /* re-enabled per-widget — see HUDManager.js / UIManager.js, Phase 13 */
+}
+
+#mobile-controls-root {
+  z-index: var(--z-mobile-controls);
+  pointer-events: none; /* re-enabled per-widget — see MobileLayoutAdapter.js, Phase 13.
+                            Stays inert (and empty) permanently on desktop. */
+}
+
+
+/* ==============================================================================
+   NOSCRIPT FALLBACK
+   Shares the game's highest z-index tier with the rotate-device notice,
+   since it's the same category of message: something that must be visible
+   no matter what else is happening on screen. This is pure CSS on purpose
+   (obviously — if JS were required to show it, it would never show).
+   ============================================================================== */
+
+#noscript-notice {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-rotate-notice);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  text-align: center;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
