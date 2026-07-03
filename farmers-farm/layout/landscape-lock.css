@@ -1,0 +1,120 @@
+/*
+================================================================================
+ FARMERS FARM  —  css/layout/landscape-lock.css
+================================================================================
+ PROJECT     : Farmers Farm
+ STUDIOS     : ArcadeOwl Games Studios / TechNODE-3 Studios
+ PHASE       : Phase 0 — Skeleton   |   FILE 7 of the project (Layout — done)
+ DEPENDS ON  : css/base/variables.css (color, spacing, radius, z-index,
+               and motion tokens)
+ USED BY     : index.html's #rotate-device-notice element — this file is
+               that element's ONLY owner: its hidden default state, its
+               visuals, its animation, and the media query that reveals it
+               all live here together (see the scope note left in
+               layout.css when this file was still just a placeholder).
+================================================================================
+ WHAT THIS FILE DOES
+   Fully implements the landscape lock: an always-on-top overlay, hidden by
+   default, that appears — covering the entire screen — the moment a touch
+   device is held in portrait. No JavaScript is involved anywhere in this
+   feature; it is pure CSS by design, so it works even before src/main.js
+   has finished loading.
+
+ DETECTION STRATEGY — why this uses (hover: none) and (pointer: coarse)
+   instead of a width/height threshold
+   responsive.css (previous file) keys its compact-mobile rules off
+   viewport HEIGHT, because once a device IS in landscape, height is the
+   real constraint. Detecting the WRONG orientation in the first place is
+   a different problem: guessing from width/height alone is unreliable
+   here, since a portrait phone (narrow) and a resized desktop browser
+   window (also potentially narrow) can report similar dimensions.
+   Media Queries Level 4 gives a more honest signal: (hover: none) is true
+   only when the device's PRIMARY input can't hover (a finger, not a
+   mouse), and (pointer: coarse) is true only when that input is
+   imprecise. Together they mean "this is a touch-first device" — true for
+   phones and tablets, false for desktops/laptops no matter how their
+   window is resized, and false for hybrid touch-laptops too (their
+   primary input is still the trackpad). Combined with orientation:
+   portrait, this fires exactly when it should and never on desktop.
+================================================================================
+*/
+
+
+/* ==============================================================================
+   BASE STATE
+   Hidden by default. Every property besides `display` is declared here,
+   not repeated inside the media query below — once the media query flips
+   display to flex, all of this is already in place.
+   ============================================================================== */
+
+#rotate-device-notice {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-rotate-notice);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  text-align: center;
+  background-color: var(--color-night-deep);
+}
+
+#rotate-device-notice p {
+  max-width: 22rem;
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-normal);
+  color: var(--color-text-inverse);
+}
+
+
+/* ==============================================================================
+   ROTATING PHONE ICON
+   Drawn entirely with a single ::before pseudo-element (a bordered rounded
+   rectangle) rather than an image asset — nothing in assets/ exists yet
+   at this point in the build, and this keeps the whole feature
+   self-contained in one file with zero external dependencies. The
+   animation swings it from portrait to landscape and back, miming the
+   exact action we want the player to perform.
+
+   Respecting prefers-reduced-motion needs no extra rule here — the global
+   safety net in reset.css already targets `*::before` and will clamp this
+   animation automatically for anyone who has that OS setting on.
+   ============================================================================== */
+
+#rotate-device-notice::before {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 80px;
+  margin-bottom: var(--space-5);
+  border: 3px solid var(--color-text-inverse);
+  border-radius: var(--radius-md);
+  animation: rotate-hint 2.4s var(--ease-standard) infinite;
+  /* 2.4s is a deliberate one-off, not one of the --duration-* tokens:
+     those are tuned for UI transitions (button presses, panel opens),
+     while this is a slow, illustrative, looping hint meant to be read
+     clearly, not a snappy interface response. */
+}
+
+@keyframes rotate-hint {
+  0%, 15%   { transform: rotate(0deg); }  /* held portrait, as-is */
+  40%, 60%  { transform: rotate(90deg); } /* rotated to landscape, held */
+  85%, 100% { transform: rotate(0deg); }  /* back to portrait, loop repeats */
+}
+
+
+/* ==============================================================================
+   THE TRIGGER
+   The only place in the whole project that decides "this device is being
+   held wrong." Everything above this point is inert until this condition
+   is true.
+   ============================================================================== */
+
+@media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+  #rotate-device-notice {
+    display: flex;
+  }
+}
