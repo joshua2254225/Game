@@ -1,0 +1,349 @@
+/* =========================================================
+FILE 53: styles/mobile.css
+
+This file controls mobile-specific layout and touch UI styling.
+
+Purpose:
+
+- Make the game feel good on phones and tablets
+- Show touch controls in landscape mode
+- Hide or reduce UI when the screen is too small
+- Support the orientation warning screen
+- Improve usability on touch devices
+
+This file only handles presentation.
+JavaScript will decide when controls should be shown.
+========================================================= */
+
+/* ---------------------------------------------------------
+TOUCH UI ROOT
+--------------------------------------------------------- */
+.touch-ui {
+position: absolute;
+inset: auto 0 0 0;
+z-index: 25;
+display: none;
+justify-content: space-between;
+align-items: flex-end;
+gap: 1rem;
+padding:
+1rem
+calc(1rem + var(--safe-right))
+calc(1rem + var(--safe-bottom))
+calc(1rem + var(--safe-left));
+pointer-events: none;
+}
+
+/* Rows on the left and right side of the screen */
+.touch-row {
+display: flex;
+gap: 0.75rem;
+pointer-events: auto;
+}
+
+.touch-row-left {
+align-items: flex-end;
+}
+
+.touch-row-right {
+align-items: flex-end;
+flex-direction: column;
+}
+
+/* ---------------------------------------------------------
+TOUCH BUTTONS
+--------------------------------------------------------- */
+.touch-button {
+min-width: 64px;
+min-height: 64px;
+padding: 0.85rem 1rem;
+border-radius: 18px;
+border: 1px solid rgba(255, 255, 255, 0.12);
+background: rgba(12, 12, 18, 0.68);
+color: #ffffff;
+font-weight: 800;
+letter-spacing: 0.04em;
+box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+touch-action: manipulation;
+user-select: none;
+-webkit-user-select: none;
+-webkit-tap-highlight-color: transparent;
+transition:
+transform 0.12s ease,
+background 0.12s ease,
+border-color 0.12s ease,
+opacity 0.12s ease;
+}
+
+.touch-button:hover {
+background: rgba(16, 16, 24, 0.76);
+}
+
+.touch-button:active,
+.touch-button.is-active {
+transform: scale(0.98);
+background: rgba(22, 22, 30, 0.82);
+border-color: rgba(255, 255, 255, 0.18);
+}
+
+.touch-button:disabled,
+.touch-button.is-disabled {
+opacity: 0.45;
+cursor: not-allowed;
+}
+
+.touch-button:focus-visible {
+outline: 3px solid rgba(255, 179, 71, 0.65);
+outline-offset: 3px;
+}
+
+.touch-button-wide {
+min-width: 84px;
+}
+
+.touch-button-accent {
+background: linear-gradient(180deg, rgba(255, 179, 71, 0.95), rgba(255, 106, 0, 0.92));
+color: #1b0e00;
+box-shadow: 0 10px 24px rgba(255, 106, 0, 0.28);
+}
+
+.touch-button-accent:active,
+.touch-button-accent.is-active {
+background: linear-gradient(180deg, rgba(255, 186, 92, 1), rgba(255, 116, 21, 0.96));
+}
+
+/* ---------------------------------------------------------
+ORIENTATION WARNING
+--------------------------------------------------------- */
+.orientation-warning {
+position: absolute;
+inset: 0;
+z-index: 80;
+display: grid;
+place-items: center;
+padding: 1rem;
+background: rgba(0, 0, 0, 0.72);
+backdrop-filter: blur(6px);
+-webkit-backdrop-filter: blur(6px);
+}
+
+.orientation-card {
+max-width: 360px;
+width: 100%;
+padding: 1.4rem 1.2rem;
+text-align: center;
+background: var(--color-panel);
+border: 1px solid var(--color-border);
+border-radius: var(--panel-radius);
+box-shadow: 0 16px 40px var(--color-shadow);
+}
+
+.orientation-card h2 {
+margin: 0 0 0.5rem;
+font-size: 1.5rem;
+line-height: 1.1;
+}
+
+.orientation-card p {
+margin: 0;
+color: var(--color-text-dim);
+line-height: 1.5;
+}
+
+/* ---------------------------------------------------------
+MOBILE HUD ADJUSTMENTS
+--------------------------------------------------------- */
+@media (max-width: 768px) {
+.hud-block {
+gap: 0.5rem;
+}
+
+.hud-item {
+padding: 0.6rem 0.7rem;
+min-width: 74px;
+}
+
+.hud-label {
+font-size: 0.68rem;
+}
+
+.hud-value {
+font-size: 0.95rem;
+}
+
+.hud-objective {
+padding: 0.75rem 0.9rem;
+font-size: 0.88rem;
+}
+
+.overlay-panel {
+padding: 1.25rem 1rem;
+}
+
+.game-title {
+font-size: clamp(2rem, 6vw, 3.8rem);
+}
+
+.overlay-title {
+font-size: clamp(1.45rem, 4vw, 2rem);
+}
+}
+
+/* ---------------------------------------------------------
+VERY SMALL SCREENS
+--------------------------------------------------------- */
+@media (max-width: 420px) {
+.hud-item {
+min-width: 68px;
+}
+
+.hud-label {
+font-size: 0.66rem;
+}
+
+.hud-value {
+font-size: 0.9rem;
+}
+
+.touch-row {
+gap: 0.5rem;
+}
+
+.touch-button {
+min-width: 58px;
+min-height: 58px;
+padding: 0.75rem 0.9rem;
+border-radius: 16px;
+font-size: 0.92rem;
+}
+
+.touch-button-wide {
+min-width: 76px;
+}
+
+.orientation-card {
+padding: 1.1rem 1rem;
+}
+
+.orientation-card h2 {
+font-size: 1.25rem;
+}
+
+.orientation-card p {
+font-size: 0.95rem;
+}
+}
+
+/* ---------------------------------------------------------
+LANDSCAPE-FIRST MOBILE MODE
+
+On mobile devices, the game is meant to be played in
+landscape orientation. The touch UI becomes more visible
+and comfortable here.
+--------------------------------------------------------- */
+@media (orientation: landscape) {
+.touch-ui {
+display: flex;
+}
+
+.hud-objective {
+font-size: 0.92rem;
+}
+
+.overlay-panel {
+width: min(86vw, 480px);
+}
+
+.touch-button {
+min-width: 64px;
+min-height: 64px;
+}
+}
+
+/* ---------------------------------------------------------
+PORTRAIT MODE
+
+In portrait, the game should usually show the orientation
+warning instead of the full touch controls.
+--------------------------------------------------------- */
+@media (orientation: portrait) {
+.touch-ui {
+display: none;
+}
+
+.orientation-warning {
+display: grid;
+}
+
+.hud-bottom-center {
+width: min(94vw, 760px);
+}
+}
+
+/* ---------------------------------------------------------
+TOUCH DEVICE IMPROVEMENTS
+
+These rules help make the game feel more native on phones.
+--------------------------------------------------------- */
+@media (hover: none) and (pointer: coarse) {
+.primary-button,
+.secondary-button,
+.touch-button {
+-webkit-tap-highlight-color: transparent;
+}
+
+.touch-button {
+box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+}
+
+.touch-button:hover {
+background: rgba(12, 12, 18, 0.68);
+}
+
+.overlay-panel,
+.menu-panel,
+.hud-item,
+.hud-objective,
+.orientation-card {
+backdrop-filter: blur(8px);
+-webkit-backdrop-filter: blur(8px);
+}
+}
+
+/* ---------------------------------------------------------
+FULLSCREEN / SAFE AREA SUPPORT
+
+Helps on phones with notches and rounded corners.
+--------------------------------------------------------- */
+.app-shell {
+padding:
+var(--safe-top)
+var(--safe-right)
+var(--safe-bottom)
+var(--safe-left);
+}
+
+/* ---------------------------------------------------------
+MOTION REDUCTION
+
+Keep animations calmer for users that prefer reduced motion.
+--------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+.touch-button,
+.primary-button,
+.secondary-button,
+.hud-item,
+.hud-objective,
+.overlay-panel,
+.menu-panel {
+transition: none !important;
+animation: none !important;
+}
+
+.touch-button:active,
+.touch-button.is-active {
+transform: none;
+}
+}
