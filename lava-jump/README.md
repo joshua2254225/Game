@@ -25,25 +25,31 @@ Project goals
 Folder structure
 
 lava-jump/
+
 ├─ index.html
 ├─ styles/
+
 │  ├─ base.css
 │  ├─ layout.css
 │  ├─ hud.css
 │  ├─ menus.css
 │  └─ mobile.css
 ├─ assets/
+
 │  ├─ textures/
 │  ├─ models/
 │  ├─ sounds/
 │  └─ icons/
 └─ js/
+
    ├─ main.js
    ├─ config/
+   
    │  ├─ gameConfig.js
    │  ├─ controlsConfig.js
    │  └─ levelConfig.js
    ├─ core/
+   
    │  ├─ game.js
    │  ├─ sceneManager.js
    │  ├─ renderer.js
@@ -51,12 +57,14 @@ lava-jump/
    │  ├─ clock.js
    │  └─ resize.js
    ├─ input/
+   
    │  ├─ inputManager.js
    │  ├─ desktopInput.js
    │  ├─ mobileInput.js
    │  ├─ touchControls.js
    │  └─ inputMap.js
    ├─ entities/
+   
    │  ├─ player.js
    │  ├─ lava.js
    │  ├─ platform.js
@@ -65,6 +73,7 @@ lava-jump/
    │  ├─ checkpoint.js
    │  └─ enemy.js
    ├─ systems/
+   
    │  ├─ movementSystem.js
    │  ├─ collisionSystem.js
    │  ├─ jumpSystem.js
@@ -73,6 +82,7 @@ lava-jump/
    │  ├─ healthSystem.js
    │  └─ respawnSystem.js
    ├─ levels/
+   
    │  ├─ levelLoader.js
    │  ├─ levelBuilder.js
    │  ├─ level01.js
@@ -80,6 +90,7 @@ lava-jump/
    │  ├─ level03.js
    │  └─ levelTemplate.js
    ├─ ui/
+   
    │  ├─ hud.js
    │  ├─ menu.js
    │  ├─ pauseMenu.js
@@ -87,11 +98,13 @@ lava-jump/
    │  ├─ winScreen.js
    │  └─ toast.js
    ├─ audio/
+   
    │  ├─ audioManager.js
    │  ├─ soundLoader.js
    │  ├─ music.js
    │  └─ sfx.js
    ├─ utils/
+   
    │  ├─ math.js
    │  ├─ time.js
    │  ├─ storage.js
