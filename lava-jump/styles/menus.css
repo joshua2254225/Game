@@ -1,0 +1,458 @@
+/* =========================================================
+FILE 52: styles/menus.css
+
+This file controls the visual styling for menus and overlays.
+
+Purpose:
+
+- Style the start screen, pause menu, win screen, and game over screen
+- Keep menu UI consistent across the project
+- Make the interface feel polished and game-like
+- Support desktop and mobile landscape layouts
+
+This file focuses only on appearance.
+JavaScript will control which menu is visible.
+========================================================= */
+
+/* ---------------------------------------------------------
+OVERLAY ROOT
+--------------------------------------------------------- */
+.overlay-layer {
+position: absolute;
+inset: 0;
+z-index: 30;
+display: grid;
+place-items: center;
+padding: 1rem;
+pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+BASE PANEL STYLE
+
+Shared style for all centered overlays.
+--------------------------------------------------------- */
+.overlay-panel {
+display: none;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 0.85rem;
+width: min(92vw, 460px);
+padding: 1.5rem 1.25rem;
+text-align: center;
+pointer-events: auto;
+background: var(--color-panel);
+border: 1px solid var(--color-border);
+border-radius: var(--panel-radius);
+box-shadow: 0 16px 40px var(--color-shadow);
+backdrop-filter: blur(var(--hud-blur));
+-webkit-backdrop-filter: blur(var(--hud-blur));
+}
+
+.overlay-visible {
+display: flex;
+}
+
+.overlay-title,
+.game-title {
+margin: 0;
+line-height: 1.05;
+letter-spacing: 0.02em;
+}
+
+.game-title {
+font-size: clamp(2.25rem, 5vw, 4.25rem);
+font-weight: 900;
+text-shadow: 0 0 18px rgba(255, 106, 0, 0.18);
+}
+
+.overlay-title {
+font-size: clamp(1.6rem, 3vw, 2.3rem);
+font-weight: 900;
+}
+
+.game-subtitle,
+.overlay-text,
+.overlay-note {
+margin: 0;
+color: rgba(255, 255, 255, 0.78);
+line-height: 1.5;
+}
+
+.game-subtitle {
+font-size: 1rem;
+max-width: 32ch;
+}
+
+.overlay-text {
+max-width: 34ch;
+}
+
+.overlay-note {
+font-size: 0.88rem;
+color: rgba(255, 255, 255, 0.62);
+max-width: 38ch;
+}
+
+/* ---------------------------------------------------------
+BUTTONS
+
+Primary action buttons used across menus and overlays.
+--------------------------------------------------------- */
+.primary-button {
+appearance: none;
+border: 0;
+border-radius: var(--button-radius);
+padding: 0.9rem 1.25rem;
+background: linear-gradient(180deg, var(--color-accent-2), var(--color-accent));
+color: #1b0e00;
+font-weight: 700;
+letter-spacing: 0.02em;
+cursor: pointer;
+box-shadow: 0 10px 24px rgba(255, 106, 0, 0.28);
+transition:
+transform 0.15s ease,
+filter 0.15s ease,
+box-shadow 0.15s ease;
+}
+
+.primary-button:hover {
+transform: translateY(-1px);
+filter: brightness(1.05);
+box-shadow: 0 12px 28px rgba(255, 106, 0, 0.35);
+}
+
+.primary-button:active {
+transform: translateY(1px) scale(0.99);
+}
+
+.primary-button:focus-visible {
+outline: 3px solid rgba(255, 179, 71, 0.75);
+outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------
+TOUCH / MENU BUTTON VARIANTS
+--------------------------------------------------------- */
+.secondary-button {
+appearance: none;
+border: 1px solid rgba(255, 255, 255, 0.12);
+border-radius: var(--button-radius);
+padding: 0.85rem 1.1rem;
+background: rgba(12, 12, 18, 0.68);
+color: #ffffff;
+font-weight: 700;
+cursor: pointer;
+transition:
+transform 0.15s ease,
+background 0.15s ease,
+border-color 0.15s ease;
+}
+
+.secondary-button:hover {
+transform: translateY(-1px);
+background: rgba(18, 18, 26, 0.78);
+border-color: rgba(255, 255, 255, 0.18);
+}
+
+.secondary-button:active {
+transform: translateY(1px) scale(0.99);
+}
+
+.secondary-button:focus-visible {
+outline: 3px solid rgba(255, 179, 71, 0.45);
+outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------
+MENU SCREEN STRUCTURE
+
+These classes are ready for a full menu system.
+--------------------------------------------------------- */
+.menu-root {
+position: absolute;
+inset: 0;
+z-index: 35;
+display: grid;
+place-items: center;
+padding: 1rem;
+}
+
+.menu-panel {
+width: min(92vw, 520px);
+padding: 1.4rem 1.25rem;
+border-radius: var(--panel-radius);
+background: var(--color-panel-strong);
+border: 1px solid var(--color-border);
+box-shadow: 0 16px 40px var(--color-shadow);
+backdrop-filter: blur(var(--hud-blur));
+-webkit-backdrop-filter: blur(var(--hud-blur));
+}
+
+.menu-header {
+display: flex;
+flex-direction: column;
+gap: 0.4rem;
+align-items: center;
+margin-bottom: 1rem;
+}
+
+.menu-title {
+margin: 0;
+font-size: clamp(1.8rem, 4vw, 2.8rem);
+font-weight: 900;
+}
+
+.menu-subtitle {
+margin: 0;
+color: var(--color-text-dim);
+text-align: center;
+line-height: 1.5;
+max-width: 36ch;
+}
+
+.menu-actions {
+display: grid;
+gap: 0.75rem;
+margin-top: 1rem;
+}
+
+.menu-actions .primary-button,
+.menu-actions .secondary-button {
+width: 100%;
+}
+
+.menu-row {
+display: flex;
+gap: 0.75rem;
+flex-wrap: wrap;
+}
+
+.menu-row > * {
+flex: 1 1 180px;
+}
+
+/* ---------------------------------------------------------
+MENU LISTS / LEVEL SELECT
+--------------------------------------------------------- */
+.menu-list {
+display: grid;
+gap: 0.7rem;
+margin: 1rem 0 0;
+padding: 0;
+list-style: none;
+}
+
+.menu-list-item {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 1rem;
+padding: 0.85rem 0.95rem;
+border-radius: 16px;
+background: rgba(12, 12, 18, 0.54);
+border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.menu-list-item:hover {
+background: rgba(18, 18, 26, 0.72);
+}
+
+.menu-list-label {
+display: flex;
+flex-direction: column;
+gap: 0.15rem;
+}
+
+.menu-list-label strong {
+font-size: 0.98rem;
+}
+
+.menu-list-label span {
+font-size: 0.82rem;
+color: var(--color-text-dim);
+}
+
+.menu-list-action {
+min-width: 92px;
+}
+
+/* ---------------------------------------------------------
+PAUSE MENU / GAME OVER / WIN SCREEN VARIANTS
+
+These can share the same panel structure but have their own
+accent styling for quick recognition.
+--------------------------------------------------------- */
+.pause-panel {
+border-color: rgba(255, 255, 255, 0.12);
+}
+
+.gameover-panel {
+border-color: rgba(255, 59, 48, 0.22);
+box-shadow: 0 16px 40px rgba(255, 59, 48, 0.12);
+}
+
+.win-panel {
+border-color: rgba(69, 212, 131, 0.22);
+box-shadow: 0 16px 40px rgba(69, 212, 131, 0.12);
+}
+
+.gameover-title {
+color: var(--color-danger);
+}
+
+.win-title {
+color: var(--color-success);
+}
+
+/* ---------------------------------------------------------
+SUMMARY / STATS BOXES
+--------------------------------------------------------- */
+.summary-grid {
+width: 100%;
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 0.7rem;
+margin-top: 0.4rem;
+}
+
+.summary-card {
+padding: 0.85rem 0.9rem;
+border-radius: 14px;
+background: rgba(8, 8, 12, 0.58);
+border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-label {
+display: block;
+font-size: 0.72rem;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+color: rgba(255, 255, 255, 0.68);
+margin-bottom: 0.2rem;
+}
+
+.summary-value {
+display: block;
+font-size: 1.05rem;
+font-weight: 800;
+color: #ffffff;
+}
+
+/* ---------------------------------------------------------
+BUTTON STATES
+--------------------------------------------------------- */
+.is-pulsed {
+animation: buttonPulse 0.18s ease-out;
+}
+
+@keyframes buttonPulse {
+0% {
+transform: scale(1);
+}
+60% {
+transform: scale(1.03);
+}
+100% {
+transform: scale(1);
+}
+}
+
+.is-disabled,
+button:disabled {
+opacity: 0.55;
+cursor: not-allowed;
+filter: grayscale(0.15);
+}
+
+/* ---------------------------------------------------------
+SCREEN TRANSITION HELPERS
+--------------------------------------------------------- */
+.menu-fade-in {
+animation: fadeIn 0.18s ease-out;
+}
+
+.menu-fade-out {
+animation: fadeOut 0.18s ease-in;
+}
+
+@keyframes fadeIn {
+from {
+opacity: 0;
+transform: translateY(8px) scale(0.99);
+}
+to {
+opacity: 1;
+transform: translateY(0) scale(1);
+}
+}
+
+@keyframes fadeOut {
+from {
+opacity: 1;
+transform: translateY(0) scale(1);
+}
+to {
+opacity: 0;
+transform: translateY(8px) scale(0.99);
+}
+}
+
+/* ---------------------------------------------------------
+RESPONSIVE TUNING
+--------------------------------------------------------- */
+@media (max-width: 768px) {
+.overlay-panel,
+.menu-panel {
+width: min(92vw, 480px);
+padding: 1.25rem 1rem;
+}
+
+.game-title {
+font-size: clamp(2rem, 6vw, 3.8rem);
+}
+
+.overlay-title {
+font-size: clamp(1.45rem, 4vw, 2rem);
+}
+
+.menu-row {
+flex-direction: column;
+}
+
+.menu-row > * {
+flex: 1 1 auto;
+}
+
+.summary-grid {
+grid-template-columns: 1fr;
+}
+}
+
+@media (max-width: 420px) {
+.primary-button,
+.secondary-button {
+padding: 0.8rem 1rem;
+}
+
+.menu-list-item {
+flex-direction: column;
+align-items: stretch;
+}
+
+.menu-list-action {
+width: 100%;
+min-width: 0;
+}
+}
+
+@media (orientation: landscape) {
+.overlay-panel {
+width: min(86vw, 500px);
+}
+
+.menu-panel {
+width: min(86vw, 540px);
+}
+}
