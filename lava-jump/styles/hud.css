@@ -1,0 +1,308 @@
+/* =========================================================
+FILE 51: styles/hud.css
+
+This file controls the heads-up display styling.
+
+Purpose:
+
+- Style score, coins, time, health, and objective text
+- Make the HUD readable on top of the game
+- Keep the HUD visually consistent across screens
+- Support desktop and mobile landscape layouts
+
+This file focuses only on HUD appearance.
+The actual values are updated by JavaScript.
+========================================================= */
+
+/* ---------------------------------------------------------
+HUD LAYER ROOT
+--------------------------------------------------------- */
+.hud-layer {
+position: absolute;
+inset: 0;
+z-index: 20;
+pointer-events: none;
+color: var(--color-text);
+}
+
+/* ---------------------------------------------------------
+HUD BLOCKS
+
+These are the top-left, top-right, and bottom-center groups.
+--------------------------------------------------------- */
+.hud-block {
+position: absolute;
+display: flex;
+gap: 0.75rem;
+flex-wrap: wrap;
+align-items: flex-start;
+pointer-events: none;
+}
+
+/* Top-left cluster */
+.hud-top-left {
+top: calc(12px + var(--safe-top));
+left: calc(12px + var(--safe-left));
+}
+
+/* Top-right cluster */
+.hud-top-right {
+top: calc(12px + var(--safe-top));
+right: calc(12px + var(--safe-right));
+justify-content: flex-end;
+}
+
+/* Bottom-center objective */
+.hud-bottom-center {
+left: 50%;
+bottom: calc(18px + var(--safe-bottom));
+transform: translateX(-50%);
+justify-content: center;
+width: min(92vw, 760px);
+}
+
+/* ---------------------------------------------------------
+HUD ITEM
+--------------------------------------------------------- */
+.hud-item {
+display: flex;
+flex-direction: column;
+gap: 0.15rem;
+min-width: 82px;
+padding: 0.7rem 0.8rem;
+border-radius: 14px;
+background: rgba(8, 8, 12, 0.58);
+border: 1px solid rgba(255, 255, 255, 0.1);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.hud-label {
+font-size: 0.72rem;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+color: rgba(255, 255, 255, 0.68);
+}
+
+.hud-value {
+font-size: 1rem;
+font-weight: 800;
+color: #ffffff;
+line-height: 1.1;
+}
+
+/* ---------------------------------------------------------
+OBJECTIVE STRIP
+--------------------------------------------------------- */
+.hud-objective {
+width: 100%;
+text-align: center;
+padding: 0.85rem 1rem;
+border-radius: 16px;
+background: rgba(8, 8, 12, 0.58);
+border: 1px solid rgba(255, 255, 255, 0.1);
+color: rgba(255, 255, 255, 0.9);
+font-size: 0.95rem;
+line-height: 1.4;
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+/* ---------------------------------------------------------
+OPTIONAL EXTRA HUD ELEMENTS
+
+These classes are ready for future use even if the HTML does
+not include them yet.
+--------------------------------------------------------- */
+.hud-progress {
+position: absolute;
+left: 50%;
+top: calc(12px + var(--safe-top));
+transform: translateX(-50%);
+width: min(92vw, 420px);
+height: 10px;
+border-radius: 999px;
+background: rgba(255, 255, 255, 0.08);
+overflow: hidden;
+pointer-events: none;
+}
+
+.hud-progress-bar {
+width: 0%;
+height: 100%;
+border-radius: 999px;
+background: linear-gradient(90deg, var(--color-accent-2), var(--color-accent));
+box-shadow: 0 0 12px rgba(255, 106, 0, 0.25);
+transition: width 0.15s ease;
+}
+
+.hud-lives {
+display: inline-flex;
+gap: 0.25rem;
+align-items: center;
+}
+
+.hud-life {
+width: 10px;
+height: 10px;
+border-radius: 50%;
+background: rgba(255, 255, 255, 0.85);
+box-shadow: 0 0 8px rgba(255, 255, 255, 0.18);
+}
+
+.hud-life.is-lost {
+background: rgba(255, 255, 255, 0.18);
+box-shadow: none;
+}
+
+/* ---------------------------------------------------------
+SCORE / COIN / TIME / HEALTH EMPHASIS
+--------------------------------------------------------- */
+#score-value,
+#coin-value,
+#time-value,
+#health-value {
+text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+#health-value {
+color: var(--color-success);
+}
+
+#health-value.low {
+color: var(--color-danger);
+}
+
+#time-value.warn {
+color: var(--color-accent-2);
+}
+
+#coin-value {
+color: #ffd54a;
+}
+
+/* ---------------------------------------------------------
+HUD ANIMATIONS
+--------------------------------------------------------- */
+.hud-item.is-updated {
+animation: hudPulse 0.22s ease-out;
+}
+
+@keyframes hudPulse {
+0% {
+transform: scale(1);
+}
+50% {
+transform: scale(1.05);
+}
+100% {
+transform: scale(1);
+}
+}
+
+.hud-objective.is-flash {
+animation: objectiveFlash 0.35s ease-out;
+}
+
+@keyframes objectiveFlash {
+0% {
+transform: translateX(-50%) scale(1);
+}
+50% {
+transform: translateX(-50%) scale(1.01);
+}
+100% {
+transform: translateX(-50%) scale(1);
+}
+}
+
+/* ---------------------------------------------------------
+DEBUG HUD
+--------------------------------------------------------- */
+.debug-panel {
+position: absolute;
+top: calc(12px + var(--safe-top));
+left: calc(12px + var(--safe-left));
+z-index: 50;
+padding: 0.75rem 0.9rem;
+min-width: 140px;
+pointer-events: none;
+color: var(--color-text);
+font-size: 0.85rem;
+line-height: 1.4;
+display: grid;
+gap: 0.2rem;
+}
+
+.debug-line {
+display: flex;
+justify-content: space-between;
+gap: 1rem;
+white-space: nowrap;
+}
+
+.debug-line span {
+color: var(--color-accent-2);
+font-weight: 700;
+}
+
+/* ---------------------------------------------------------
+RESPONSIVE HUD TUNING
+--------------------------------------------------------- */
+@media (max-width: 768px) {
+.hud-block {
+gap: 0.5rem;
+}
+
+.hud-item {
+padding: 0.6rem 0.7rem;
+min-width: 74px;
+}
+
+.hud-label {
+font-size: 0.68rem;
+}
+
+.hud-value {
+font-size: 0.95rem;
+}
+
+.hud-objective {
+padding: 0.75rem 0.9rem;
+font-size: 0.88rem;
+}
+
+.debug-panel {
+font-size: 0.8rem;
+}
+}
+
+@media (max-width: 420px) {
+.hud-item {
+min-width: 68px;
+}
+
+.hud-label {
+font-size: 0.66rem;
+}
+
+.hud-value {
+font-size: 0.9rem;
+}
+
+.hud-bottom-center {
+width: min(94vw, 760px);
+}
+}
+
+@media (orientation: landscape) {
+.hud-objective {
+font-size: 0.92rem;
+}
+
+.hud-progress {
+width: min(86vw, 480px);
+}
+}
