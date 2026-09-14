@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Klavier-Trainer Pro</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --text-color: #ffffff;
+            --primary-color: #bb86fc;
+            --success-color: #03dac6;
+            --error-color: #cf6679;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        button, .file-upload-btn {
+            background-color: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: opacity 0.2s;
+            display: inline-block;
+            box-sizing: border-box;
+        }
+
+        button:active, .file-upload-btn:active {
+            opacity: 0.8;
+        }
+
+        button.active-mic {
+            background-color: var(--error-color);
+            color: #fff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .note-display {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 60px;
+        }
+
+        .expected-note {
+            color: var(--success-color);
+        }
+
+        .detected-note {
+            color: var(--primary-color);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 20px;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--success-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .song-title {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Klavier-Trainer</h1>
+    <p>Spiele die Noten auf deinem Klavier!</p>
+
+    <div class="card">
+        <div class="song-title" id="songTitle">Lied: Happy Birthday</div>
+        
+        <div>Ziel-Note:</div>
+        <div class="note-display expected-note" id="expectedNote">-</div>
+        
+        <div>Erkannte Note:</div>
+        <div class="note-display detected-note" id="detectedNote">-</div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="stats">
+            <div>Richtige: <span id="correctCount">0</span>/<span id="totalNotes">0</span></div>
+            <div>Genauigkeit: <span id="accuracy">100</span>%</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <button id="micBtn">🎤 Mikrofon Starten</button>
+        
+        <label class="file-upload-btn">
+            📂 Eigenes Lied hochladen (JSON)
+            <input type="file" id="fileInput" accept=".json">
+        </label>
+    </div>
+
+    <script>
+        // --- 1. Audio & Pitch Detection Setup ---
+        let audioContext;
+        let analyser;
+        let microphone;
+        let isListening = false;
+        let animationId;
+
+        const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        
+        // --- 2. Spiel-Logik & Zustand ---
+        // Standard-Lied: Happy Birthday (einfache Version ohne Oktaven-Zwang für Anfänger)
+        let currentSong = {
+            title: "Happy Birthday",
+            notes: ["G", "G", "A", "G", "C", "B", "G", "G", "A", "G", "D", "C"]
+        };
+        
+        let noteIndex = 0;
+        let attempts = 0;
+        let correctHits = 0;
+        
+        let lastDetectedNote = "";
+        let noteStabilityCount = 0;
+        const STABILITY_THRESHOLD = 5; // Note muss für X Frames stabil sein, um gezählt zu werden
+
+        // UI Elemente
+        const micBtn = document.getElementById('micBtn');
+        const expectedNoteEl = document.getElementById('expectedNote');
+        const detectedNoteEl = document.getElementById('detectedNote');
+        const correctCountEl = document.getElementById('correctCount');
+        const totalNotesEl = document.getElementById('totalNotes');
+        const accuracyEl = document.getElementById('accuracy');
+        const songTitleEl = document.getElementById('songTitle');
+        const progressFill = document.getElementById('progressFill');
+        const fileInput = document.getElementById('fileInput');
+
+        function initGame() {
+            noteIndex = 0;
+            attempts = 0;
+            correctHits = 0;
+            songTitleEl.innerText = "Lied: " + currentSong.title;
+            totalNotesEl.innerText = currentSong.notes.length;
+            updateUI();
+        }
+
+        function updateUI() {
+            if (noteIndex < currentSong.notes.length) {
+                expectedNoteEl.innerText = currentSong.notes[noteIndex];
+            } else {
+                expectedNoteEl.innerText = "🎉 Fertig!";
+            }
+
+            correctCountEl.innerText = correctHits;
+            let accuracy = attempts === 0 ? 100 : Math.round((correctHits / attempts) * 100);
+            accuracyEl.innerText = accuracy;
+            
+            let progress = (noteIndex / currentSong.notes.length) * 100;
+            progressFill.style.width = progress + "%";
+        }
+
+        // --- 3. Mikrofon & Audio Context ---
+        micBtn.addEventListener('click', async () => {
+            if (isListening) {
+                stopMic();
+            } else {
+                await startMic();
+            }
+        });
+
+        async function startMic() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                microphone = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                microphone.connect(analyser);
+                
+                isListening = true;
+                micBtn.innerText = "🛑 Mikrofon Stoppen";
+                micBtn.classList.add("active-mic");
+                
+                initGame(); // Spiel zurücksetzen
+                updatePitch();
+            } catch (err) {
+                alert("Fehler beim Zugriff auf das Mikrofon: " + err);
+            }
+        }
+
+        function stopMic() {
+            isListening = false;
+            cancelAnimationFrame(animationId);
+            if (audioContext) audioContext.close();
+            micBtn.innerText = "🎤 Mikrofon Starten";
+            micBtn.classList.remove("active-mic");
+            detectedNoteEl.innerText = "-";
+        }
+
+        // --- 4. Pitch Detection Algorithmus (Autokorrelation) ---
+        function autoCorrelate(buf, sampleRate) {
+            let SIZE = buf.length;
+            let rms = 0;
+
+            for (let i = 0; i < SIZE; i++) {
+                let val = buf[i];
+                rms += val * val;
+            }
+            rms = Math.sqrt(rms / SIZE);
+            if (rms < 0.02) return -1; // Zu leise (Hintergrundrauschen ignorieren)
+
+            let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+            for (let i = 0; i < SIZE / 2; i++)
+                if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+            for (let i = 1; i < SIZE / 2; i++)
+                if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+
+            buf = buf.slice(r1, r2);
+            SIZE = buf.length;
+
+            let c = new Array(SIZE).fill(0);
+            for (let i = 0; i < SIZE; i++)
+                for (let j = 0; j < SIZE - i; j++)
+                    c[i] = c[i] + buf[j] * buf[j + i];
+
+            let d = 0; while (c[d] > c[d + 1]) d++;
+            let maxval = -1, maxpos = -1;
+            for (let i = d; i < SIZE; i++) {
+                if (c[i] > maxval) {
+                    maxval = c[i];
+                    maxpos = i;
+                }
+            }
+            let T0 = maxpos;
+            let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+            let a = (x1 + x3 - 2 * x2) / 2;
+            let b = (x3 - x1) / 2;
+            if (a) T0 = T0 - b / (2 * a);
+
+            return sampleRate / T0;
+        }
+
+        function noteFromPitch(frequency) {
+            let noteNum = 12 * (Math.log(frequency / 440) / Math.log(2));
+            return Math.round(noteNum) + 69;
+        }
+
+        function getNoteString(midiNote) {
+            // Wir lassen die Oktave weg (z.B. "C" statt "C4"), 
+            // damit es fehlertoleranter für Anfänger ist.
+            return noteStrings[midiNote % 12];
+        }
+
+        // --- 5. Game Loop ---
+        function updatePitch() {
+            if (!isListening) return;
+
+            let buffer = new Float32Array(analyser.fftSize);
+            analyser.getFloatTimeDomainData(buffer);
+            let pitch = autoCorrelate(buffer, audioContext.sampleRate);
+
+            if (pitch !== -1 && noteIndex < currentSong.notes.length) {
+                let midiNote = noteFromPitch(pitch);
+                let currentNoteStr = getNoteString(midiNote);
+                
+                detectedNoteEl.innerText = currentNoteStr;
+
+                // Stabilisierung: Note muss mehrmals hintereinander erkannt werden
+                if (currentNoteStr === lastDetectedNote) {
+                    noteStabilityCount++;
+                } else {
+                    noteStabilityCount = 0;
+                    lastDetectedNote = currentNoteStr;
+                }
+
+                if (noteStabilityCount === STABILITY_THRESHOLD) {
+                    processNote(currentNoteStr);
+                    noteStabilityCount = 0; // Reset
+                }
+            } else if (pitch === -1) {
+                detectedNoteEl.innerText = "-";
+                noteStabilityCount = 0;
+            }
+
+            animationId = requestAnimationFrame(updatePitch);
+        }
+
+        function processNote(playedNote) {
+            let expectedNote = currentSong.notes[noteIndex];
+            attempts++;
+
+            if (playedNote === expectedNote) {
+                // Richtig gespielt!
+                correctHits++;
+                noteIndex++;
+                expectedNoteEl.style.color = "var(--success-color)";
+                setTimeout(() => expectedNoteEl.style.color = "var(--text-color)", 300);
+            } else {
+                // Falsch gespielt
+                detectedNoteEl.style.color = "var(--error-color)";
+                setTimeout(() => detectedNoteEl.style.color = "var(--primary-color)", 300);
+            }
+            updateUI();
+        }
+
+        // --- 6. Datei Upload ---
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedSong = JSON.parse(e.target.result);
+                    if (parsedSong.title && parsedSong.notes && Array.isArray(parsedSong.notes)) {
+                        currentSong = parsedSong;
+                        initGame();
+                        alert("Lied erfolgreich geladen: " + currentSong.title);
+                    } else {
+                        alert("Fehler: Das JSON-Format ist ungültig.");
+                    }
+                } catch (err) {
+                    alert("Fehler beim Lesen der Datei. Bitte stelle sicher, dass es eine valide JSON-Datei ist.");
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Init beim Laden der Seite
+        initGame();
+    </script>
+</body>
+</html>
