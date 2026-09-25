@@ -179,30 +179,6 @@ html,body{
   background:#ffc107;
 }
 
-/* LOCKED GAME */
-.game-card.locked{
-  position:relative;
-  pointer-events:none;
-}
-
-.game-card.locked img{
-  filter:grayscale(1) brightness(.5);
-}
-
-.lock-overlay{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,.55);
-  color:white;
-  font-weight:700;
-  text-align:center;
-  font-size:14px;
-  padding:10px;
-}
-
 .footer-bar{
   margin-top:40px;
   background:#111;
@@ -302,12 +278,6 @@ html,body{
   <a href="tic-tac-toe-AI.html" class="game-card">
     <img src="images/Tic-tac-toeAI.jpg" alt="Tic Tac Toe AI">
   </a>
-
-  <div class="game-card locked" id="minecraftCard">
-    <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
-    <div class="lock-overlay">🔒 Only for logged-in users</div>
-  </div>
-
 </div>
 
 
@@ -438,25 +408,12 @@ const leaderboardToggleSection = document.getElementById("leaderboardToggleSecti
 const leaderboardNotice = document.getElementById("leaderboardNotice");
 
 // 1. ZENTRALE AUTH-STEUERUNG (Firebase Status-Check)
-onAuthStateChanged(auth, user => {
-  const minecraftCard = document.getElementById("minecraftCard");
-  
-  if (user) {
+onAuthStateChanged(auth, user => { if (user) {
     const name = user.displayName || user.email.split("@")[0] || "User";
     userBox.textContent = name;
     loginBtn.style.display = "none";
     userBox.style.display = "block";
-
-    // Minecraft Kachel freischalten
-    if (minecraftCard) {
-      minecraftCard.outerHTML = `
-        <a href="minecraft.html" class="game-card">
-          <img src="images/Blockbuilder.jpg" alt="MINECRAFT">
-        </a>
-      `;
-    }
-
-    // Leaderboard Optionen aktivieren
+// Leaderboard Optionen aktivieren
     leaderboardToggle.disabled = false;
     leaderboardToggleSection.style.opacity = "1";
     leaderboardNotice.style.display = "none";
